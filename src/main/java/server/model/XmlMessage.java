@@ -1,8 +1,8 @@
 package server.model;
 
 import org.apache.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -10,7 +10,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,7 +23,7 @@ import java.util.List;
  * @version %I%, %G%
  */
 public class XmlMessage {
-    static Logger log = Logger.getLogger(XmlMessage.class);
+    static Logger          log = Logger.getLogger(XmlMessage.class);
     static DocumentBuilder builder;
 
     /**
@@ -35,70 +38,45 @@ public class XmlMessage {
         }
     }
 
+    public void writeChild(Element RootElement, Document doc, String strTeg, String str ) {
+        Element NameElementTitle = doc.createElement(strTeg);
+        NameElementTitle.appendChild(doc.createTextNode(str));
+        RootElement.appendChild(NameElementTitle);
+    }
+
     public void writeXMLinStream(XmlSet xmlSet, OutputStream out) throws TransformerException {
         paramLangXML();
 
         Document doc = builder.newDocument();
         Element RootElement = doc.createElement("XmlMessage");
-
         // id user
-        Element NameElementTitle = doc.createElement("IdUser");
-        NameElementTitle.appendChild(doc.createTextNode(String.valueOf(xmlSet.getIdUser())));
-        RootElement.appendChild(NameElementTitle);
-
-        //write name of active user
-        if (xmlSet.getListActiveUser() != null) {
-            Element list = doc.createElement("list_active_user");
-            RootElement.appendChild(list);
-
-            List<String> l = xmlSet.getListActiveUser();
-
-            for (String i : l) {
-                Element name = doc.createElement("name");
-                name.appendChild(doc.createTextNode(i));
-                list.appendChild(name);
-            }
-        }
+        writeChild(RootElement, doc, "IdUser", String.valueOf(xmlSet.getIdUser()));
 
         // general message
-        if (xmlSet.getGeneralMessage() != null) {
-            NameElementTitle = doc.createElement("general_message");
-            NameElementTitle.appendChild(doc.createTextNode(xmlSet.getGeneralMessage()));
-            RootElement.appendChild(NameElementTitle);
+        if (xmlSet.getMessage() != null) {
+            writeChild(RootElement, doc, "messageID", String.valueOf(xmlSet.getKeyMessage()));
+            writeChild(RootElement, doc, "message", xmlSet.getMessage());
         }
 
-        // create private window
-        if (xmlSet.isOpenPrivateWindow()) {
-            NameElementTitle = doc.createElement("create_private_window");
-            NameElementTitle.appendChild(doc.createTextNode(String.valueOf(xmlSet.getKeyPrivatDialog())));
+        //write name of active user
+        if (xmlSet.getActiveUser() != null) {
+            Element      list;
+            Integer      count = 1;
+            List<String> l     = xmlSet.getActiveUser();
 
-            //write list name of user
-            if (xmlSet.getListPrivatDialog() != null) {
-                List<String> l = xmlSet.getListPrivatDialog();
-
-                Element list = doc.createElement("list_private_user");
+            for (String name : l) {
+                list = doc.createElement("list_user");
                 RootElement.appendChild(list);
 
-                for (String i : l) {
-                    Element name = doc.createElement("name");
-                    name.appendChild(doc.createTextNode(i));
-                    list.appendChild(name);
-                }
+                list.setAttribute("id", count.toString());
+                writeChild(list, doc, "name", name);
+                count++;
             }
-        }
-
-        //send private message
-        if (xmlSet.getPrivateMessage() != null) {
-            NameElementTitle = doc.createElement("private_message");
-            NameElementTitle.appendChild(doc.createTextNode(xmlSet.getPrivateMessage()));
-            RootElement.appendChild(NameElementTitle);
         }
 
         // write else preference
         if (xmlSet.getElsePreference() != null) {
-            NameElementTitle = doc.createElement("else_preference");
-            NameElementTitle.appendChild(doc.createTextNode(xmlSet.getElsePreference()));
-            RootElement.appendChild(NameElementTitle);
+            writeChild(RootElement, doc, "else_preference", xmlSet.getElsePreference());
         }
 
         // add in XML
@@ -108,9 +86,7 @@ public class XmlMessage {
         t.setOutputProperty(OutputKeys.INDENT, "yes");
         t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
-        //try { t.transform(new DOMSource(doc), new StreamResult(new FileOutputStream("TEST.xml")));
-            t.transform(new DOMSource(doc), new StreamResult(out));
-        //} catch (FileNotFoundException e) { log.debug("transform "+e); }
+        t.transform(new DOMSource(doc), new StreamResult(out));
         //DOMSource -- представляет полученные данные в виде Document Object Model (DOM).
         //(представляется в виде древовидной структуры документа)
         //StreamResult -- "Записывает в память" преобразованный документ... к которому мы можем уже обращаться...
@@ -119,9 +95,59 @@ public class XmlMessage {
         //в xml (древовидную структуру)
     }
 
-    public XmlSet readXmlFromStream(OutputStream in){
+
+    public String readChild(Document document, String strTeg) {
+        NodeList nList = document.getElementsByTagName(strTeg);
+        Node node = nList.item(0);
+        return node.getTextContent();
+    }
+
+    public XmlSet readXmlFromStream(InputStream in) throws IOException, SAXException {
         XmlSet xmlSet = new XmlSet(-1);
 
-        return xmlSet;
+        paramLangXML();
+        Document document;
+        document = builder.parse(in);                                       //it will test in thread
+        document.getDocumentElement().normalize();
+
+        // parsing id of user
+        xmlSet.setIdUser(Integer.parseInt(readChild(document, "IdUser")));
+
+        // parsing messageID and message
+        try {
+            int id = Integer.parseInt(readChild(document, "messageID"));
+            xmlSet.setKeyDialog(id);
+            xmlSet.setMessage(readChild(document, "message"));
+        } catch (Exception e){
+            log.debug("messageID" + e);
+        }
+
+        // parsing list of user
+        List<String> list  = new ArrayList<String>();
+        NodeList     nList = document.getElementsByTagName("list_user");
+        Node nNode;
+
+        for (int temp = 0; temp < nList.getLength(); temp++) {
+            nNode = nList.item(temp);
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    list.add(eElement.getElementsByTagName("name").item(0).getTextContent());
+                }
+        }
+        xmlSet.setActiveUser(list);
+
+        // parsing else_preference
+        try {
+            xmlSet.setElsePreference(readChild(document, "else_preference"));
+        } catch (Exception e){
+            log.debug("else_preference"+e);
+        }
+
+        // if parsing was good return xmlSet else null
+        if(xmlSet.getIdUser() != -1) {
+            return xmlSet;
+        } else {
+            return null;
+        }
     }
 }

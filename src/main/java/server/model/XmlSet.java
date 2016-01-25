@@ -11,22 +11,13 @@ import java.util.List;
 public class XmlSet {
     private int          idUser;
     private String       message;
+    private int          keyMessage;
     private List<String> activeUser;
-
-    private boolean      openPrivateWindow;
-    private int          keyPrivatDialog;
-    private String       privateMessage;
-    private List<String> privatDialog;
-
-    private String elsePreference;
+    private String       elsePreference;
 
     public XmlSet(int id) {
         this.idUser = id;
     }
-
-    /**
-     * minimum message
-     */
 
     /**
      * @param id of user
@@ -43,89 +34,63 @@ public class XmlSet {
     }
 
     /**
-     * @param mess for send
+     * @return list of user
      */
-    public void setGeneralMessage(String mess) {
-        this.message = mess;
+    public List<String> getActiveUser() {
+        return activeUser;
     }
 
     /**
-     * @return message
+     * @param activeUser send list of user
      */
-    public String getGeneralMessage() {
+    public void setActiveUser(List<String> activeUser) {
+        this.activeUser = activeUser;
+    }
+
+    /**
+     * @param message send for dialog
+     */
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    /**
+     *
+     * @return Sting of message
+     */
+    public String getMessage() {
         return message;
     }
 
     /**
-     * @param act list of active user
+     * @param keyDialog key of dialog
      */
-    public void setListActiveUser(List act) {
-        this.activeUser = act;
+    public void setKeyDialog(int keyDialog) {
+        this.keyMessage = keyDialog;
     }
-
-    /**
-     * @return list of active user
-     */
-    public List getListActiveUser() {
-        return activeUser;
-    }
-
-
-    /**
-     * message for private window
-     */
 
     /**
      *
-     * @param keyPrivateDialog is int
-     * @param privUser list for private window
+     * @return key of message
      */
-    public void openPrivateWindow(int keyPrivateDialog, List<String> privUser) {
-        this.openPrivateWindow = true;
-        this.keyPrivatDialog = keyPrivateDialog;
-        this.privatDialog = privUser;
+    public int getKeyMessage() {
+        return keyMessage;
     }
-
-    /**
-     * @return true if user needs open the private dialog
-     */
-    public boolean isOpenPrivateWindow() {
-        return openPrivateWindow;
-    }
-
-    /**
-     * @return list of private window
-     */
-    public List<String> getListPrivatDialog() {
-        return privatDialog;
-    }
-
-    public void setPrivatDialog(List<String> privatDialog) {
-        this.privatDialog = privatDialog;
-    }
-
-    public void setPrivateMessage(int keyPrivateDialog, String privateMessage) {
-        this.keyPrivatDialog = keyPrivateDialog;
-        this.privateMessage = privateMessage;
-    }
-
-    public int getKeyPrivatDialog() {
-        return keyPrivatDialog;
-    }
-
-    public String getPrivateMessage() {
-        return privateMessage;
-    }
-
 
     /**
      * else preference
      */
 
+    /**
+     * @return String of else preference
+     */
     public String getElsePreference() {
         return elsePreference;
     }
 
+    /**
+     * @param elsePreference is string for send
+     */
     public void setElsePreference(String elsePreference) {
         this.elsePreference = elsePreference;
     }
