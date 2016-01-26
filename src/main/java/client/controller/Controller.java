@@ -13,7 +13,6 @@ import java.text.ParseException;
  * Client's controller
  * @author Veleri Rechembei
  * @version %I%, %G%
- *
  */
 public class Controller implements Runnable {
 
