@@ -23,32 +23,38 @@ import java.util.List;
  * @version %I%, %G%
  */
 public class XmlMessage {
-    static Logger          log = Logger.getLogger(XmlMessage.class);
-    static DocumentBuilder builder;
+    private static Logger          LOG     = Logger.getLogger(XmlMessage.class);
+    private static DocumentBuilder builder;
 
     /**
-     * method creates factory for work with XML
+     * method create factory for work with XML.
      */
-    public static void paramLangXML() {
+    private static  void paramLangXML() {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             builder = factory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            log.error("ParamLangXML err " + e);
+            LOG.error("ParamLangXML err " + e);
         }
     }
 
-    public void writeChild(Element RootElement, Document doc, String strTeg, String str ) {
+    private static void writeChild(Element RootElement, Document doc, String strTeg, String str ) {
         Element NameElementTitle = doc.createElement(strTeg);
         NameElementTitle.appendChild(doc.createTextNode(str));
         RootElement.appendChild(NameElementTitle);
     }
 
-    public void writeXMLinStream(XmlSet xmlSet, OutputStream out) throws TransformerException {
+    /**
+     * Method for write of XML in a stream
+     * @param xmlSet                parameters for send
+     * @param out                   is a stream
+     * @throws TransformerException if xml can not transform in out
+     */
+    public static void writeXMLinStream(XmlSet xmlSet, OutputStream out) throws TransformerException {
         paramLangXML();
 
-        Document doc = builder.newDocument();
-        Element RootElement = doc.createElement("XmlMessage");
+        Document doc         = builder.newDocument();
+        Element  RootElement = doc.createElement("XmlMessage");
         // id user
         writeChild(RootElement, doc, "IdUser", String.valueOf(xmlSet.getIdUser()));
 
@@ -56,20 +62,22 @@ public class XmlMessage {
         if (xmlSet.getMessage() != null) {
             writeChild(RootElement, doc, "messageID", String.valueOf(xmlSet.getKeyMessage()));
             writeChild(RootElement, doc, "message", xmlSet.getMessage());
+
+            Model.logMessage(xmlSet.getKeyMessage(), xmlSet.getMessage());
         }
 
         //write name of active user
         if (xmlSet.getActiveUser() != null) {
-            Element      list;
+            Element      elist;
             Integer      count = 1;
-            List<String> l     = xmlSet.getActiveUser();
+            List<String> list  = xmlSet.getActiveUser();
 
-            for (String name : l) {
-                list = doc.createElement("list_user");
-                RootElement.appendChild(list);
+            for (String name : list) {
+                elist = doc.createElement("list_user");
+                RootElement.appendChild(elist);
 
-                list.setAttribute("id", count.toString());
-                writeChild(list, doc, "name", name);
+                elist.setAttribute("id", count.toString());
+                writeChild(elist, doc, "name", name);
                 count++;
             }
         }
@@ -81,7 +89,8 @@ public class XmlMessage {
 
         // add in XML
         doc.appendChild(RootElement);
-        Transformer t=  TransformerFactory.newInstance().newTransformer();
+        Transformer t =  TransformerFactory.newInstance().newTransformer();
+
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
         t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
@@ -96,18 +105,25 @@ public class XmlMessage {
     }
 
 
-    public String readChild(Document document, String strTeg) {
+    private static String readChild(Document document, String strTeg) {
         NodeList nList = document.getElementsByTagName(strTeg);
-        Node node = nList.item(0);
+        Node     node  = nList.item(0);
         return node.getTextContent();
     }
 
-    public XmlSet readXmlFromStream(InputStream in) throws IOException, SAXException {
+    /**
+     * Method for read of XML from a stream
+     * @param in            is a stream for read
+     * @return              XmlSet
+     * @throws IOException  if input stream can not be parse
+     * @throws SAXException if input stream can not be parse
+     */
+    public static  XmlSet readXmlFromStream(InputStream in) throws IOException, SAXException {
         XmlSet xmlSet = new XmlSet(-1);
 
         paramLangXML();
         Document document;
-        document = builder.parse(in);                                       //it will test in thread
+        document = builder.parse(in);                                       //it will test in thread!!!
         document.getDocumentElement().normalize();
 
         // parsing id of user
@@ -119,16 +135,15 @@ public class XmlMessage {
             xmlSet.setKeyDialog(id);
             xmlSet.setMessage(readChild(document, "message"));
         } catch (Exception e){
-            log.debug("messageID" + e);
+            LOG.debug("messageID" + e);
         }
 
         // parsing list of user
-        List<String> list  = new ArrayList<String>();
+        List<String> list  = new ArrayList<>();
         NodeList     nList = document.getElementsByTagName("list_user");
-        Node nNode;
 
         for (int temp = 0; temp < nList.getLength(); temp++) {
-            nNode = nList.item(temp);
+            Node nNode = nList.item(temp);
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
                     list.add(eElement.getElementsByTagName("name").item(0).getTextContent());
@@ -140,7 +155,7 @@ public class XmlMessage {
         try {
             xmlSet.setElsePreference(readChild(document, "else_preference"));
         } catch (Exception e){
-            log.debug("else_preference"+e);
+            LOG.debug("else_preference"+e);
         }
 
         // if parsing was good return xmlSet else null
