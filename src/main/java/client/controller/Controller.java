@@ -10,9 +10,10 @@ import java.net.UnknownHostException;
 import java.text.ParseException;
 
 /**
+ * Client's controller
  * @author Veleri Rechembei
  * @version %I%, %G%
- * Client's controller
+ *
  */
 public class Controller implements Runnable {
 
