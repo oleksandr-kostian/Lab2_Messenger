@@ -73,7 +73,7 @@ public class XmlSet {
      *
      * @return key of message
      */
-    public int getKeyMessage() {
+    public int getKeyDialog() {
         return keyMessage;
     }
 

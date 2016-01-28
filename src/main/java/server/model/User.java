@@ -10,9 +10,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
  * @version %I%, %G%
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class User {
+public class User implements Cloneable {
     private int     id;
-    private String  name;
+    private String  password;
     private String  login;
     private boolean ban;
 
@@ -27,12 +27,12 @@ public class User {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getPassword() {
+        return password;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getLogin() {
@@ -57,5 +57,19 @@ public class User {
      */
     public void setBan(boolean ban) {
         this.ban = ban;
+    }
+
+    @Override
+    public User clone() {
+        User result = null;
+        try {
+            result = (User) super.clone();
+            result.setLogin(this.login);
+            result.setBan(this.ban);
+            result.setPassword(this.password);
+        } catch (CloneNotSupportedException e) {
+            return null;
+        }
+        return result;
     }
 }

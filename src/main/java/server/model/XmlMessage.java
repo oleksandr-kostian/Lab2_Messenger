@@ -58,12 +58,15 @@ public class XmlMessage {
         // id user
         writeChild(RootElement, doc, "IdUser", String.valueOf(xmlSet.getIdUser()));
 
+        //dialogID
+        if (xmlSet.getKeyDialog() != 0) {
+            writeChild(RootElement, doc, "dialogID", String.valueOf(xmlSet.getKeyDialog()));
+        }
         // general message
         if (xmlSet.getMessage() != null) {
-            writeChild(RootElement, doc, "messageID", String.valueOf(xmlSet.getKeyMessage()));
             writeChild(RootElement, doc, "message", xmlSet.getMessage());
 
-            Model.logMessage(xmlSet.getKeyMessage(), xmlSet.getMessage());
+            Model.logMessage(xmlSet.getKeyDialog(), xmlSet.getMessage());                  //log message
         }
 
         //write name of active user
