@@ -12,8 +12,8 @@ public class XmlSet {
     private int          idUser;
     private String       message;
     private int          keyMessage;
-    private List<String> activeUser;
-    private String       elsePreference;
+    private List<String> list;
+    private String       preference;
 
     public XmlSet(int id) {
         this.idUser = id;
@@ -36,15 +36,15 @@ public class XmlSet {
     /**
      * @return list of user
      */
-    public List<String> getActiveUser() {
-        return activeUser;
+    public List<String> getList() {
+        return list;
     }
 
     /**
-     * @param activeUser send list of user
+     * @param list send list of user
      */
-    public void setActiveUser(List<String> activeUser) {
-        this.activeUser = activeUser;
+    public void setList(List<String> list) {
+        this.list = list;
     }
 
     /**
@@ -82,16 +82,16 @@ public class XmlSet {
      */
 
     /**
-     * @return String of else preference
+     * @return String of preference
      */
-    public String getElsePreference() {
-        return elsePreference;
+    public String getPreference() {
+        return preference;
     }
 
     /**
-     * @param elsePreference is string for send
+     * @param preference is string for send
      */
-    public void setElsePreference(String elsePreference) {
-        this.elsePreference = elsePreference;
+    public void setPreference(String preference) {
+        this.preference = preference;
     }
 }

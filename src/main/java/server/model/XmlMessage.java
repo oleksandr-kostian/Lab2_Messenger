@@ -70,10 +70,10 @@ public class XmlMessage {
         }
 
         //write name of active user
-        if (xmlSet.getActiveUser() != null) {
+        if (xmlSet.getList() != null) {
             Element      elist;
             Integer      count = 1;
-            List<String> list  = xmlSet.getActiveUser();
+            List<String> list  = xmlSet.getList();
 
             for (String name : list) {
                 elist = doc.createElement("list_user");
@@ -86,8 +86,8 @@ public class XmlMessage {
         }
 
         // write else preference
-        if (xmlSet.getElsePreference() != null) {
-            writeChild(RootElement, doc, "else_preference", xmlSet.getElsePreference());
+        if (xmlSet.getPreference() != null) {
+            writeChild(RootElement, doc, "else_preference", xmlSet.getPreference());
         }
 
         // add in XML
@@ -99,12 +99,6 @@ public class XmlMessage {
         t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
         t.transform(new DOMSource(doc), new StreamResult(out));
-        //DOMSource -- представляет полученные данные в виде Document Object Model (DOM).
-        //(представляется в виде древовидной структуры документа)
-        //StreamResult -- "Записывает в память" преобразованный документ... к которому мы можем уже обращаться...
-        //как к xml документу. А файл, мы в него выгружаем полученный результат (в StreamResult) конечного преобразования.
-        //transform - метод который и позволяет преобразовывать "исходник" (текст который мы выдаём за xml)
-        //в xml (древовидную структуру)
     }
 
 
@@ -134,7 +128,7 @@ public class XmlMessage {
 
         // parsing messageID and message
         try {
-            int id = Integer.parseInt(readChild(document, "messageID"));
+            int id = Integer.parseInt(readChild(document, "dialogID"));
             xmlSet.setKeyDialog(id);
             xmlSet.setMessage(readChild(document, "message"));
         } catch (Exception e){
@@ -152,11 +146,11 @@ public class XmlMessage {
                     list.add(eElement.getElementsByTagName("name").item(0).getTextContent());
                 }
         }
-        xmlSet.setActiveUser(list);
+        xmlSet.setList(list);
 
         // parsing else_preference
         try {
-            xmlSet.setElsePreference(readChild(document, "else_preference"));
+            xmlSet.setPreference(readChild(document, "else_preference"));
         } catch (Exception e){
             LOG.debug("else_preference"+e);
         }
