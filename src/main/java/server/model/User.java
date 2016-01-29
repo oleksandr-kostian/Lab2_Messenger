@@ -20,7 +20,7 @@ public class User implements Cloneable {
      * Constructor that set a unique id when you create user.
      */
     public User() {
-        this.id = this.hashCode();
+        this.id = (int) System.currentTimeMillis();
     }
 
     public int getId() {
