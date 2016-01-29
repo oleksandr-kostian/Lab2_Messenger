@@ -6,6 +6,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 
 /**
@@ -45,25 +47,25 @@ final class UserIO {
 
             LOG.info("write in file success");
         } catch (JAXBException e) {
-            LOG.error("JAXB marshal writes" + e);
+            LOG.error("JAXB marshal writes " + e);
         }
     }
 
     /**
      * @return list that read from file
      */
-    protected ListUser readList() {
+    protected ListUser readList() throws FileNotFoundException {
         ListUser list = null;
 
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(ListUser.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-            list = (ListUser) jaxbUnmarshaller.unmarshal(new File("listUser.txt"));
+            list = (ListUser) jaxbUnmarshaller.unmarshal(new FileInputStream("listUser.txt"));
 
             LOG.info("read from file success");
         } catch (JAXBException e) {
-            LOG.error("JAXB unmarshal reads" + e);
+            LOG.error("JAXB unmarshal reads " + e);
         }
         return list;
     }

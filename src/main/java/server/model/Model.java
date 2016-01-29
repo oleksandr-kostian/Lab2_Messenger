@@ -96,7 +96,12 @@ public class Model {
      */
     public void start() {
         USERIO  = UserIO.getInstance();
-        list    = USERIO.readList().getHashList();
+
+        try {
+            list    = USERIO.readList().getHashList();
+        } catch (FileNotFoundException e) {
+            list = new HashMap<Integer, User>();
+        }
         LOG.info("server start");
     }
 
