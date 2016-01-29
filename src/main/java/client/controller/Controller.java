@@ -3,11 +3,17 @@ package client.controller;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import server.model.XmlMessage;
+import server.model.XmlSet;
 
 /**
  * Client's controller
@@ -16,26 +22,27 @@ import java.text.ParseException;
  */
 public class Controller implements Runnable {
 
-    private String hostName;
-    final private int PORT;
-    private Socket connect;
-    private String myUser;
-    ObjectInputStream fromServer;
-    ObjectOutputStream toServer;
+    private String              hostName;
+    final private int           PORT=1025;
+    private Socket              connect;
+    private String              myUser;
+    ObjectInputStream           fromServer;
+    ObjectOutputStream          toServer;
    // private static final Logger logger = Logger.getLogger(Controller.class);
      //ClientGUI = gui
 
-    public Controller(String hostName, int port, String myUser) {
+    public Controller(String hostName) {
         this.hostName = hostName;
-        this.PORT = port;
-        this.myUser=myUser;
 
     }
 
     public boolean connectToServer() {
         try {
             connect = new Socket(hostName, PORT);
+            //fromServer = new ObjectInputStream(connect.getInputStream());
             System.out.println("Connected: " + connect);
+            toServer = new ObjectOutputStream(connect.getOutputStream());
+           // sendMessage("authentication");
             //logger.info("Connected: " + connect);
         }
         catch (UnknownHostException uhe) {
@@ -48,27 +55,9 @@ public class Controller implements Runnable {
             System.out.println("Unexpected exception: " + e.getMessage());
             return false;
         }
-        try{
-            fromServer = new ObjectInputStream(connect.getInputStream());
-            toServer = new ObjectOutputStream(connect.getOutputStream());
             new Thread(this).start();
 
-        }
-        catch (IOException e) {
-            //  logger.error(e);
-            System.out.println("Exception creating new Input/output Streams: " + e);
-            return false;
-        }
-        try
-        {
-            toServer.writeObject(this.getMyUser());
-        }
-        catch (IOException eIO) {
-            System.out.println("Exception doing login : " + eIO);
-            closeServer();
-            return false;
-        }
-        return true;
+     return true;
 
     }
 
@@ -127,16 +116,22 @@ public class Controller implements Runnable {
 
 
     public void sendMessage(String message) {
-       /* try {
-            toServer.writeObject(message);
+        /*
+        try {
+            XmlMessage.writeXMLinStream(aut, connect.getOutputStream());
+
+        }
+        catch (javax.xml.transform.TransformerException e1) {
+            System.out.println(" TransformerException " + e1);
+
         }
         catch(IOException e) {
             System.out.println("Exception writing to server: " + e);
             //logger.error("IOException writing to server." + e);
         }
-*/
+       */
     }
-    public void displayToChat(String message){
+   public void displayToChat(String message){
 
     }
     public void viewActiveUser() {
@@ -145,9 +140,10 @@ public class Controller implements Runnable {
 
    // @Override
     public void run() {
-        while (true) {
+
+      /*  while (true) {
                try {
-                String message = (String)fromServer.readObject();
+                  XmlMessage.readXmlFromStream(connect.getInputStream());
 
                 // + print message in GUI
             }
@@ -159,6 +155,7 @@ public class Controller implements Runnable {
             System.out.println(e2.getMessage() + e2);
         }
            }
+        */
     }
 
 
@@ -171,8 +168,9 @@ public class Controller implements Runnable {
 
     public static void main(String[] args)throws IOException, ParseException {
         String serverAddress = "localhost";
-        Controller client = new Controller(serverAddress,994,"someUser");
+        Controller client = new Controller(serverAddress);
         client.connectToServer();
+      //  client.sendMessage();
 
     }
 
