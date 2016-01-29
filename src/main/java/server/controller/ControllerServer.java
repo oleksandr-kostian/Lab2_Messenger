@@ -238,11 +238,12 @@ public class ControllerServer {
         @Override
         public void run() {
             try {
-                fromClient = new ObjectInputStream(socket.getInputStream());
-                if (!this.isAuthentication()) {
-                    this.setXmlUser(XmlMessage.readXmlFromStream(fromClient));
-                } else {
-                    while (true) {
+                while (true) {
+                    fromClient = new ObjectInputStream(socket.getInputStream());
+                    if (!this.isAuthentication()) {
+                        this.setXmlUser(XmlMessage.readXmlFromStream(fromClient));
+                    } else {
+
                         //try to read command from client!!!!!!!!
                         this.setXmlUser(XmlMessage.readXmlFromStream(fromClient));
                         if (getXmlUser().getIdUser() >= 0) {
@@ -250,6 +251,7 @@ public class ControllerServer {
                             readCommand(this, preference);
                             sleep(1000);
                         }
+
                     }
                 }
             }
