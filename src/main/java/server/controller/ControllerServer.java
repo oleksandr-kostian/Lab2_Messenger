@@ -2,6 +2,7 @@ package server.controller;
 
 
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 import server.model.Model;
 import server.model.User;
 import server.model.XmlMessage;
@@ -24,88 +25,105 @@ public class ControllerServer {
     private ServerSocket                    socket;
     private HashMap<User,ServerThread>      activeUser;
     private Model                           model;
-    private static Logger                   logger = Logger.getLogger(ControllerServer.class);
-    // private List<ServerThread>            activeUser;
+    private static final Logger             logger = Logger.getLogger(ControllerServer.class);
 
+    /**
+     * Authenticates the user on the server.
+     * @param client thread of client.
+     * @throws javax.xml.transform.TransformerException if method send() has mistake.
+     * throws new IllegalArgumentException if client is not authenticated. No token \"authentication\" word.
+     */
+  public synchronized void authorization(ServerThread client)throws javax.xml.transform.TransformerException{
+      String preference = client.getXmlUser().getPreference();
+      List<String> data = client.getXmlUser().getList();
+      if (preference.compareToIgnoreCase("authentication") == 0) {
+          int idUser = model.authorizationUser(data.get(0), data.get(1));
+          if(idUser!=-1){
+              client.getXmlUser().setIdUser(idUser);
+              client.setUser(model.getUser(idUser));
+              activeUser.put(model.getUser(idUser), client);
+              client.setAuthentication(true);
+              logger.info("Authentication is successful.");
+              logger.debug("Authentications user is" + client.getUser().getLogin());
+              //System.out.println("Authentications user is" + client.getUser().getLogin());
+          }
+          else{
+              User createUser = new User();
+              createUser.setLogin(data.get(0));
+              createUser.setPassword(data.get(1));
+              createUser.setBan(false);
+              client.getXmlUser().setIdUser(createUser.getId());
+              client.setUser(createUser);
+              model.addUser(createUser);
+              activeUser.put(model.getUser(createUser.getId()), client);
+              //activeUser.put(createUser, client);
+              client.setAuthentication(true);
+              logger.info("Authentication is successful. New user  created.");
+              logger.debug("Create new user" + client.getUser().getLogin());
+              //System.out.println("Authentications user is" + client.getUser().getLogin());
+          }
+          //send message to client of active user list and data of client
+          client.getXmlUser().setList(getUserListString());
+          if(client.getUser().isBan()){
+              client.getXmlUser().setMessage("ban");
+          }
+          else {
+              client.getXmlUser().setMessage("activeUser");
+          }
+          client.sendMessage("authentication");
+      }
+      else{
+          client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\" word. Please try to connect again.");
+          client.sendMessage("authentication");
+          client.close();
+          throw new IllegalArgumentException("The client is not authenticated. No token \"authentication\" word.");
 
-    public void run() throws IOException{
-            model = new Model();
-            activeUser = new HashMap<>();
-            logger.info("Binding to port " + this.PORT + ", please wait  ...");
-            System.out.println("Binding to port " + this.PORT + ", please wait  ...");
-            socket = new ServerSocket(PORT);
-            logger.info("Server started: ");
-            System.out.println("Server started: ");
-            logger.info("Waiting a client... ");
-            System.out.println("Waiting a client... ");
-            //connect new client and authentication
-            while (true) {
-             Socket client = socket.accept();
-              System.out.println("Connection from " + client.getInetAddress().getHostName());
-                ServerThread newUser= new ServerThread(client);
-                newUser.start();
-                String preference=newUser.getXmlUser().getPreference();
-                List<String> data = newUser.getXmlUser().getList();
-                if(preference.compareToIgnoreCase("authentication")==0){
-               int idUser= model.authorizationUser(data.get(0),data.get(1));
-                    if(idUser!=-1){
-                        newUser.getXmlUser().setIdUser(idUser);
-                        newUser.setUser(model.getUser(idUser));
-                        activeUser.put(model.getUser(idUser), newUser);
-                        newUser.setAuthentication(true);
-                        logger.info("Authentication is successful.");
-                        logger.debug("Authentications user is" + newUser.getUser().getLogin());
-                    }
-                    else{
-                        User createUser = new User();
-                        createUser.setLogin(data.get(0));
-                        createUser.setPassword(data.get(1));
-                        createUser.setBan(false);
-                        newUser.getXmlUser().setIdUser(createUser.getId());
-                        newUser.setUser(createUser);
-                        model.addUser(createUser);
-                        activeUser.put(createUser, newUser);
-                        newUser.setAuthentication(true);
-                        logger.info("Authentication is successful. New user  created.");
-                        logger.debug("Create new user" + newUser.getUser().getLogin());
-                    }
-                            //send message to client of active user list and data of client
-                            newUser.getXmlUser().setList(getUserListString());
-                            if(newUser.getUser().isBan()){
-                                newUser.getXmlUser().setMessage("ban");
-                            }
-                            else {
-                                newUser.getXmlUser().setMessage("activeUser");
-                            }
-                            newUser.sendMessage("authentication");
+      }
+  }
 
-                }
+    /**
+     * Method for start work of server.
+     * @throws IOException if port don't build; wrong of client's socket.
+     * @throws org.xml.sax.SAXException if ServerThread has mistake of xml
+     */
+  public void run()throws IOException, org.xml.sax.SAXException{
+      model = new Model();
+      activeUser = new HashMap<>();
+      logger.info("Building to port " + this.PORT + ", please wait  ...");
+     // System.out.println("Binding to port " + this.PORT + ", please wait  ...");
+      socket = new ServerSocket(PORT);
+      logger.info("Server started: ");
+     // System.out.println("Server started: ");
+      logger.info("Waiting a client... ");
+      System.out.println("Waiting a client... ");
+      while (true) {
+          Socket client = socket.accept();
+          logger.debug("Connection from " + client.getInetAddress().getHostName());
+         new ServerThread(client);
+      }
 
-                else{
-                    newUser.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\" word. Please try to connect again.");
-                    newUser.sendMessage("authentication");
-                    newUser.close();
-                    throw new IllegalArgumentException("The client is not authenticated. No token \"authentication\" word.");
-
-                }
-
-        }
-
-
-    }
+  }
     public void stop() throws IOException{
             for (User key : activeUser.keySet()) {
                 activeUser.get(key).stop();
             }
-            if(socket != null) socket.close();
+            if(socket != null) {
+                socket.close();
+            }
 
 
     }
-    public HashMap<User,ServerThread> getUserList(){
+  /*  public HashMap<User,ServerThread> getUserList(){
         return activeUser;
 
     }
-    public List<String> getUserListString(){
+   */
+
+    /**
+     * Method, that transforms HashMap<User,ServerThread> to List<String>.
+     * @return String list of active users of server.
+     */
+  public List<String> getUserListString(){
         ArrayList<String> userList = new ArrayList<>();
         for (User key : activeUser.keySet()) {
             userList.add(activeUser.get(key).getUser().getLogin());
@@ -113,7 +131,7 @@ public class ControllerServer {
         return userList;
 
     }
-    public ArrayList getBanList(){
+   /* public ArrayList getBanList(){
         ArrayList<ServerThread> banList = new ArrayList();
         for (User key : activeUser.keySet()) {
             if( activeUser.get(key).user.isBan()){
@@ -124,180 +142,247 @@ public class ControllerServer {
         return banList;
 
     }
+*/
 
-    public void readCommand(ServerThread client, String command){
-        if(command.compareToIgnoreCase("activeUser")==0){
-            client.getXmlUser().setList(getUserListString());
-            client.getXmlUser().setMessage("activeUser");
-            client.sendMessage("activeUser");
-        }
-        if(command.compareToIgnoreCase("private")==0){
-            String messageToChat = client.getXmlUser().getMessage();
-            List<String> userList = client.getXmlUser().getList();
-            for (User key : activeUser.keySet()) {
-                for (int i = 0; i < userList.size(); i++) {
-                    if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(userList.get(i))==0){
-                        activeUser.get(key).getXmlUser().setMessage(messageToChat);
-                        activeUser.get(key).sendMessage("private");
-                    }
-                }
-            }
+    /**
+     * Method, that reads client's preference, handles it and sends answer to client.
+     * @param client thread of client.
+     * @param command preference of client's message.
+     * @throws javax.xml.transform.TransformerException if transformation xml to OutputStream has mistake.
+     */
+    public synchronized void readCommand(ServerThread client,String command) throws javax.xml.transform.TransformerException{
+           if (command.compareToIgnoreCase("activeUser") == 0) {
+               client.getXmlUser().setList(getUserListString());
+               client.getXmlUser().setMessage("activeUser");
+               client.sendMessage("activeUser");
+           }
+            if (command.compareToIgnoreCase("private") == 0) {
+               String messageToChat = client.getXmlUser().getMessage();
+               List<String> userList = client.getXmlUser().getList();
+               for (User key : activeUser.keySet()) {
+                   for (int i = 0; i < userList.size(); i++) {
+                       if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(userList.get(i)) == 0) {
+                           activeUser.get(key).getXmlUser().setMessage(messageToChat);
+                           activeUser.get(key).sendMessage("private");
+                       }
+                   }
+               }
 
-        }
-        if(command.compareToIgnoreCase("all")==0){
-            String messageToChat = client.getXmlUser().getMessage();
-            for (User key : activeUser.keySet()) {
-                activeUser.get(key).getXmlUser().setMessage(messageToChat);
-                activeUser.get(key).sendMessage("all");
-            }
-            System.out.println("all");
-        }
-        if(command.compareToIgnoreCase("edit")==0){
-            model.editUser(client.getUser());
-            client.getXmlUser().setMessage("edit is successful.");
-            client.sendMessage("edit");
-        }
-        if(command.compareToIgnoreCase("remove")==0){
-            model.removeUser(client.getUser());
-            activeUser.remove(client);
-            client.getXmlUser().setMessage("remove is successful.");
-            client.sendMessage("remove");
-        }
-        if(command.compareToIgnoreCase("ban")==0){
-            //+ проверка на админа
-            List<String> infoFoBan = client.getXmlUser().getList();
-            for (User key : activeUser.keySet()) {
-                    if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(infoFoBan.get(1)) == 0) {
-                        if(infoFoBan.get(0).compareToIgnoreCase("ban")==0) {
-                            activeUser.get(key).getUser().setBan(true);
-                            client.getXmlUser().setMessage("ban");
-                            break;
-                        }
-                        else{
-                            activeUser.get(key).getUser().setBan(false);
-                            client.getXmlUser().setMessage("ban is remove");
-                            break;
-                        }
-                    }
+           }
+            if (command.compareToIgnoreCase("all") == 0) {
 
-            }
-            client.sendMessage("ban");
+               String messageToChat = client.getXmlUser().getMessage();
+               for (User key : activeUser.keySet()) {
+                   activeUser.get(key).getXmlUser().setMessage(messageToChat);
+                   activeUser.get(key).sendMessage("message to all");
+               }
+              // System.out.println("all");
+           }
+            if (command.compareToIgnoreCase("edit") == 0) {
+               model.editUser(client.getUser());
+               client.getXmlUser().setMessage("edit is successful.");
+               client.sendMessage("edit");
+           }
+            if (command.compareToIgnoreCase("remove") == 0) {
+                //удаление самого пользователя
+               model.removeUser(client.getUser());
+               activeUser.remove(client);
+               client.getXmlUser().setMessage("remove is successful.");
+               client.sendMessage("remove");
+                //+удаление пользователя админом
+           }
+              if (command.compareToIgnoreCase("ban") == 0) {
+               //+ проверка на админа
+               List<String> infoFoBan = client.getXmlUser().getList();
+               for (User key : activeUser.keySet()) {
+                   if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(infoFoBan.get(1)) == 0) {
+                       if (infoFoBan.get(0).compareToIgnoreCase("ban") == 0) {
+                           activeUser.get(key).getUser().setBan(true);
+                           client.getXmlUser().setMessage("ban");
+                           break;
+                       } else {
+                           activeUser.get(key).getUser().setBan(false);
+                           client.getXmlUser().setMessage("ban is remove");
+                           break;
+                       }
+                   }
 
-        }
-        if(command.compareToIgnoreCase("close")==0){
-            client.close();
-        }
-        else{
-            throw new IllegalArgumentException("Wrong command!");
-        }
+               }
+               client.sendMessage("ban");
+           }
+           if (command.compareToIgnoreCase("close") == 0) {
+               client.close();
 
-
+           }
     }
 
-    public static void main(String[] args)throws IOException, ParseException {
+    public static void main(String[] args)throws IOException, ParseException,SAXException {
         ControllerServer cr = new ControllerServer();
         cr.run();
 
     }
 
+    /**
+     * Class of client's thread.
+     */
     public class ServerThread extends Thread {
        private User user;
         private Socket socket; //connect with client
-        ObjectInputStream fromClient;
-        ObjectOutputStream toClient;
+        InputStream fromClient;
+        OutputStream toClient;
         private XmlSet xmlUser;
         boolean authentication;
 
-        public ServerThread(Socket socket) {
+        /**
+         * Constructor of class.
+         * @param socket socket of client.
+         * @throws IOException if socket has mistake.
+         * @throws org.xml.sax.SAXException if method start() has mistake of xml.
+         */
+        public ServerThread(Socket socket) throws  IOException,org.xml.sax.SAXException{
             this.socket = socket;
             this.authentication=false;
+            fromClient = socket.getInputStream();
+            toClient=socket.getOutputStream();
+            start();
         }
+
+        /**
+         * Method that return XmlSet of user.
+         * @return XmlSet of user.
+         */
         public XmlSet getXmlUser() {
             return xmlUser;
         }
 
+        /**
+         * Method for set XmlSet of user.
+         * @param xmlUser XmlSet of user.
+         */
         public void setXmlUser(XmlSet xmlUser) {
             this.xmlUser = xmlUser;
         }
+
+        /**
+         * Method that return user in client's thread.
+         * @return user of client.
+         */
        public User getUser() {
             return user;
         }
 
+        /**
+         * Method set  user in client's thread.
+         * @param user user for client.
+         */
         public void setUser(User user) {
             this.user = user;
         }
+
+        /**
+         * Method that return true or false for client's authentication.
+         * @return  <code>true</code> if user has been authenticated.
+         *          <code>false</code> if user hasn't been authenticated.
+         */
         public boolean isAuthentication() {
             return authentication;
         }
 
+        /**
+         * Method for set authentication of client.
+         * @param authentication <code>true</code> if user has been authenticated.
+         *          <code>false</code> if user hasn't been authenticated.
+         */
         public void setAuthentication(boolean authentication) {
             this.authentication = authentication;
         }
 
+        /**
+         * Method of read message from client to server.
+         * @throws IOException of read line.
+         */
+        public  void getMessage() throws IOException,org.xml.sax.SAXException{
+                BufferedReader is = new BufferedReader(new InputStreamReader(fromClient));
+                StringBuffer ans = new StringBuffer();
+                while (true) {
+                    String input = is.readLine();
+                    ans.append(input);
+                    if (input == null || input.equals("</XmlMessage>")) {
+                        break;
+                    }
+                }
+               this.setXmlUser(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+}
 
+        /**
+         * Method that describes the action thread.
+         */
         @Override
         public void run() {
             try {
                 while (true) {
-                    fromClient = new ObjectInputStream(socket.getInputStream());
-                    if (!this.isAuthentication()) {
-                        this.setXmlUser(XmlMessage.readXmlFromStream(fromClient));
-                    } else {
-
-                        //try to read command from client!!!!!!!!
-                        this.setXmlUser(XmlMessage.readXmlFromStream(fromClient));
-                        if (getXmlUser().getIdUser() >= 0) {
+                    try {
+                        this.getMessage();
+                    } catch (IOException e) {
+                        continue;
+                    }
+                    if (getXmlUser() != null) {
+                        if (!this.isAuthentication()) {
+                            authorization(this);
+                        } else {
+                            //try to read command from client!!!!!!!!
                             String preference = getXmlUser().getPreference();
+
                             readCommand(this, preference);
-                            sleep(1000);
+
                         }
+
 
                     }
                 }
             }
-            catch (java.lang.InterruptedException e2) {
+            catch (org.xml.sax.SAXException e) {
+                logger.error(e);
             }
-            catch (org.xml.sax.SAXException e1) {
-                System.out.println(" SAXException.Authorization is not passed successfully. " + e1);
+            catch (javax.xml.transform.TransformerException e){
+                logger.error(e);
             }
-            catch (IOException e) {
-                System.out.println(" Exception reading Streams: " + e);
-            }
+
         }
-        public void sendMessage(String message){
-            try {
+
+        /**
+         * Method of send message to client.
+         * @param message is a String message to client.
+         * @throws javax.xml.transform.TransformerException if transformation xml to OutputStream has mistake.
+         */
+        public void sendMessage(String message) throws javax.xml.transform.TransformerException {
                 getXmlUser().setPreference(message);
-                toClient = new ObjectOutputStream(socket.getOutputStream());
                 XmlMessage.writeXMLinStream(getXmlUser(), toClient);
-                toClient.flush();
-               // toClient.writeObject(toClient);
-            }
-            catch (javax.xml.transform.TransformerException e1) {
-                System.out.println(" TransformerException " + e1);
-
-            }
-            catch (IOException e) {
-                System.out.println(" Exception reading Streams: " + e);
-
-            }
-
         }
+
+        /**
+         * Method, that try to close ServerThread of client.
+         */
         public void close()  {
             try {
-                if(fromClient != null) fromClient.close();
+                if(fromClient != null) {
+                    fromClient.close();
+                }
             }
-            catch(Exception e) {/*logger.error(e);*/}
+            catch(Exception e) {logger.error(e);}
             try {
-                if(toClient != null) toClient.close();
+                if(toClient != null) {
+                    toClient.close();
+                }
             }
-            catch(Exception e) {/*logger.error(e);*/}
+            catch(Exception e) {logger.error(e);}
             try{
-                if(socket != null) socket.close();
+                if(socket != null){
+                    socket.close();
+                }
             }
-            catch(Exception e) {/*logger.error(e);*/}
+            catch(Exception e) {logger.error(e);}
         }
-
-
 
     }
 }
