@@ -14,7 +14,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.ParseException;
 import java.util.*;
-
 /**
  * Server's controller
  * @author Veleri Rechembei
@@ -26,7 +25,6 @@ public class ControllerServer {
     private HashMap<User,ServerThread>      activeUser;
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
-
     /**
      * Authenticates the user on the server.
      * @param client thread of client.
