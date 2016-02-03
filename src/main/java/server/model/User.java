@@ -15,12 +15,17 @@ public class User implements Cloneable {
     private String  password;
     private String  login;
     private boolean ban;
+    private boolean isAdmin;
 
     /**
      * Constructor that set a unique id when you create user.
      */
     public User() {
         this.id = (int) System.currentTimeMillis();
+    }
+
+    protected void setId (int id) {
+        this.id = id;
     }
 
     public int getId() {
@@ -45,7 +50,7 @@ public class User implements Cloneable {
 
     /**
      * @return <code>true</code> if user is in ban,
-     *          <code>false</code> if user is not in ban.
+     *         <code>false</code> if user is not in ban.
      */
     public boolean isBan() {
         return ban;
@@ -57,6 +62,19 @@ public class User implements Cloneable {
      */
     public void setBan(boolean ban) {
         this.ban = ban;
+    }
+
+    /**
+     * Method that return true if user is admin.
+     * @return <code>true</code> if user is admin,
+     *         <code>false</code> if user is not admin.
+     */
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setIsAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
     }
 
     @Override

@@ -16,9 +16,10 @@ public class Model {
     private static Logger          LOG = Logger.getLogger(Model.class);
     private static UserIO          USERIO;
     private HashMap<Integer, User> list;
-
+    
     public Model() {
         start();
+        addAdmin();
     }
 
     /**
@@ -112,5 +113,27 @@ public class Model {
         saveHashMapOfUsers();
         LOG.info("server stop");
         System.exit(0);
+    }
+
+    /**
+     * Method for create the administrator if it does not exist.
+     */
+    private void addAdmin() {
+        for (Map.Entry<Integer, User> user: list.entrySet()) {
+            if (user.getKey().equals(0)) {
+                //if admin found then return.
+                return;
+            }
+        }
+
+        // if admin didn't found then create his.
+        User admin = new User();
+        admin.setId(0);
+        admin.setIsAdmin(true);
+        admin.setLogin("root");
+        admin.setPassword("root");
+
+        addUser(admin);
+        LOG.debug("create admin " + admin.getLogin() + admin.getPassword());
     }
 }
