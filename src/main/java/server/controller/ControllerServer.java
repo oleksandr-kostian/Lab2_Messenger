@@ -7,6 +7,7 @@ import server.model.Model;
 import server.model.User;
 import server.model.XmlMessage;
 import server.model.XmlSet;
+import server.view.ServerView;
 //import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -25,6 +26,7 @@ public class ControllerServer {
     private HashMap<User,ServerThread>      activeUser;
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
+
     /**
      * Authenticates the user on the server.
      * @param client thread of client.
@@ -50,6 +52,7 @@ public class ControllerServer {
               createUser.setLogin(data.get(0));
               createUser.setPassword(data.get(1));
               createUser.setBan(false);
+              createUser.setIsAdmin(false);
               client.getXmlUser().setIdUser(createUser.getId());
               client.setUser(createUser);
               model.addUser(createUser);
@@ -68,7 +71,14 @@ public class ControllerServer {
           else {
               client.getXmlUser().setMessage("activeUser");
           }
-          client.sendMessage("authentication");
+          ///
+          if((model.getUser(idUser)).isAdmin()){
+              client.sendMessage("admin");
+          }
+          /////
+          else {
+              client.sendMessage("authentication");
+          }
       }
       else{
           client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\" word. Please try to connect again.");
@@ -155,12 +165,20 @@ public class ControllerServer {
                client.sendMessage("activeUser");
            }
             if (command.compareToIgnoreCase("private") == 0) {
+
                String messageToChat = client.getXmlUser().getMessage();
                List<String> userList = client.getXmlUser().getList();
+                List<String> privateList = client.getXmlUser().getList();
+                privateList.add(client.getUser().getLogin());
+                for(int i=0;i<userList.size();i++){
+                    privateList.add(userList.get(i));
+                }
+                client.sendMessage("private");
                for (User key : activeUser.keySet()) {
                    for (int i = 0; i < userList.size(); i++) {
                        if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(userList.get(i)) == 0) {
                            activeUser.get(key).getXmlUser().setMessage(messageToChat);
+                           activeUser.get(key).getXmlUser().setList(privateList);
                            activeUser.get(key).sendMessage("private");
                        }
                    }
@@ -172,9 +190,10 @@ public class ControllerServer {
                String messageToChat = client.getXmlUser().getMessage();
                for (User key : activeUser.keySet()) {
                    activeUser.get(key).getXmlUser().setMessage(messageToChat);
+                   activeUser.get(key).getXmlUser().setList(getUserListString());
                    activeUser.get(key).sendMessage("message to all");
                }
-              // System.out.println("all");
+
            }
             if (command.compareToIgnoreCase("edit") == 0) {
                model.editUser(client.getUser());
@@ -182,33 +201,48 @@ public class ControllerServer {
                client.sendMessage("edit");
            }
             if (command.compareToIgnoreCase("remove") == 0) {
-                //удаление самого пользователя
-               model.removeUser(client.getUser());
-               activeUser.remove(client);
-               client.getXmlUser().setMessage("remove is successful.");
-               client.sendMessage("remove");
-                //+удаление пользователя админом
-           }
+                //проверка на админа
+                if(client.getUser().isAdmin()){
+                    String removeUser = client.getXmlUser().getList().get(0);
+                    for (User key : activeUser.keySet()) {
+                        if(activeUser.get(key).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
+                            activeUser.remove(activeUser.get(key));
+                            model.removeUser(activeUser.get(key).getUser());
+                        }
+                    }
+                }
+                else{
+                    //удаление самого пользователя
+                    model.removeUser(client.getUser());
+                    activeUser.remove(client);
+                    client.getXmlUser().setMessage("remove is successful.");
+                    client.sendMessage("remove");
+                }
+                client.getXmlUser().setMessage("remove is successful.");
+                client.sendMessage("remove");
+            }
               if (command.compareToIgnoreCase("ban") == 0) {
-               //+ проверка на админа
-               List<String> infoFoBan = client.getXmlUser().getList();
-               for (User key : activeUser.keySet()) {
-                   if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(infoFoBan.get(1)) == 0) {
-                       if (infoFoBan.get(0).compareToIgnoreCase("ban") == 0) {
-                           activeUser.get(key).getUser().setBan(true);
-                           client.getXmlUser().setMessage("ban");
-                           break;
-                       } else {
-                           activeUser.get(key).getUser().setBan(false);
-                           client.getXmlUser().setMessage("ban is remove");
-                           break;
-                       }
-                   }
+                  if(client.getUser().isAdmin()) {
+                      List<String> infoFoBan = client.getXmlUser().getList();
+                      for (User key : activeUser.keySet()) {
+                          if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(infoFoBan.get(1)) == 0) {
+                              if (infoFoBan.get(0).compareToIgnoreCase("ban") == 0) {
+                                  activeUser.get(key).getUser().setBan(true);
+                                  client.getXmlUser().setMessage("ban");
+                                  break;
+                              } else {
+                                  activeUser.get(key).getUser().setBan(false);
+                                  client.getXmlUser().setMessage("ban is remove");
+                                  break;
+                              }
+                          }
 
-               }
+                      }
+                  }
                client.sendMessage("ban");
            }
            if (command.compareToIgnoreCase("close") == 0) {
+               activeUser.remove(client);
                client.close();
 
            }
@@ -216,7 +250,7 @@ public class ControllerServer {
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
         ControllerServer cr = new ControllerServer();
-        cr.run();
+       cr.run();
 
     }
 
@@ -361,25 +395,21 @@ public class ControllerServer {
         /**
          * Method, that try to close ServerThread of client.
          */
-        public void close()  {
-            try {
-                if(fromClient != null) {
-                    fromClient.close();
+        public void close() {
+                try {
+                    if (fromClient != null) {
+                        fromClient.close();
+                    }
+                    if (toClient != null) {
+                        toClient.close();
+                    }
+                    if (socket != null) {
+                        socket.close();
+                    }
                 }
-            }
-            catch(Exception e) {logger.error(e);}
-            try {
-                if(toClient != null) {
-                    toClient.close();
+                catch (IOException e){
+                    logger.error(e);
                 }
-            }
-            catch(Exception e) {logger.error(e);}
-            try{
-                if(socket != null){
-                    socket.close();
-                }
-            }
-            catch(Exception e) {logger.error(e);}
         }
 
     }
