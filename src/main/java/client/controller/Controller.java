@@ -1,9 +1,6 @@
 package client.controller;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -12,6 +9,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.xml.sax.SAXException;
+import server.controller.ControllerServer;
 import server.model.XmlMessage;
 import server.model.XmlSet;
 
@@ -26,8 +25,9 @@ public class Controller implements Runnable {
     final private int           PORT=1025;
     private Socket              connect;
     private String              myUser;
-    ObjectInputStream           fromServer;
-    ObjectOutputStream          toServer;
+    private InputStream         fromServer;
+    private OutputStream        toServer;
+    private XmlSet              UserXml;
    // private static final Logger logger = Logger.getLogger(Controller.class);
      //ClientGUI = gui
 
@@ -41,7 +41,10 @@ public class Controller implements Runnable {
             connect = new Socket(hostName, PORT);
             //fromServer = new ObjectInputStream(connect.getInputStream());
             System.out.println("Connected: " + connect);
-            toServer = new ObjectOutputStream(connect.getOutputStream());
+            toServer = connect.getOutputStream();
+            fromServer = connect.getInputStream();
+
+            //fromServer = new ObjectInputStream(connect.getInputStream());
            // sendMessage("authentication");
             //logger.info("Connected: " + connect);
         }
@@ -55,7 +58,7 @@ public class Controller implements Runnable {
             System.out.println("Unexpected exception: " + e.getMessage());
             return false;
         }
-            new Thread(this).start();
+         //   new Thread(this).start();
 
      return true;
 
@@ -113,25 +116,49 @@ public class Controller implements Runnable {
 
     }
 
+    public void setUserXml(XmlSet userXml) {
+        UserXml = userXml;
+    }
 
+    public XmlSet getUserXml() {
+        return UserXml;
+    }
 
-    public void sendMessage(String message) {
-        /*
+    public void getMessage(){
         try {
-            XmlMessage.writeXMLinStream(aut, connect.getOutputStream());
+
+            BufferedReader is = new BufferedReader(new InputStreamReader(fromServer));
+            StringBuffer ans = new StringBuffer();
+            while (true) {
+                String input = is.readLine();
+                ans.append(input);
+                if (input == null || input.equals("</XmlMessage>")) {
+                    break;
+                }
+            }
+            this.setUserXml(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+        } catch (org.xml.sax.SAXException e1) {
+            System.out.println(" SAXException.Authorization is not passed successfully. " + e1);
+        } catch (IOException e) {
+            System.out.println(" Exception reading Streams: " + e);
+        }
+    }
+
+
+
+    public void sendMessage(XmlSet xml, String message) {
+        try {
+            xml.setPreference(message);
+
+            XmlMessage.writeXMLinStream(xml, toServer);
+
 
         }
         catch (javax.xml.transform.TransformerException e1) {
             System.out.println(" TransformerException " + e1);
-
         }
-        catch(IOException e) {
-            System.out.println("Exception writing to server: " + e);
-            //logger.error("IOException writing to server." + e);
-        }
-       */
     }
-   public void displayToChat(String message){
+    public void displayToChat(String message){
 
     }
     public void viewActiveUser() {
@@ -166,7 +193,9 @@ public class Controller implements Runnable {
         this.myUser=user;
     }
 
-    public static void main(String[] args)throws IOException, ParseException {
+    public static void main(String[] args) throws IOException, ParseException, SAXException {
+        ControllerServer controllerServer = new ControllerServer();
+        controllerServer.run();
         String serverAddress = "localhost";
         Controller client = new Controller(serverAddress);
         client.connectToServer();

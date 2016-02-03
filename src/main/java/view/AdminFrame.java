@@ -1,5 +1,6 @@
 package view;
 
+import client.controller.Controller;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -9,8 +10,8 @@ import java.awt.*;
  * Created by Слава on 24.01.2016.
  */
 public class AdminFrame extends UserFrame {
-    public AdminFrame(){
-        super();
+    public AdminFrame(Controller controller){
+        super(controller);
        }
     public UserMenu setMenu(){
         UserMenu userMenu = new AdminMenu();
