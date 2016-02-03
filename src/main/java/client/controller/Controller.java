@@ -1,9 +1,6 @@
 package client.controller;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -20,7 +17,7 @@ import server.model.XmlSet;
  * @author Veleri Rechembei
  * @version %I%, %G%
  */
-public class Controller implements Runnable {
+public class Controller implements  Serializable {
 
     private String              hostName;
     final private int           PORT=1025;
@@ -28,6 +25,7 @@ public class Controller implements Runnable {
     private String              myUser;
     ObjectInputStream           fromServer;
     ObjectOutputStream          toServer;
+    OutputStream out;
    // private static final Logger logger = Logger.getLogger(Controller.class);
      //ClientGUI = gui
 
@@ -41,8 +39,16 @@ public class Controller implements Runnable {
             connect = new Socket(hostName, PORT);
             //fromServer = new ObjectInputStream(connect.getInputStream());
             System.out.println("Connected: " + connect);
-            toServer = new ObjectOutputStream(connect.getOutputStream());
-           // sendMessage("authentication");
+            OutputStream out = connect.getOutputStream();
+            // toServer = new ObjectOutputStream(connect.getOutputStream());
+            XmlSet fs = new XmlSet(-2);
+            //fs.setPreference("authentication");
+            List<String> ff= new ArrayList<>();
+            ff.add("User1");
+            ff.add("5656");
+            fs.setList(ff);
+            fs.setIdUser(-10);
+            sendMessage(fs, "authentication",out);
             //logger.info("Connected: " + connect);
         }
         catch (UnknownHostException uhe) {
@@ -55,7 +61,7 @@ public class Controller implements Runnable {
             System.out.println("Unexpected exception: " + e.getMessage());
             return false;
         }
-            new Thread(this).start();
+
 
      return true;
 
@@ -115,21 +121,36 @@ public class Controller implements Runnable {
 
 
 
-    public void sendMessage(String message) {
-        /*
+    public void sendMessage(XmlSet xml, String message,OutputStream out) {
+
         try {
-            XmlMessage.writeXMLinStream(aut, connect.getOutputStream());
+           // final ObjectInputStream inputStream   = new ObjectInputStream(this.connect.getInputStream());
+            //final ObjectOutputStream outputStream = new ObjectOutputStream(this.connect.getOutputStream());
+           // OutputStream out = connect.getOutputStream();
+
+            //xml.setMessage("User1");
+            //xml.setKeyDialog(5);
+           // xml.setList(null);
+            xml.setPreference(message);
+     // toServer = new ObjectOutputStream(connect.getOutputStream());
+         //  OutputStream out = connect.getOutputStream();
+          XmlMessage.writeXMLinStream(xml, out);
+           // toServer.writeUTF("grdgd");
+            //connect.getOutputStream().flush();
+         // toServer.flush();
+
+
 
         }
         catch (javax.xml.transform.TransformerException e1) {
             System.out.println(" TransformerException " + e1);
 
         }
-        catch(IOException e) {
+     /*  catch(IOException e) {
             System.out.println("Exception writing to server: " + e);
             //logger.error("IOException writing to server." + e);
         }
-       */
+*/
     }
    public void displayToChat(String message){
 
@@ -170,6 +191,7 @@ public class Controller implements Runnable {
         String serverAddress = "localhost";
         Controller client = new Controller(serverAddress);
         client.connectToServer();
+
       //  client.sendMessage();
 
     }

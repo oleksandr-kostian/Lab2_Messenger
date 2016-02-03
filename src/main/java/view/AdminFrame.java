@@ -1,6 +1,6 @@
 package view;
 
-import net.miginfocom.swing.MigLayout;
+//import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +18,7 @@ public class AdminFrame extends UserFrame {
     }
     public JPanel setListPanel(){
         JPanel listPanel = new FonPanel();
-        listPanel.setLayout(new MigLayout());
+       // listPanel.setLayout(new MigLayout());
         JLabel allView = new JLabel("all users");
         allView.setForeground(Color.white);
         JLabel bannView = new JLabel("bann users");

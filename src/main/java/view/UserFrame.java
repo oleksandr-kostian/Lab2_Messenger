@@ -1,6 +1,6 @@
 package view;
 
-import net.miginfocom.swing.MigLayout;
+//import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -12,7 +12,7 @@ import java.awt.event.ActionListener;
 /**
  * Created by Слава on 29.01.2016.
  */
-class UserFrame {
+public class UserFrame {
     private int[] element;
     private JList list;
     private UserMenu menu;
@@ -30,7 +30,7 @@ class UserFrame {
     }
     public JPanel setListPanel() {
         final JPanel panel = new FonPanel();
-        panel.setLayout(new MigLayout());
+       // panel.setLayout(new MigLayout());
         JLabel listLabel = new JLabel("Список контактов");
         listLabel.setForeground(Color.WHITE);
         list = new JList(data);
@@ -103,7 +103,7 @@ class UserFrame {
             }
         });*/
 
-        cont.setLayout(new MigLayout());
+        //cont.setLayout(new MigLayout());
         cont.add(jsp1);
         cont.add(listPanel,"wrap");
         cont.add(jsp2);
