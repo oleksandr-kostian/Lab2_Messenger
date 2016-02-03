@@ -1,6 +1,7 @@
 package view;
 
-//import net.miginfocom.swing.MigLayout;
+import client.controller.Controller;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,8 +10,8 @@ import java.awt.*;
  * Created by Слава on 24.01.2016.
  */
 public class AdminFrame extends UserFrame {
-    public AdminFrame(){
-        super();
+    public AdminFrame(Controller controller){
+        super(controller);
        }
     public UserMenu setMenu(){
         UserMenu userMenu = new AdminMenu();
@@ -18,7 +19,7 @@ public class AdminFrame extends UserFrame {
     }
     public JPanel setListPanel(){
         JPanel listPanel = new FonPanel();
-       // listPanel.setLayout(new MigLayout());
+        listPanel.setLayout(new MigLayout());
         JLabel allView = new JLabel("all users");
         allView.setForeground(Color.white);
         JLabel bannView = new JLabel("bann users");

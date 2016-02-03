@@ -1,54 +1,96 @@
 package view;
 
+import client.controller.Controller;
+import org.xml.sax.SAXException;
+import server.controller.ControllerServer;
+import server.model.XmlSet;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Created by Слава on 22.01.2016.
  */
 public class LoginWindow extends JFrame {
+    private int id = 0;
+    private JTextField loginField;
+    private JPasswordField passwordField;
+    private JButton ok;
+    private Controller controller;
 
-    /* Для того, чтобы впоследствии обращаться к содержимому текстовых полей, рекомендуется сделать их членами класса окна */
-    JTextField loginField;
-    JPasswordField passwordField;
-    JButton ok;
-
-    LoginWindow() {
+    LoginWindow(Controller controller) {
         super("Вход в систему");
+        this.controller = controller;
+        createGUI();
+    }
+    LoginWindow() {
+        super("Enter to chat");
         createGUI();
     }
 
     public void createGUI(){
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-// Настраиваем первую горизонтальную панель (для ввода логина)
         Box box1 = Box.createHorizontalBox();
-        JLabel loginLabel = new JLabel("Логин:");
+        final JLabel loginLabel = new JLabel("Login:");
         loginLabel.setForeground(Color.WHITE);
         loginField = new JTextField(15);
         box1.add(loginLabel);
         box1.add(Box.createHorizontalStrut(6));
         box1.add(loginField);
-// Настраиваем вторую горизонтальную панель (для ввода пароля)
+
         Box box2 = Box.createHorizontalBox();
-        JLabel passwordLabel = new JLabel("Пароль:");
+        final JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setForeground(Color.WHITE);
         passwordField = new JPasswordField(15);
         box2.add(passwordLabel);
         box2.add(Box.createHorizontalStrut(6));
         box2.add(passwordField);
-// Настраиваем третью горизонтальную панель (с кнопками)
+
         Box box3 = Box.createHorizontalBox();
         ok =  setButton();
+        ok.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                /*if(loginField.getText()!=null&&loginField.getText().equals("admin")& new String(passwordField.getPassword()).equals("admin")){
+                    AdminFrame adminFrame = new AdminFrame(null);
+                }else*/
+                if ( loginField.getText()!=null&&!loginField.getText().trim().equals("")) {
+                    XmlSet aut = new XmlSet(id++);
+                    java.util.List<String> logPas = new ArrayList<String>();
+                    logPas.add(loginField.getText());
+                    logPas.add(new String(passwordField.getPassword()));
+                    aut.setList(logPas);
+                    aut.setKeyDialog(11);
+                    controller.sendMessage(aut,"authentication");
+
+                    while (true){
+                        controller.getMessage();
+                        if (controller.getUserXml().getPreference().equals("authentication") &&
+                                controller.getUserXml().getMessage().equals("activeUser") ){
+                            UserFrame userFrame = new UserFrame(controller);
+                            break;
+                        }
+                    }
+
+
+                }
+
+            }
+        });
        // JButton cancel = new JButton("Отмена");
         //box3.add(Box.createHorizontalGlue());
         box3.add(ok);
        // box3.add(Box.createHorizontalStrut(12));
         //box3.add(cancel);
-// Уточняем размеры компонентов
+
         loginLabel.setPreferredSize(passwordLabel.getPreferredSize());
-// Размещаем три горизонтальные панели на одной вертикальной
+
         Box mainBox = Box.createVerticalBox();
 
         mainBox.setBorder(new EmptyBorder(12,12,12,12));
@@ -75,5 +117,12 @@ public class LoginWindow extends JFrame {
     public JButton setButton(){
          JButton enter = new JButton("Вход");
         return enter;
+    }
+
+    public static void main(String[] args) throws IOException, SAXException {
+        String serverAddress = "localhost";
+        Controller client = new Controller(serverAddress);
+        client.connectToServer();
+        LoginWindow loginWindow = new LoginWindow(client);
     }
 }

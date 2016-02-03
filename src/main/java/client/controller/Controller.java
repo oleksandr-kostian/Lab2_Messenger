@@ -9,6 +9,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.xml.sax.SAXException;
+import server.controller.ControllerServer;
 import server.model.XmlMessage;
 import server.model.XmlSet;
 
@@ -17,15 +19,15 @@ import server.model.XmlSet;
  * @author Veleri Rechembei
  * @version %I%, %G%
  */
-public class Controller implements  Serializable {
+public class Controller implements Runnable {
 
     private String              hostName;
     final private int           PORT=1025;
     private Socket              connect;
     private String              myUser;
-    ObjectInputStream           fromServer;
-    ObjectOutputStream          toServer;
-    OutputStream out;
+    private InputStream         fromServer;
+    private OutputStream        toServer;
+    private XmlSet              UserXml;
    // private static final Logger logger = Logger.getLogger(Controller.class);
      //ClientGUI = gui
 
@@ -39,16 +41,11 @@ public class Controller implements  Serializable {
             connect = new Socket(hostName, PORT);
             //fromServer = new ObjectInputStream(connect.getInputStream());
             System.out.println("Connected: " + connect);
-            OutputStream out = connect.getOutputStream();
-            // toServer = new ObjectOutputStream(connect.getOutputStream());
-            XmlSet fs = new XmlSet(-2);
-            //fs.setPreference("authentication");
-            List<String> ff= new ArrayList<>();
-            ff.add("User1");
-            ff.add("5656");
-            fs.setList(ff);
-            fs.setIdUser(-10);
-            sendMessage(fs, "authentication",out);
+            toServer = connect.getOutputStream();
+            fromServer = connect.getInputStream();
+
+            //fromServer = new ObjectInputStream(connect.getInputStream());
+           // sendMessage("authentication");
             //logger.info("Connected: " + connect);
         }
         catch (UnknownHostException uhe) {
@@ -61,7 +58,7 @@ public class Controller implements  Serializable {
             System.out.println("Unexpected exception: " + e.getMessage());
             return false;
         }
-
+         //   new Thread(this).start();
 
      return true;
 
@@ -119,40 +116,49 @@ public class Controller implements  Serializable {
 
     }
 
+    public void setUserXml(XmlSet userXml) {
+        UserXml = userXml;
+    }
 
+    public XmlSet getUserXml() {
+        return UserXml;
+    }
 
-    public void sendMessage(XmlSet xml, String message,OutputStream out) {
-
+    public void getMessage(){
         try {
-           // final ObjectInputStream inputStream   = new ObjectInputStream(this.connect.getInputStream());
-            //final ObjectOutputStream outputStream = new ObjectOutputStream(this.connect.getOutputStream());
-           // OutputStream out = connect.getOutputStream();
 
-            //xml.setMessage("User1");
-            //xml.setKeyDialog(5);
-           // xml.setList(null);
+            BufferedReader is = new BufferedReader(new InputStreamReader(fromServer));
+            StringBuffer ans = new StringBuffer();
+            while (true) {
+                String input = is.readLine();
+                ans.append(input);
+                if (input == null || input.equals("</XmlMessage>")) {
+                    break;
+                }
+            }
+            this.setUserXml(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+        } catch (org.xml.sax.SAXException e1) {
+            System.out.println(" SAXException.Authorization is not passed successfully. " + e1);
+        } catch (IOException e) {
+            System.out.println(" Exception reading Streams: " + e);
+        }
+    }
+
+
+
+    public void sendMessage(XmlSet xml, String message) {
+        try {
             xml.setPreference(message);
-     // toServer = new ObjectOutputStream(connect.getOutputStream());
-         //  OutputStream out = connect.getOutputStream();
-          XmlMessage.writeXMLinStream(xml, out);
-           // toServer.writeUTF("grdgd");
-            //connect.getOutputStream().flush();
-         // toServer.flush();
 
+            XmlMessage.writeXMLinStream(xml, toServer);
 
 
         }
         catch (javax.xml.transform.TransformerException e1) {
             System.out.println(" TransformerException " + e1);
-
         }
-     /*  catch(IOException e) {
-            System.out.println("Exception writing to server: " + e);
-            //logger.error("IOException writing to server." + e);
-        }
-*/
     }
-   public void displayToChat(String message){
+    public void displayToChat(String message){
 
     }
     public void viewActiveUser() {
@@ -187,11 +193,12 @@ public class Controller implements  Serializable {
         this.myUser=user;
     }
 
-    public static void main(String[] args)throws IOException, ParseException {
+    public static void main(String[] args) throws IOException, ParseException, SAXException {
+        ControllerServer controllerServer = new ControllerServer();
+        controllerServer.run();
         String serverAddress = "localhost";
         Controller client = new Controller(serverAddress);
         client.connectToServer();
-
       //  client.sendMessage();
 
     }
