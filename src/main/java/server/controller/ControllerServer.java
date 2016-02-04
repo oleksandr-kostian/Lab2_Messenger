@@ -120,7 +120,7 @@ public class ControllerServer {
      * @param message is exception of server.
      */
     public void catchGuiException(Exception message) {
-        logger.error("Server GUI: "+ message);
+        logger.error("Server GUI: " + message);
 
     }
     /**
@@ -201,23 +201,28 @@ public class ControllerServer {
 
                String messageToChat = client.getXmlUser().getMessage();
                List<String> userList = client.getXmlUser().getList();
-                List<String> privateList = client.getXmlUser().getList();
-                privateList.add(client.getUser().getLogin());
-                for(int i=0;i<userList.size();i++){
-                    privateList.add(userList.get(i));
+                if(userList!=null) {
+                    List<String> privateList = client.getXmlUser().getList();
+                    privateList.add(client.getUser().getLogin());
+                    privateList.addAll(userList);
+                    client.sendMessage("private");
+                    for (User key : activeUser.keySet()) {
+                        for (int i = 0; i < userList.size(); i++) {
+                            if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(userList.get(i)) == 0) {
+                                activeUser.get(key).getXmlUser().setMessage(messageToChat);
+                                activeUser.get(key).getXmlUser().setList(privateList);
+                                activeUser.get(key).sendMessage("private");
+                            }
+                        }
+                    }
+                    logger.debug("Send private message: " +messageToChat+" to users: "+userList.toString());
                 }
-                client.sendMessage("private");
-               for (User key : activeUser.keySet()) {
-                   for (int i = 0; i < userList.size(); i++) {
-                       if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(userList.get(i)) == 0) {
-                           activeUser.get(key).getXmlUser().setMessage(messageToChat);
-                           activeUser.get(key).getXmlUser().setList(privateList);
-                           activeUser.get(key).sendMessage("private");
-                       }
-                   }
-               }
+                else{
+                    client.getXmlUser().setMessage("wrong list");
+                    client.sendMessage("private");
+                }
                // this.displayInfoLog("User: "+client.getUser().getLogin()+" send private message to users: "+userList.toString());
-                logger.debug("Send private message: " +messageToChat+" to users: "+userList.toString());
+
            }
             if (command.compareToIgnoreCase("all") == 0) {
 
