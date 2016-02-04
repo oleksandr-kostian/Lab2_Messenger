@@ -14,17 +14,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * Abstract class that describes work with thread for data exchange with the users
+ * Class that describes work with thread for data exchange with the users
  *
  * @author Sasha Kostyan
  * @version %I%, %G%
  */
 public class XmlMessage {
-    private static Logger          LOG     = Logger.getLogger(XmlMessage.class);
+    private static Logger          LOG              = Logger.getLogger(XmlMessage.class);
     private static DocumentBuilder builder;
+    private static String          ROOT_ELEMENT     = "XmlMessage";
+    private static String          ID_USER          = "IdUser";
+    private static String          ELSE_PREFERENCE  = "else_preference";
+    private static String          ID               = "id";
+    private static String          NAME             = "name";
+    private static String          MESSAGE          ="message";
+    private static String          DiALOG_ID        ="dialogID";
+    private static String          LIST_USER        ="list_user";
 
     /**
      * method create factory for work with XML.
@@ -54,19 +63,19 @@ public class XmlMessage {
         paramLangXML();
 
         Document doc         = builder.newDocument();
-        Element  RootElement = doc.createElement("XmlMessage");
+        Element  RootElement = doc.createElement(ROOT_ELEMENT);
         // id user
-        writeChild(RootElement, doc, "IdUser", String.valueOf(xmlSet.getIdUser()));
+        writeChild(RootElement, doc, ID_USER, String.valueOf(xmlSet.getIdUser()));
 
         //dialogID
         if (xmlSet.getKeyDialog() != 0) {
-            writeChild(RootElement, doc, "dialogID", String.valueOf(xmlSet.getKeyDialog()));
+            writeChild(RootElement, doc, DiALOG_ID, String.valueOf(xmlSet.getKeyDialog()));
         }
         // general message
         if (xmlSet.getMessage() != null) {
-            writeChild(RootElement, doc, "message", xmlSet.getMessage());
+            writeChild(RootElement, doc, MESSAGE, xmlSet.getMessage());
 
-            Model.logMessage(xmlSet.getKeyDialog(), xmlSet.getMessage());                  //log message
+            Model.logMessage(xmlSet.getIdUser(), xmlSet.getMessage());                  //log message!!!
         }
 
         //write name of active user
@@ -76,18 +85,18 @@ public class XmlMessage {
             List<String> list  = xmlSet.getList();
 
             for (String name : list) {
-                elist = doc.createElement("list_user");
+                elist = doc.createElement(LIST_USER);
                 RootElement.appendChild(elist);
 
-                elist.setAttribute("id", count.toString());
-                writeChild(elist, doc, "name", name);
+                elist.setAttribute(ID, count.toString());
+                writeChild(elist, doc, NAME, name);
                 count++;
             }
         }
 
         // write else preference
         if (xmlSet.getPreference() != null) {
-            writeChild(RootElement, doc, "else_preference", xmlSet.getPreference());
+            writeChild(RootElement, doc, ELSE_PREFERENCE, xmlSet.getPreference());
         }
 
         // add in XML
@@ -102,10 +111,16 @@ public class XmlMessage {
     }
 
 
+    /**
+     * Method read TextContent of node from XML with name of child.
+     * @param document is a type of Document for read.
+     * @param strTeg name of child
+     * @return String with text or null if node did not found.
+     */
     private static String readChild(Document document, String strTeg) {
         NodeList nList = document.getElementsByTagName(strTeg);
         Node     node  = nList.item(0);
-        return node.getTextContent();
+        return node == null ? null : node.getTextContent();
     }
 
     /**
@@ -123,36 +138,49 @@ public class XmlMessage {
         document = builder.parse(in);                                       //it will test in thread!!!
         document.getDocumentElement().normalize();
 
+        String result;
+
         // parsing id of user
-        xmlSet.setIdUser(Integer.parseInt(readChild(document, "IdUser")));
+        if ((result = readChild(document, ID_USER)) != null) {
+            xmlSet.setIdUser(Integer.parseInt(result));
+        }
 
         // parsing messageID and message
         try {
-            int id = Integer.parseInt(readChild(document, "dialogID"));
-            xmlSet.setKeyDialog(id);
-            xmlSet.setMessage(readChild(document, "message"));
+            if ((result = readChild(document, MESSAGE)) != null) {
+                    xmlSet.setMessage(result);
+            }
+
+            if ((result = readChild(document, DiALOG_ID)) != null) {
+                    xmlSet.setKeyDialog(Integer.parseInt(result));
+            }
         } catch (Exception e){
-            LOG.debug("messageID" + e);
+            LOG.error("messageID and ID " + e);
+            LOG.debug("message, ID " + Arrays.toString(e.getStackTrace()));
         }
 
         // parsing list of user
         List<String> list  = new ArrayList<>();
-        NodeList     nList = document.getElementsByTagName("list_user");
+        NodeList     nList = document.getElementsByTagName(LIST_USER);
 
-        for (int temp = 0; temp < nList.getLength(); temp++) {
-            Node nNode = nList.item(temp);
+        if (nList != null) {
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                Node nNode = nList.item(temp);
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
-                    list.add(eElement.getElementsByTagName("name").item(0).getTextContent());
+                    list.add(eElement.getElementsByTagName(NAME).item(0).getTextContent());
                 }
+            }
+            xmlSet.setList(list);
         }
-        xmlSet.setList(list);
 
         // parsing else_preference
         try {
-            xmlSet.setPreference(readChild(document, "else_preference"));
+            if ((result = readChild(document, ELSE_PREFERENCE)) != null ){
+                xmlSet.setPreference(result);
+            }
         } catch (Exception e){
-            LOG.debug("else_preference"+e);
+            LOG.debug("else_preference " + e);
         }
 
         // if parsing was good return xmlSet else null

@@ -21,14 +21,14 @@ final class UserIO {
     private static Logger LOG = Logger.getLogger(UserIO.class);
 
     protected static class Singleton {
-        public static final UserIO INSTANCE = new UserIO();
+        public static final UserIO _INSTANCE = new UserIO();
     }
 
     /**
      * @return instance of this class
      */
     protected static UserIO getInstance() {
-        return Singleton.INSTANCE;
+        return Singleton._INSTANCE;
     }
 
     /**

@@ -16,7 +16,7 @@ public class Model {
     private static Logger          LOG = Logger.getLogger(Model.class);
     private static UserIO          USERIO;
     private HashMap<Integer, User> list;
-    
+
     public Model() {
         start();
         addAdmin();
@@ -24,12 +24,15 @@ public class Model {
 
     /**
      * Method for log of all message
-     * @param idDialog is key of dialog
+     * @param id is key of user
      * @param message  ia a String
      */
-    protected static void logMessage(Integer idDialog, String message) {
+    protected static void logMessage(Integer id, String message) {
         try (Writer logMess = new BufferedWriter(new FileWriter("logMessage.txt",true))) {
-            logMess.append(idDialog.toString()).append(": ").append(message).append("\n");
+            String number = String.format("%11d", id);
+            logMess.append("id: <").append(number).append(">").append(" - send to all: ")
+                    .append("\"").append(message).append("\"").append("\n");
+
             logMess.flush();
         } catch (FileNotFoundException e) {
             LOG.error("log for messages not found " + e);
