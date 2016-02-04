@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import server.controller.ControllerServer;
 import javax.swing.*;
-
     /**
      * GUI of server's controller
      * @author Veleri Rechembei
