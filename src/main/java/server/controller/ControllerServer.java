@@ -26,12 +26,26 @@ public class ControllerServer {
     private HashMap<User,ServerThread>      activeUser;
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
+    private ServerView                      serverGUI;
 
+    /**
+     * Default constructor of servers controller.
+     */
+    public ControllerServer()throws  IOException,org.xml.sax.SAXException{
+        run();
+    }
+
+    /**
+     * GUI constructor of servers controller.
+     * @param serverGUI GUI of servers controller.
+     */
+    public ControllerServer(ServerView serverGUI){
+        this.serverGUI = serverGUI;
+    }
     /**
      * Authenticates the user on the server.
      * @param client thread of client.
      * @throws javax.xml.transform.TransformerException if method send() has mistake.
-     * throws new IllegalArgumentException if client is not authenticated. No token \"authentication\" word.
      */
   public synchronized void authorization(ServerThread client)throws javax.xml.transform.TransformerException{
       String preference = client.getXmlUser().getPreference();
@@ -43,9 +57,13 @@ public class ControllerServer {
               client.setUser(model.getUser(idUser));
               activeUser.put(model.getUser(idUser), client);
               client.setAuthentication(true);
-              logger.info("Authentication is successful.");
-              logger.debug("Authentications user is" + client.getUser().getLogin());
-              //System.out.println("Authentications user is" + client.getUser().getLogin());
+              logger.debug("Authentications user is " + client.getUser().getLogin());
+              if(client.getUser().isAdmin()){
+                  this.displayInfoLog("Admin: "+client.getUser().getLogin()+ " is welcome.");
+              }
+              else{
+                  this.displayInfoLog(client.getUser().getLogin()+ " is welcome.");
+              }
           }
           else{
               User createUser = new User();
@@ -57,11 +75,9 @@ public class ControllerServer {
               client.setUser(createUser);
               model.addUser(createUser);
               activeUser.put(model.getUser(createUser.getId()), client);
-              //activeUser.put(createUser, client);
               client.setAuthentication(true);
-              logger.info("Authentication is successful. New user  created.");
-              logger.debug("Create new user" + client.getUser().getLogin());
-              //System.out.println("Authentications user is" + client.getUser().getLogin());
+              this.displayInfoLog("New user: "+client.getUser().getLogin()+"  is welcome.");
+              logger.debug("Create new user " + client.getUser().getLogin());
           }
           //send message to client of active user list and data of client
           client.getXmlUser().setList(getUserListString());
@@ -71,24 +87,42 @@ public class ControllerServer {
           else {
               client.getXmlUser().setMessage("activeUser");
           }
-          ///
-          if((model.getUser(idUser)).isAdmin()){
-              client.sendMessage("admin");
-          }
-          /////
-          else {
-              client.sendMessage("authentication");
-          }
+
+              if(client.getUser().isAdmin()){
+                  client.sendMessage("admin");
+              }
+
+              else {
+                  client.sendMessage("authentication");
+              }
       }
       else{
           client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\" word. Please try to connect again.");
           client.sendMessage("authentication");
           client.close();
-          throw new IllegalArgumentException("The client is not authenticated. No token \"authentication\" word.");
-
       }
   }
 
+    /**
+     * Method for display information on servers GUI or info message of lOG.
+     * @param message is String information of server.
+     */
+    public void displayInfoLog(String message){
+        if(serverGUI!=null){
+            serverGUI.display(message);
+        }
+            logger.info(message);
+
+    }
+
+    /**
+     * Method for write exception on servers GUI to LOG error message.
+     * @param message is exception of server.
+     */
+    public void catchGuiException(Exception message) {
+        logger.error("Server GUI: "+ message);
+
+    }
     /**
      * Method for start work of server.
      * @throws IOException if port don't build; wrong of client's socket.
@@ -97,17 +131,14 @@ public class ControllerServer {
   public void run()throws IOException, org.xml.sax.SAXException{
       model = new Model();
       activeUser = new HashMap<>();
-      logger.info("Building to port " + this.PORT + ", please wait  ...");
-     // System.out.println("Binding to port " + this.PORT + ", please wait  ...");
+      this.displayInfoLog("Building to port " + this.PORT + ", please wait  ...");
       socket = new ServerSocket(PORT);
-      logger.info("Server started: ");
-     // System.out.println("Server started: ");
-      logger.info("Waiting a client... ");
-      System.out.println("Waiting a client... ");
+      this.displayInfoLog("Server started.");
+      this.displayInfoLog("Waiting a client... ");
       while (true) {
-          Socket client = socket.accept();
-          logger.debug("Connection from " + client.getInetAddress().getHostName());
-         new ServerThread(client);
+              Socket client = socket.accept();
+              logger.debug("Connection from " + client.getInetAddress().getHostName());
+              new ServerThread(client);
       }
 
   }
@@ -118,6 +149,7 @@ public class ControllerServer {
             if(socket != null) {
                 socket.close();
             }
+        this.displayInfoLog("\n" + "Server is stopped." + "\n");
 
 
     }
@@ -163,6 +195,7 @@ public class ControllerServer {
                client.getXmlUser().setList(getUserListString());
                client.getXmlUser().setMessage("activeUser");
                client.sendMessage("activeUser");
+               this.displayInfoLog("Send list of active user to user: "+client.getUser().getLogin());
            }
             if (command.compareToIgnoreCase("private") == 0) {
 
@@ -183,7 +216,8 @@ public class ControllerServer {
                        }
                    }
                }
-
+               // this.displayInfoLog("User: "+client.getUser().getLogin()+" send private message to users: "+userList.toString());
+                logger.debug("Send private message: " +messageToChat+" to users: "+userList.toString());
            }
             if (command.compareToIgnoreCase("all") == 0) {
 
@@ -193,12 +227,15 @@ public class ControllerServer {
                    activeUser.get(key).getXmlUser().setList(getUserListString());
                    activeUser.get(key).sendMessage("message to all");
                }
-
+               // this.displayInfoLog("User: "+client.getUser().getLogin()+" send message to all. ");
+                logger.debug("Send message to all: " +messageToChat);
            }
             if (command.compareToIgnoreCase("edit") == 0) {
                model.editUser(client.getUser());
                client.getXmlUser().setMessage("edit is successful.");
                client.sendMessage("edit");
+                this.displayInfoLog("Edit of user: " + client.getUser().getLogin() + " is successful. ");
+                logger.debug("edit user: "+client.getUser().getLogin());
            }
             if (command.compareToIgnoreCase("remove") == 0) {
                 //проверка на админа
@@ -210,13 +247,15 @@ public class ControllerServer {
                             model.removeUser(activeUser.get(key).getUser());
                         }
                     }
+                    this.displayInfoLog("Admin remove user: " + removeUser);
+                    logger.debug("Remove " +removeUser);
                 }
                 else{
                     //удаление самого пользователя
                     model.removeUser(client.getUser());
                     activeUser.remove(client);
-                    client.getXmlUser().setMessage("remove is successful.");
-                    client.sendMessage("remove");
+                    this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
+                    logger.debug("Remove " + client.getUser().getLogin());
                 }
                 client.getXmlUser().setMessage("remove is successful.");
                 client.sendMessage("remove");
@@ -238,19 +277,22 @@ public class ControllerServer {
                           }
 
                       }
+                      this.displayInfoLog("Admin "+ client.getXmlUser().getMessage()+" user:  " + infoFoBan.get(1));
                   }
+
                client.sendMessage("ban");
            }
            if (command.compareToIgnoreCase("close") == 0) {
                activeUser.remove(client);
                client.close();
-
+               this.displayInfoLog("User: " + client.getUser().getLogin() + " close.");
            }
     }
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
-        ControllerServer cr = new ControllerServer();
-       cr.run();
+        new ControllerServer(new ServerView());
+      //  ControllerServer cr = new ControllerServer();
+      // cr.run();
 
     }
 
@@ -258,12 +300,12 @@ public class ControllerServer {
      * Class of client's thread.
      */
     public class ServerThread extends Thread {
-       private User user;
-        private Socket socket; //connect with client
-        InputStream fromClient;
-        OutputStream toClient;
-        private XmlSet xmlUser;
-        boolean authentication;
+        private User                 user;
+        private Socket               socket;
+        private InputStream          fromClient;
+        private OutputStream         toClient;
+        private XmlSet               xmlUser;
+        boolean                      authentication;
 
         /**
          * Constructor of class.
@@ -353,6 +395,7 @@ public class ControllerServer {
         public void run() {
             try {
                 while (true) {
+                    //+timeout of client
                     try {
                         this.getMessage();
                     } catch (IOException e) {
@@ -411,6 +454,7 @@ public class ControllerServer {
                     logger.error(e);
                 }
         }
+
 
     }
 }
