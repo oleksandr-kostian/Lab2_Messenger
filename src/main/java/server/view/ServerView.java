@@ -7,11 +7,11 @@ import java.io.IOException;
 import server.controller.ControllerServer;
 import javax.swing.*;
 
-/**
- * GUI of server's controller
- * @author Veleri Rechembei
- * @version %I%, %G%
- */
+    /**
+     * GUI of server's controller
+     * @author Veleri Rechembei
+     * @version %I%, %G%
+     */
 public class ServerView extends JFrame implements ActionListener,Runnable{
     private JPanel                  viewPanel;
     private Font                    font;

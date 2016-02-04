@@ -34,7 +34,6 @@ public class ControllerServer {
     public ControllerServer()throws  IOException,org.xml.sax.SAXException{
         run();
     }
-
     /**
      * GUI constructor of servers controller.
      * @param serverGUI GUI of servers controller.
