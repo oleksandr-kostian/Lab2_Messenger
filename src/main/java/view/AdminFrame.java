@@ -11,7 +11,7 @@ import java.awt.*;
  */
 public class AdminFrame extends UserFrame {
     public AdminFrame(Controller controller){
-        super(controller);
+        super(controller,"admin");
        }
     public UserMenu setMenu(){
         UserMenu userMenu = new AdminMenu();

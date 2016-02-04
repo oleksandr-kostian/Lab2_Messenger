@@ -24,7 +24,7 @@ public class LoginWindow extends JFrame {
     private Controller controller;
 
     LoginWindow(Controller controller) {
-        super("Вход в систему");
+        super("Enter to chat");
         this.controller = controller;
         createGUI();
     }
@@ -71,9 +71,20 @@ public class LoginWindow extends JFrame {
 
                     while (true){
                         controller.getMessage();
-                        if (controller.getUserXml().getPreference().equals("authentication") &&
-                                controller.getUserXml().getMessage().equals("activeUser") ){
-                            UserFrame userFrame = new UserFrame(controller);
+                        XmlSet buff = controller.getUserXml();
+                        if (buff.getPreference().equals("authentication") && buff.getMessage().equals("activeUser") ){
+                            closeFrame();
+                            UserFrame userFrame = new UserFrame(controller,logPas.get(0));
+                            break;
+                        }
+                        if(buff.getPreference().equals("authentication") && buff.getMessage().equals("ban") ){
+                            JOptionPane.showMessageDialog(null, "You have ban!!!");
+                            break;
+                        }
+
+                        if(buff.getPreference().equals("admin")){
+                            closeFrame();
+                            AdminFrame adminFrame = new AdminFrame(controller);
                             break;
                         }
                     }
@@ -83,10 +94,10 @@ public class LoginWindow extends JFrame {
 
             }
         });
-       // JButton cancel = new JButton("Отмена");
+        // JButton cancel = new JButton("Отмена");
         //box3.add(Box.createHorizontalGlue());
         box3.add(ok);
-       // box3.add(Box.createHorizontalStrut(12));
+        // box3.add(Box.createHorizontalStrut(12));
         //box3.add(cancel);
 
         loginLabel.setPreferredSize(passwordLabel.getPreferredSize());
@@ -115,8 +126,12 @@ public class LoginWindow extends JFrame {
         g.drawImage(im, 0, 0, null);
     }*/
     public JButton setButton(){
-         JButton enter = new JButton("Вход");
+        JButton enter = new JButton("Enter");
         return enter;
+    }
+    public void closeFrame(){
+        this.setVisible(false);
+        this.dispose();
     }
 
     public static void main(String[] args) throws IOException, SAXException {

@@ -10,6 +10,8 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.*;
 import java.util.List;
 
@@ -25,6 +27,7 @@ class UserFrame {
     private JTextArea memo;
     private Controller controller;
     private XmlSet userSet;
+    private String login;
     private Thread  getMess = new Thread() {
         @Override
         public void run() {
@@ -34,18 +37,44 @@ class UserFrame {
                     memo.append(controller.getUserXml().getMessage()+"\n");
                     memo.append("\n");
                 }
+                if (controller.getUserXml().getPreference().equals("activeUser")){
+                    DefaultListModel<String> activeUser = new DefaultListModel<>();
+                    data = controller.getUserXml().getList();
+                    data.remove(login);
+                    for (String s: data){
+                        activeUser.addElement(s);
+                    }
+                    list.setModel(activeUser);
+                }
             }
         }
     };
+    private Thread sendMess = new Thread(){
+        @Override
+        public void run() {
+            while (true){
+                controller.sendMessage(userSet,"activeUser");
+                try {
+                    sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
     /*new String[]{
         "user1","user2","user3","user4","user5","user6","user7","user8","user9","user10","user11","user12"
     };*/
-    public UserFrame(Controller controller){
+    public UserFrame(Controller controller,String login){
+        this.login = login;
         userSet = controller.getUserXml();
         this.controller = controller;
-        this.data =  userSet.getList();
+        data =  userSet.getList();
+        data.remove(login);
         createGUI();
         getMess.start();
+        sendMess.start();
     }
 
     public UserMenu setMenu() {
@@ -96,7 +125,7 @@ class UserFrame {
 
     public void createGUI(){
         final JFrame viewAll = new JFrame();
-        viewAll.setTitle("Chat");
+        viewAll.setTitle(login);
         viewAll.setResizable(false);
         viewAll.setContentPane(new FonPanel());
         final Container cont = viewAll.getContentPane();
@@ -114,12 +143,17 @@ class UserFrame {
         edit.setLineWrap(true);
 
         menu = setMenu();
+
         JButton send = new JButton("Send");
         send.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 userSet.setKeyDialog(11);
-                userSet.setMessage(edit.getText());
+                if(edit.getText()==null|edit.getText().trim().equals("")){
+                    return;
+                }
+                userSet.setMessage(login + ":  "+ edit.getText());
+                edit.setText("");
                 controller.sendMessage(userSet,"all");
             }
         });
@@ -143,10 +177,26 @@ class UserFrame {
                     return;
                 }
                 //viewAll.setTitle("Private message");
-                DefaultListModel privateUser = new DefaultListModel();
+                List<String> privateList = new ArrayList<String>();
+                List<String> buff =  data;
                 for(int i:element){
-                privateUser.addElement(data.get(i));}
+                    privateList.add(buff.get(i));}
+                for(String s:privateList){
+                    System.out.println(s);
+                }
+                userSet.setList(privateList);
+                controller.sendMessage(userSet,"private");
+                /*while (true) {
+                    controller.getMessage();
+                    if (controller.getUserXml().getPreference().equals("private")) {
+                  */
+                DefaultListModel privateUser = new DefaultListModel();
+                for (int i : element) {
+                    privateUser.addElement(buff.get(i));
+                }
                 list.setModel(privateUser);
+
+
 
                 //UserFrame fr = new UserFrame();
             }
@@ -169,10 +219,27 @@ class UserFrame {
         cont.add(listPanel,"wrap");
         cont.add(jsp2);
         cont.add(send);
+        viewAll.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent event) {
+                Object[] options = { "Yes", "No" };
+                int n = JOptionPane
+                        .showOptionDialog(event.getWindow(), "Close chat?",
+                                "Confirmation", JOptionPane.YES_NO_OPTION,
+                                JOptionPane.QUESTION_MESSAGE, null, options,
+                                options[0]);
+                if (n == 0) {
+                    controller.sendMessage(userSet,"close");
+                    controller.closeServer();
+                    System.exit(2);
+                }
+            }
+        });
+
         viewAll.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         viewAll.pack();
         viewAll.setLocationRelativeTo(null);
         viewAll.setVisible(true);
+
     }
 
 
