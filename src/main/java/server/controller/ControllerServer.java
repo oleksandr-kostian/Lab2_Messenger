@@ -41,7 +41,6 @@ public class ControllerServer {
     public ControllerServer(ServerView serverGUI){
         this.serverGUI = serverGUI;
     }
-
     /**
      * Authenticates the user on the server.
      * @param client thread of client.
