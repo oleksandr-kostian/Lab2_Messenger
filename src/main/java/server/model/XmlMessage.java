@@ -26,14 +26,14 @@ import java.util.List;
 public class XmlMessage {
     private static Logger          LOG              = Logger.getLogger(XmlMessage.class);
     private static DocumentBuilder builder;
-    private static String          ROOT_ELEMENT     = "XmlMessage";
-    private static String          ID_USER          = "IdUser";
-    private static String          ELSE_PREFERENCE  = "else_preference";
-    private static String          ID               = "id";
-    private static String          NAME             = "name";
-    private static String          MESSAGE          ="message";
-    private static String          DiALOG_ID        ="dialogID";
-    private static String          LIST_USER        ="list_user";
+    private static final String    ROOT_ELEMENT     = "XmlMessage";
+    private static final String    ID_USER          = "IdUser";
+    private static final String    ELSE_PREFERENCE  = "preference";
+    private static final String    ID               = "id";
+    private static final String    NAME             = "name";
+    private static final String    MESSAGE          = "message";
+    private static final String    DIALOG_ID        = "dialogID";
+    private static final String    LIST_USER        = "list_user";
 
     /**
      * method create factory for work with XML.
@@ -60,6 +60,8 @@ public class XmlMessage {
      * @throws TransformerException if xml can not transform in out
      */
     public static void writeXMLinStream(XmlSet xmlSet, OutputStream out) throws TransformerException {
+        Model.logMessage(xmlSet);                  //log message!!!
+
         paramLangXML();
 
         Document doc         = builder.newDocument();
@@ -69,13 +71,11 @@ public class XmlMessage {
 
         //dialogID
         if (xmlSet.getKeyDialog() != 0) {
-            writeChild(RootElement, doc, DiALOG_ID, String.valueOf(xmlSet.getKeyDialog()));
+            writeChild(RootElement, doc, DIALOG_ID, String.valueOf(xmlSet.getKeyDialog()));
         }
         // general message
         if (xmlSet.getMessage() != null) {
             writeChild(RootElement, doc, MESSAGE, xmlSet.getMessage());
-
-            Model.logMessage(xmlSet.getIdUser(), xmlSet.getMessage());                  //log message!!!
         }
 
         //write name of active user
@@ -151,7 +151,7 @@ public class XmlMessage {
                     xmlSet.setMessage(result);
             }
 
-            if ((result = readChild(document, DiALOG_ID)) != null) {
+            if ((result = readChild(document, DIALOG_ID)) != null) {
                     xmlSet.setKeyDialog(Integer.parseInt(result));
             }
         } catch (Exception e){

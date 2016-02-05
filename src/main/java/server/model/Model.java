@@ -1,8 +1,7 @@
 package server.model;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 
@@ -23,22 +22,38 @@ public class Model {
     }
 
     /**
-     * Method for log of all message
-     * @param id is key of user
-     * @param message  ia a String
+     * Method for log of all message.
+     * @param id is key of user.
+     * @param message  ia a String with text.
+     * @param forWhom is a String with direction.
      */
-    protected static void logMessage(Integer id, String message) {
-        try (Writer logMess = new BufferedWriter(new FileWriter("logMessage.txt",true))) {
+    protected static void logMessage(Integer id, String message, String forWhom) {
+        try (Writer logMess = new BufferedWriter(new FileWriter("logMessage.txt", true))) {
             String number = String.format("%11d", id);
-            logMess.append("id: <").append(number).append(">").append(" - send to all: ")
-                    .append("\"").append(message).append("\"").append("\n");
-
+            logMess.append("id: <").append(number).append("> ")
+                    .append(new Date(System.currentTimeMillis()).toString())
+                    .append(" - send ").append(forWhom).append(" ")
+                    .append("\"").append(message).append("\"")
+                    .append("\n");
             logMess.flush();
         } catch (FileNotFoundException e) {
             LOG.error("log for messages not found " + e);
         } catch (IOException e) {
             LOG.error("write in log of messages " + e);
         }
+    }
+
+    /**
+     * Method for log of all message.
+     * @param xmlSet is a instance of message;
+     */
+    protected static void logMessage (XmlSet xmlSet) {
+        String forWhom;
+        //if (xmlSet.getPreference().equals("all")) {
+        forWhom = "to all:";
+        //if (xmlSet.getPreference().equals("all"))
+        //forWhom = "to all: " + xmlSet.getList().toString();
+        logMessage(xmlSet.getIdUser(), xmlSet.getMessage(), forWhom);
     }
 
     /**
@@ -62,6 +77,20 @@ public class Model {
             }
         }
         return -1;
+    }
+
+    /**
+     * Method for get list with login of ban users
+     * @return list
+     */
+    public List<String> getBanList() {
+        List<String> listBan = new ArrayList<>();
+        for (Map.Entry<Integer, User> user: list.entrySet()) {
+            if (user.getValue().isBan()) {
+                listBan.add(user.getValue().getLogin());
+            }
+        }
+        return listBan;
     }
 
     /**
