@@ -202,7 +202,7 @@ public class ControllerServer {
                String messageToChat = client.getXmlUser().getMessage();
                List<String> userList = client.getXmlUser().getList();
                 if(userList!=null) {
-                    List<String> privateList = client.getXmlUser().getList();
+                    List<String> privateList = new ArrayList<>();
                     privateList.add(client.getUser().getLogin());
                     privateList.addAll(userList);
                     client.sendMessage("private");

@@ -195,10 +195,6 @@ public class Controller implements Runnable {
 
     public static void main(String[] args) throws IOException, ParseException, SAXException {
         ControllerServer controllerServer = new ControllerServer();
-        controllerServer.run();
-        String serverAddress = "localhost";
-        Controller client = new Controller(serverAddress);
-        client.connectToServer();
       //  client.sendMessage();
 
     }

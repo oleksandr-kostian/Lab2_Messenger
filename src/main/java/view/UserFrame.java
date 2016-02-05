@@ -23,21 +23,27 @@ class UserFrame {
     private JList list;
     private UserMenu menu;
     private JPanel listPanel;
-    private java.util.List<String> data ;
+volatile private java.util.List<String> data ;
     private JTextArea memo;
     private Controller controller;
     private XmlSet userSet;
     private String login;
+    private boolean privateDialog;
+    JFrame viewAll;
+    List<String> privateList;
     private Thread  getMess = new Thread() {
         @Override
         public void run() {
             while (true){
                 controller.getMessage();
-                if (controller.getUserXml().getPreference().equals("message to all")){
+                XmlSet buff = controller.getUserXml();
+
+                if (buff.getPreference().equals("message to all")){
                     memo.append(controller.getUserXml().getMessage()+"\n");
                     memo.append("\n");
                 }
-                if (controller.getUserXml().getPreference().equals("activeUser")){
+                if (buff.getPreference().equals("activeUser")){
+                    if(privateDialog) continue;
                     DefaultListModel<String> activeUser = new DefaultListModel<>();
                     data = controller.getUserXml().getList();
                     data.remove(login);
@@ -46,6 +52,34 @@ class UserFrame {
                     }
                     list.setModel(activeUser);
                 }
+                if(buff.getPreference().equals("private")) {
+                    if(privateDialog ){
+                        memo.append(buff.getMessage()+"\n");
+                        memo.append("\n");
+                    } else {
+                        if (buff.getList().contains(login)) {
+                            Object[] options = {"Yes", "No"};
+                            int n = JOptionPane
+                                    .showOptionDialog(viewAll, "Do you want to enter the private chat?",
+                                            "Confirmation", JOptionPane.YES_NO_OPTION,
+                                            JOptionPane.QUESTION_MESSAGE, null, options,
+                                            options[0]);
+                            if (n == 0) {
+
+                                privateDialog = true;
+                                DefaultListModel<String> model = new DefaultListModel<>();
+                                data = buff.getList();
+                                data.remove(login);
+                                for (String s : data) {
+                                    model.addElement(s);
+                                }
+                                list.setModel(model);
+                                memo.append(buff.getMessage() + "\n");
+                                memo.append("\n");
+                            }
+                        }
+                    }
+                }
             }
         }
     };
@@ -53,6 +87,9 @@ class UserFrame {
         @Override
         public void run() {
             while (true){
+                if(privateDialog){
+                    break;
+                }
                 controller.sendMessage(userSet,"activeUser");
                 try {
                     sleep(10000);
@@ -106,7 +143,7 @@ class UserFrame {
     public JPanel setListPanel() {
         final JPanel panel = new FonPanel();
         panel.setLayout(new MigLayout());
-        JLabel listLabel = new JLabel("Список контактов");
+        JLabel listLabel = new JLabel("User list");
         listLabel.setForeground(Color.WHITE);
         setList();
         list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -124,7 +161,7 @@ class UserFrame {
     }
 
     public void createGUI(){
-        final JFrame viewAll = new JFrame();
+        viewAll = new JFrame();
         viewAll.setTitle(login);
         viewAll.setResizable(false);
         viewAll.setContentPane(new FonPanel());
@@ -142,12 +179,16 @@ class UserFrame {
         edit.setWrapStyleWord(true);
         edit.setLineWrap(true);
 
-        menu = setMenu();
-
         JButton send = new JButton("Send");
         send.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(privateDialog){
+                    userSet.setList(data);
+                    userSet.setMessage(login + ":  "+ edit.getText());
+                    edit.setText("");
+                    controller.sendMessage(userSet,"private");
+                }
                 userSet.setKeyDialog(11);
                 if(edit.getText()==null|edit.getText().trim().equals("")){
                     return;
@@ -161,44 +202,32 @@ class UserFrame {
         JScrollPane jsp1 = new JScrollPane(memo);
         JScrollPane jsp2 = new JScrollPane(edit);
 
-
         listPanel = setListPanel();
 
-
+        menu = setMenu();
         viewAll.setJMenuBar(menu);
         JMenuItem priv =  menu.getPrivate();
         priv.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                //viewAll.setVisible(false);
-                //viewAll.dispose();
-                //createGUI();
                 if (element == null) {
                     JOptionPane.showMessageDialog(viewAll, "Choose users");
                     return;
                 }
-                //viewAll.setTitle("Private message");
-                List<String> privateList = new ArrayList<String>();
+                privateList = new ArrayList<String>();
                 List<String> buff =  data;
                 for(int i:element){
                     privateList.add(buff.get(i));}
-                for(String s:privateList){
-                    System.out.println(s);
-                }
+                data = privateList;
+                userSet.setKeyDialog(12);
                 userSet.setList(privateList);
+                privateDialog = true;
+                userSet.setMessage("private chat");
                 controller.sendMessage(userSet,"private");
-                /*while (true) {
-                    controller.getMessage();
-                    if (controller.getUserXml().getPreference().equals("private")) {
-                  */
                 DefaultListModel privateUser = new DefaultListModel();
                 for (int i : element) {
                     privateUser.addElement(buff.get(i));
                 }
                 list.setModel(privateUser);
-
-
-
-                //UserFrame fr = new UserFrame();
             }
         });
         /*
