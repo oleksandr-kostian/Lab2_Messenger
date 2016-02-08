@@ -94,56 +94,54 @@ public class ControllerServer {
           }
       }
       ///авторизация
-      if (preference.compareToIgnoreCase(Preference.Authentication.name()) == 0) {
-          if (idUser != -1) {
-              client.getXmlUser().setIdUser(idUser);
-              client.setUser(model.getUser(idUser));
-              //проверка пользователя
-              for (int i = 0; i < activeUsers.size(); i++) {
-                  if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(client.getUser().getLogin()) == 0) {
-                      online = true;
-                      client.getXmlUser().setMessage("The user is online.");
-                      client.sendMessage(Preference.Authentication.name());
-                      client.close();
-                      break;
+      else {
+          if (preference.compareToIgnoreCase(Preference.Authentication.name()) == 0) {
+              if (idUser != -1) {
+                  client.getXmlUser().setIdUser(idUser);
+                  client.setUser(model.getUser(idUser));
+                  //проверка пользователя
+                  for (int i = 0; i < activeUsers.size(); i++) {
+                      if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(client.getUser().getLogin()) == 0) {
+                          online = true;
+                          client.getXmlUser().setMessage("The user is online.");
+                          client.sendMessage(Preference.Authentication.name());
+                          client.close();
+                          break;
+                      }
+                  }
+                  if (!online) {
+                      activeUsers.add(client);
+                      //   activeUser.put(model.getUser(idUser), client);
+                      client.setAuthentication(true);
+                      logger.debug("Authentications user is " + client.getUser().getLogin());
+                      if (client.getUser().isAdmin()) {
+                          this.displayInfoLog("Admin: " + client.getUser().getLogin() + " is welcome.");
+                      } else {
+                          this.displayInfoLog(client.getUser().getLogin() + " is welcome.");
+                      }
+                      //send message to client of active user list and data of client
+                      client.getXmlUser().setList(getUserListString());
+                      if (client.getUser().isBan()) {
+                          client.getXmlUser().setMessage(Preference.Ban.name());
+                      } else {
+                          client.getXmlUser().setMessage(Preference.ActiveUsers.name());
+                      }
+
+                      if (client.getUser().isAdmin()) {
+                          client.sendMessage(Preference.Admin.name());
+                      } else {
+                          client.sendMessage(Preference.Authentication.name());
+                      }
+
                   }
               }
-             if(!online){
-                  activeUsers.add(client);
-                  //   activeUser.put(model.getUser(idUser), client);
-                  client.setAuthentication(true);
-                  logger.debug("Authentications user is " + client.getUser().getLogin());
-                  if (client.getUser().isAdmin()) {
-                      this.displayInfoLog("Admin: " + client.getUser().getLogin() + " is welcome.");
-                  }
-                  else {
-                      this.displayInfoLog(client.getUser().getLogin() + " is welcome.");
-                  }
-                  //send message to client of active user list and data of client
-                  client.getXmlUser().setList(getUserListString());
-                  if (client.getUser().isBan()) {
-                      client.getXmlUser().setMessage(Preference.Ban.name());
-                  }
-                  else {
-                      client.getXmlUser().setMessage(Preference.ActiveUsers.name());
-                  }
-
-                  if (client.getUser().isAdmin()) {
-                      client.sendMessage(Preference.Admin.name());
-                  }
-                  else {
-                      client.sendMessage(Preference.Authentication.name());
-                  }
-
-              }
-         }
+          }
+          else{
+              client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
+              client.sendMessage(Preference.Authentication.name());
+              client.close();
+          }
       }
-      else{
-          client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
-          client.sendMessage(Preference.Authentication.name());
-          client.close();
-      }
-
 
   }
 
