@@ -39,14 +39,9 @@ public class Controller implements Runnable {
     public boolean connectToServer() {
         try {
             connect = new Socket(hostName, PORT);
-            //fromServer = new ObjectInputStream(connect.getInputStream());
             System.out.println("Connected: " + connect);
             toServer = connect.getOutputStream();
             fromServer = connect.getInputStream();
-
-            //fromServer = new ObjectInputStream(connect.getInputStream());
-           // sendMessage("authentication");
-            //logger.info("Connected: " + connect);
         }
         catch (UnknownHostException uhe) {
             // logger.error("Host unknown: " + uhe.getMessage());
@@ -107,12 +102,7 @@ public class Controller implements Runnable {
             }
         }
 
-        if(exception==null){
-            return true;
-        }
-        else{
-            return false;
-        }
+        return exception==null;
 
     }
 

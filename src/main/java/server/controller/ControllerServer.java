@@ -14,6 +14,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.ParseException;
+import java.time.Period;
 import java.util.*;
 /**
  * Server's controller
@@ -23,10 +24,11 @@ import java.util.*;
 public class ControllerServer {
     private final int                       PORT=1025;
     private ServerSocket                    socket;
-    private HashMap<User,ServerThread>      activeUser;
+    private List<ServerThread>              activeUsers;
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
     private ServerView                      serverGUI;
+    private volatile boolean                finish = false;
 
     /**
      * Default constructor of servers controller.
@@ -41,66 +43,108 @@ public class ControllerServer {
     public ControllerServer(ServerView serverGUI){
         this.serverGUI = serverGUI;
     }
-    
+
+    /**
+     * Registration the user on the server.
+     * @param client thread of client.
+     * @param login is String login of user.
+     * @param password is String password of user.
+     * @throws javax.xml.transform.TransformerException if method send() has mistake.
+     */
+    public synchronized void registration (ServerThread client, String login, String password)throws javax.xml.transform.TransformerException{
+
+        User createUser = new User();
+        createUser.setLogin(login);
+        createUser.setPassword(password);
+        createUser.setBan(false);
+        createUser.setIsAdmin(false);
+        client.getXmlUser().setIdUser(createUser.getId());
+        client.setUser(createUser);
+        model.addUser(createUser);
+        //  activeUser.put(model.getUser(createUser.getId()), client);
+        activeUsers.add(client);
+        client.setAuthentication(true);
+
+        client.getXmlUser().setList(getUserListString());
+        client.getXmlUser().setMessage(Preference.ActiveUsers.name());
+        client.sendMessage(Preference.Registration.name());
+
+        this.displayInfoLog("New user: "+client.getUser().getLogin()+"  is welcome.");
+        logger.debug("Create new user " + client.getUser().getLogin());
+    }
+
     /**
      * Authenticates the user on the server.
      * @param client thread of client.
      * @throws javax.xml.transform.TransformerException if method send() has mistake.
      */
   public synchronized void authorization(ServerThread client)throws javax.xml.transform.TransformerException{
+      boolean online=false;
       String preference = client.getXmlUser().getPreference();
       List<String> data = client.getXmlUser().getList();
-      if (preference.compareToIgnoreCase("authentication") == 0) {
-          int idUser = model.authorizationUser(data.get(0), data.get(1));
-          if(idUser!=-1){
-              client.getXmlUser().setIdUser(idUser);
-              client.setUser(model.getUser(idUser));
-              activeUser.put(model.getUser(idUser), client);
-              client.setAuthentication(true);
-              logger.debug("Authentications user is " + client.getUser().getLogin());
-              if(client.getUser().isAdmin()){
-                  this.displayInfoLog("Admin: "+client.getUser().getLogin()+ " is welcome.");
-              }
-              else{
-                  this.displayInfoLog(client.getUser().getLogin()+ " is welcome.");
-              }
+      int idUser = model.authorizationUser(data.get(0), data.get(1));
+      /// регистрация
+      if (preference.compareToIgnoreCase(Preference.Registration.name()) == 0){
+          if(idUser==-1) {
+              registration(client, data.get(0), data.get(1));
           }
           else{
-              User createUser = new User();
-              createUser.setLogin(data.get(0));
-              createUser.setPassword(data.get(1));
-              createUser.setBan(false);
-              createUser.setIsAdmin(false);
-              client.getXmlUser().setIdUser(createUser.getId());
-              client.setUser(createUser);
-              model.addUser(createUser);
-              activeUser.put(model.getUser(createUser.getId()), client);
-              client.setAuthentication(true);
-              this.displayInfoLog("New user: "+client.getUser().getLogin()+"  is welcome.");
-              logger.debug("Create new user " + client.getUser().getLogin());
+              client.getXmlUser().setMessage(Preference.IncorrectValue.name()+" name of user. This user has already been created.");
+              client.sendMessage(Preference.Registration.name());
           }
-          //send message to client of active user list and data of client
-          client.getXmlUser().setList(getUserListString());
-          if(client.getUser().isBan()){
-              client.getXmlUser().setMessage("ban");
-          }
-          else {
-              client.getXmlUser().setMessage("activeUser");
-          }
-
-              if(client.getUser().isAdmin()){
-                  client.sendMessage("admin");
+      }
+      ///авторизация
+      if (preference.compareToIgnoreCase(Preference.Authentication.name()) == 0) {
+          if (idUser != -1) {
+              client.getXmlUser().setIdUser(idUser);
+              client.setUser(model.getUser(idUser));
+              //проверка пользователя
+              for (int i = 0; i < activeUsers.size(); i++) {
+                  if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(client.getUser().getLogin()) == 0) {
+                      online = true;
+                      client.getXmlUser().setMessage("The user is online.");
+                      client.sendMessage(Preference.Authentication.name());
+                      client.close();
+                      break;
+                  }
               }
+             if(!online){
+                  activeUsers.add(client);
+                  //   activeUser.put(model.getUser(idUser), client);
+                  client.setAuthentication(true);
+                  logger.debug("Authentications user is " + client.getUser().getLogin());
+                  if (client.getUser().isAdmin()) {
+                      this.displayInfoLog("Admin: " + client.getUser().getLogin() + " is welcome.");
+                  }
+                  else {
+                      this.displayInfoLog(client.getUser().getLogin() + " is welcome.");
+                  }
+                  //send message to client of active user list and data of client
+                  client.getXmlUser().setList(getUserListString());
+                  if (client.getUser().isBan()) {
+                      client.getXmlUser().setMessage(Preference.Ban.name());
+                  }
+                  else {
+                      client.getXmlUser().setMessage(Preference.ActiveUsers.name());
+                  }
 
-              else {
-                  client.sendMessage("authentication");
+                  if (client.getUser().isAdmin()) {
+                      client.sendMessage(Preference.Admin.name());
+                  }
+                  else {
+                      client.sendMessage(Preference.Authentication.name());
+                  }
+
               }
+         }
       }
       else{
-          client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\" word. Please try to connect again.");
-          client.sendMessage("authentication");
+          client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
+          client.sendMessage(Preference.Authentication.name());
           client.close();
       }
+
+
   }
 
     /**
@@ -130,7 +174,7 @@ public class ControllerServer {
      */
   public void run()throws IOException, org.xml.sax.SAXException{
       model = new Model();
-      activeUser = new HashMap<>();
+      activeUsers = new ArrayList<>();
       this.displayInfoLog("Building to port " + this.PORT + ", please wait  ...");
       socket = new ServerSocket(PORT);
       this.displayInfoLog("Server started.");
@@ -143,21 +187,14 @@ public class ControllerServer {
 
   }
     public void stop() throws IOException{
-            for (User key : activeUser.keySet()) {
-                activeUser.get(key).stop();
-            }
-            if(socket != null) {
+        this.finish=true;
+        if (socket != null) {
                 socket.close();
             }
         this.displayInfoLog("\n" + "Server is stopped." + "\n");
 
 
     }
-  /*  public HashMap<User,ServerThread> getUserList(){
-        return activeUser;
-
-    }
-   */
 
     /**
      * Method, that transforms HashMap<User,ServerThread> to List<String>.
@@ -165,133 +202,154 @@ public class ControllerServer {
      */
   public List<String> getUserListString(){
         ArrayList<String> userList = new ArrayList<>();
-        for (User key : activeUser.keySet()) {
-            userList.add(activeUser.get(key).getUser().getLogin());
-        }
+      for(int i=0;i<activeUsers.size();i++){
+          userList.add(activeUsers.get(i).getUser().getLogin());
+      }
         return userList;
 
     }
-   /* public ArrayList getBanList(){
-        ArrayList<ServerThread> banList = new ArrayList();
-        for (User key : activeUser.keySet()) {
-            if( activeUser.get(key).user.isBan()){
-                banList.add(activeUser.get(key));
-            }
-
-        }
-        return banList;
-
-    }
-*/
-
     /**
      * Method, that reads client's preference, handles it and sends answer to client.
      * @param client thread of client.
-     * @param command preference of client's message.
+     * @param preference preference of client's message.
      * @throws javax.xml.transform.TransformerException if transformation xml to OutputStream has mistake.
      */
-    public synchronized void readCommand(ServerThread client,String command) throws javax.xml.transform.TransformerException{
-           if (command.compareToIgnoreCase("activeUser") == 0) {
-               client.getXmlUser().setList(getUserListString());
-               client.getXmlUser().setMessage("activeUser");
-               client.sendMessage("activeUser");
-               this.displayInfoLog("Send list of active user to user: "+client.getUser().getLogin());
-           }
-            if (command.compareToIgnoreCase("private") == 0) {
+    public synchronized void readCommand(ServerThread client,Preference preference) throws javax.xml.transform.TransformerException{
+        switch (preference){
 
-               String messageToChat = client.getXmlUser().getMessage();
-               List<String> userList = client.getXmlUser().getList();
+            case MessageForAll:
+                String messageToChat = client.getXmlUser().getMessage();
+                for(int i=0;i<activeUsers.size();i++){
+                    activeUsers.get(i).getXmlUser().setMessage(messageToChat);
+                    activeUsers.get(i).getXmlUser().setList(getUserListString());
+                    activeUsers.get(i).sendMessage(Preference.MessageForAll.name());
+                }
+                // this.displayInfoLog("User: "+client.getUser().getLogin()+" send message to all. ");
+                logger.debug("Send message to all: " + messageToChat);
+                break;
+
+            case PrivateMessage:
+                String messageToPrivateChat = client.getXmlUser().getMessage();
+                List<String> userList = client.getXmlUser().getList();
                 if(userList!=null) {
                     List<String> privateList = new ArrayList<>();
                     privateList.add(client.getUser().getLogin());
                     privateList.addAll(userList);
-                    client.sendMessage("private");
-                    for (User key : activeUser.keySet()) {
+                    client.sendMessage(Preference.PrivateMessage.name());
+                    for(int j=0;j<activeUsers.size();j++){
                         for (int i = 0; i < userList.size(); i++) {
-                            if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(userList.get(i)) == 0) {
-                                activeUser.get(key).getXmlUser().setMessage(messageToChat);
-                                activeUser.get(key).getXmlUser().setList(privateList);
-                                activeUser.get(key).sendMessage("private");
+                            if (activeUsers.get(j).getUser().getLogin().compareToIgnoreCase(userList.get(i)) == 0) {
+                                activeUsers.get(j).getXmlUser().setMessage(messageToPrivateChat);
+                                activeUsers.get(j).getXmlUser().setList(privateList);
+                                activeUsers.get(j).sendMessage(Preference.PrivateMessage.name());
                             }
                         }
                     }
-                    logger.debug("Send private message: " +messageToChat+" to users: "+userList.toString());
+                    logger.debug("Send private message: " +messageToPrivateChat+" to users: "+userList.toString());
                 }
                 else{
-                    client.getXmlUser().setMessage("wrong list");
-                    client.sendMessage("private");
+                    client.getXmlUser().setMessage(Preference.IncorrectValue.name());
+                    client.sendMessage(Preference.PrivateMessage.name());
                 }
-               // this.displayInfoLog("User: "+client.getUser().getLogin()+" send private message to users: "+userList.toString());
+                // this.displayInfoLog("User: "+client.getUser().getLogin()+" send private message to users: "+userList.toString());
 
-           }
-            if (command.compareToIgnoreCase("all") == 0) {
+                break;
 
-               String messageToChat = client.getXmlUser().getMessage();
-               for (User key : activeUser.keySet()) {
-                   activeUser.get(key).getXmlUser().setMessage(messageToChat);
-                   activeUser.get(key).getXmlUser().setList(getUserListString());
-                   activeUser.get(key).sendMessage("message to all");
-               }
-               // this.displayInfoLog("User: "+client.getUser().getLogin()+" send message to all. ");
-                logger.debug("Send message to all: " +messageToChat);
-           }
-            if (command.compareToIgnoreCase("edit") == 0) {
-               model.editUser(client.getUser());
-               client.getXmlUser().setMessage("edit is successful.");
-               client.sendMessage("edit");
+            case ActiveUsers:
+                client.getXmlUser().setList(getUserListString());
+                client.getXmlUser().setMessage(Preference.ActiveUsers.name());
+                client.sendMessage(Preference.ActiveUsers.name());
+               // this.displayInfoLog("Send list of active user to user: " + client.getUser().getLogin());
+               // this.displayInfoLog(getUserListString().toString());
+                break;
+
+            case Ban:
+                if(client.getUser().isAdmin()) {
+                   String infoFoBan = client.getXmlUser().getList().get(0);
+                    for(int i=0;i<activeUsers.size();i++){
+                        if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan) == 0) {
+                                activeUsers.get(i).getUser().setBan(true);
+                                client.getXmlUser().setMessage(Preference.Successfully.name());
+                                break;
+                            }
+                    }
+                    this.displayInfoLog("Admin "+ Preference.Ban.name()+" user:  " + infoFoBan);
+                }
+
+                client.sendMessage(Preference.Ban.name());
+                break;
+
+            case UnBan:
+                if(client.getUser().isAdmin()) {
+                    String infoFoBan = client.getXmlUser().getList().get(0);
+                    for(int i=0;i<activeUsers.size();i++){
+                        if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan) == 0) {
+                            activeUsers.get(i).getUser().setBan(false);
+                            client.getXmlUser().setMessage(Preference.Successfully.name());
+                            break;
+                        }
+                    }
+                    this.displayInfoLog("Admin "+ Preference.UnBan.name()+" user:  " + infoFoBan);
+                }
+
+                client.sendMessage(Preference.UnBan.name());
+                break;
+
+            case BanUsers:
+                List<String> banUsers = model.getBanList();
+                client.getXmlUser().setList(banUsers);
+                client.getXmlUser().setMessage(Preference.BanUsers.name());
+                client.sendMessage(Preference.BanUsers.name());
+                break;
+
+            case Edit:
+                model.editUser(client.getUser());
+                client.getXmlUser().setMessage(Preference.Successfully.name());
+                client.sendMessage(Preference.Edit.name());
                 this.displayInfoLog("Edit of user: " + client.getUser().getLogin() + " is successful. ");
-                logger.debug("edit user: "+client.getUser().getLogin());
-           }
-            if (command.compareToIgnoreCase("remove") == 0) {
+                logger.debug(Preference.Edit.name()+" user: "+client.getUser().getLogin());
+                break;
+
+            case Remove:
                 //проверка на админа
                 if(client.getUser().isAdmin()){
                     String removeUser = client.getXmlUser().getList().get(0);
-                    for (User key : activeUser.keySet()) {
-                        if(activeUser.get(key).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
-                            activeUser.remove(activeUser.get(key));
-                            model.removeUser(activeUser.get(key).getUser());
+                    for(int i=0;i<activeUsers.size();i++){
+                        if(activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
+                            activeUsers.remove(activeUsers.get(i));
+                            model.removeUser(activeUsers.get(i).getUser());
                         }
                     }
+
                     this.displayInfoLog("Admin remove user: " + removeUser);
-                    logger.debug("Remove " +removeUser);
+                    logger.debug(Preference.Remove.name()+ " removeUser");
                 }
                 else{
                     //удаление самого пользователя
                     model.removeUser(client.getUser());
-                    activeUser.remove(client);
+                    activeUsers.remove(client);
                     this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
                     logger.debug("Remove " + client.getUser().getLogin());
                 }
-                client.getXmlUser().setMessage("remove is successful.");
-                client.sendMessage("remove");
-            }
-              if (command.compareToIgnoreCase("ban") == 0) {
-                  if(client.getUser().isAdmin()) {
-                      List<String> infoFoBan = client.getXmlUser().getList();
-                      for (User key : activeUser.keySet()) {
-                          if (activeUser.get(key).getUser().getLogin().compareToIgnoreCase(infoFoBan.get(1)) == 0) {
-                              if (infoFoBan.get(0).compareToIgnoreCase("ban") == 0) {
-                                  activeUser.get(key).getUser().setBan(true);
-                                  client.getXmlUser().setMessage("ban");
-                                  break;
-                              } else {
-                                  activeUser.get(key).getUser().setBan(false);
-                                  client.getXmlUser().setMessage("ban is remove");
-                                  break;
-                              }
-                          }
+                client.getXmlUser().setMessage(Preference.Successfully.name());
+                client.sendMessage(Preference.Remove.name());
+                break;
 
-                      }
-                      this.displayInfoLog("Admin "+ client.getXmlUser().getMessage()+" user:  " + infoFoBan.get(1));
-                  }
+            case Close:
+                activeUsers.remove(client);
+                client.close();
+                this.displayInfoLog("User: " + client.getUser().getLogin() + " close.");
+                break;
 
-               client.sendMessage("ban");
-           }
-           if (command.compareToIgnoreCase("close") == 0) {
-               activeUser.remove(client);
-               client.close();
-               this.displayInfoLog("User: " + client.getUser().getLogin() + " close.");
-           }
+            default:
+                client.sendMessage(Preference.IncorrectValue.name());
+                break;
+        }
+
+
+
+
+
     }
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
@@ -323,9 +381,9 @@ public class ControllerServer {
             this.authentication=false;
             fromClient = socket.getInputStream();
             toClient=socket.getOutputStream();
+            this.setDaemon(true);
             start();
         }
-
         /**
          * Method that return XmlSet of user.
          * @return XmlSet of user.
@@ -391,6 +449,7 @@ public class ControllerServer {
                     }
                 }
                this.setXmlUser(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+
 }
 
         /**
@@ -400,26 +459,32 @@ public class ControllerServer {
         public void run() {
             try {
                 while (true) {
-                    //+timeout of client
-                    try {
-                        this.getMessage();
-                    } catch (IOException e) {
-                        continue;
-                    }
-                    if (getXmlUser() != null) {
-                        if (!this.isAuthentication()) {
-                            authorization(this);
-                        } else {
-                            //try to read command from client!!!!!!!!
-                            String preference = getXmlUser().getPreference();
+                   if (finish) {
+                       this.close();
+                       return;
+                   }
+                        //+timeout of client
+                        try {
+                            this.getMessage();
+                        }
+                        catch (IOException e) {
+                            continue;
+                        }
+                            if (getXmlUser() != null) {
+                            if (!this.isAuthentication()) {
+                                authorization(this);
+                            } else {
+                                //try to read command from client!!!!!!!!
+                                String preference = getXmlUser().getPreference();
+                                Preference command = Preference.fromString(preference);
+                                readCommand(this, command);
 
-                            readCommand(this, preference);
+                            }
+
 
                         }
-
-
-                    }
                 }
+
             }
             catch (org.xml.sax.SAXException e) {
                 logger.error(e);
