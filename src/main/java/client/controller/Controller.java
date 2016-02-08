@@ -6,8 +6,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.xml.sax.SAXException;
 import server.controller.ControllerServer;
@@ -27,7 +25,7 @@ public class Controller implements Runnable {
     private String              myUser;
     private InputStream         fromServer;
     private OutputStream        toServer;
-    private XmlSet              UserXml;
+    private XmlSet              userXml;
    // private static final Logger logger = Logger.getLogger(Controller.class);
      //ClientGUI = gui
 
@@ -107,14 +105,14 @@ public class Controller implements Runnable {
     }
 
     public void setUserXml(XmlSet userXml) {
-        UserXml = userXml;
+        this.userXml = userXml;
     }
 
     public XmlSet getUserXml() {
-        return UserXml;
+        return userXml;
     }
 
-    public void getMessage(){
+    public void  getMessage(){
         try {
 
             BufferedReader is = new BufferedReader(new InputStreamReader(fromServer));
@@ -184,7 +182,7 @@ public class Controller implements Runnable {
     }
 
     public static void main(String[] args) throws IOException, ParseException, SAXException {
-        ControllerServer controllerServer = new ControllerServer();
+        server.controller.ControllerServer controllerServer = new ControllerServer();
       //  client.sendMessage();
 
     }

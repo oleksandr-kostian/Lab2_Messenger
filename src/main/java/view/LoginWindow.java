@@ -2,7 +2,6 @@ package view;
 
 import client.controller.Controller;
 import org.xml.sax.SAXException;
-import server.controller.ControllerServer;
 import server.model.XmlSet;
 
 import javax.swing.*;
@@ -21,6 +20,7 @@ public class LoginWindow extends JFrame {
     private JTextField loginField;
     private JPasswordField passwordField;
     private JButton ok;
+    private JButton reg;
     private Controller controller;
 
     LoginWindow(Controller controller) {
@@ -53,13 +53,57 @@ public class LoginWindow extends JFrame {
         box2.add(passwordField);
 
         Box box3 = Box.createHorizontalBox();
-        ok =  setButton();
+        ok =  setButtonF();
         ok.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 /*if(loginField.getText()!=null&&loginField.getText().equals("admin")& new String(passwordField.getPassword()).equals("admin")){
                     AdminFrame adminFrame = new AdminFrame(null);
                 }else*/
+                if (loginField.getText() != null && !loginField.getText().trim().equals("")) {
+                    XmlSet aut = new XmlSet(id++);
+                    java.util.List<String> logPas = new ArrayList<String>();
+                    logPas.add(loginField.getText());
+                    logPas.add(new String(passwordField.getPassword()));
+                    aut.setList(logPas);
+                    aut.setKeyDialog(11);
+                    controller.sendMessage(aut, "Authentication");
+
+                    while (true) {
+                        controller.getMessage();
+                        XmlSet buff = controller.getUserXml();
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("ActiveUsers")) {
+                            closeFrame();
+                            UserFrame userFrame = new UserFrame(controller, logPas.get(0));
+                            break;
+                        }
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("Ban")) {
+                            JOptionPane.showMessageDialog(null, "You have ban!!!");
+                            break;
+                        }
+
+                        if (buff.getPreference().equals("admin")) {
+                            closeFrame();
+                            AdminFrame adminFrame = new AdminFrame(controller);
+                            break;
+                        }
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("The user is online.")) {
+                            JOptionPane.showMessageDialog(null, "The user is online.");
+                            break;
+                        }
+                        if(buff.getPreference().equals("Authentication")){
+                            JOptionPane.showMessageDialog(null,
+                                    "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
+                        }
+                    }
+                }
+            }
+
+        });
+        reg = setButtonS();
+        reg.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 if ( loginField.getText()!=null&&!loginField.getText().trim().equals("")) {
                     XmlSet aut = new XmlSet(id++);
                     java.util.List<String> logPas = new ArrayList<String>();
@@ -67,38 +111,29 @@ public class LoginWindow extends JFrame {
                     logPas.add(new String(passwordField.getPassword()));
                     aut.setList(logPas);
                     aut.setKeyDialog(11);
-                    controller.sendMessage(aut,"authentication");
+                    controller.sendMessage(aut,"Registration");
 
-                    while (true){
+                    while (true) {
                         controller.getMessage();
                         XmlSet buff = controller.getUserXml();
-                        if (buff.getPreference().equals("authentication") && buff.getMessage().equals("activeUser") ){
+                        if (buff.getPreference().equals("Registration") && buff.getMessage().equals("ActiveUsers")) {
                             closeFrame();
-                            UserFrame userFrame = new UserFrame(controller,logPas.get(0));
-                            break;
+                            UserFrame userFrame = new UserFrame(controller, logPas.get(0));
+                            return;
                         }
-                        if(buff.getPreference().equals("authentication") && buff.getMessage().equals("ban") ){
-                            JOptionPane.showMessageDialog(null, "You have ban!!!");
-                            break;
-                        }
-
-                        if(buff.getPreference().equals("admin")){
-                            closeFrame();
-                            AdminFrame adminFrame = new AdminFrame(controller);
-                            break;
+                        if (buff.getPreference().equals("Registration") &&
+                                buff.getMessage().equals("IncorrectValue name of user. This user has already been created.")) {
+                            JOptionPane.showMessageDialog(null, "IncorrectValue name of user. This user has already been created.");
+                            return;
                         }
                     }
-
-
                 }
-
             }
         });
-        // JButton cancel = new JButton("Отмена");
-        //box3.add(Box.createHorizontalGlue());
+        box3.add(Box.createHorizontalGlue());
         box3.add(ok);
-        // box3.add(Box.createHorizontalStrut(12));
-        //box3.add(cancel);
+        box3.add(Box.createHorizontalStrut(12));
+        box3.add(reg);
 
         loginLabel.setPreferredSize(passwordLabel.getPreferredSize());
 
@@ -118,16 +153,13 @@ public class LoginWindow extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
     }
-    /*public void paintComponent(Graphics g){
-        Image im = null;
-        try {
-            im = ImageIO.read(new File("D:\\fon.jpg"));
-        } catch (IOException e) {}
-        g.drawImage(im, 0, 0, null);
-    }*/
-    public JButton setButton(){
-        JButton enter = new JButton("Enter");
-        return enter;
+
+    public JButton setButtonF(){
+        return  new JButton("Enter");
+    }
+    public JButton setButtonS(){
+        return  new JButton("Registration");
+
     }
     public void closeFrame(){
         this.setVisible(false);

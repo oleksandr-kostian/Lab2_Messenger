@@ -25,24 +25,26 @@ class UserFrame {
     private JPanel listPanel;
 volatile private java.util.List<String> data ;
     private JTextArea memo;
-    private Controller controller;
+    private client.controller.Controller controller;
     private XmlSet userSet;
     private String login;
     private boolean privateDialog;
-    JFrame viewAll;
-    List<String> privateList;
+    private boolean close;
+    private JFrame viewAll;
+    private List<String> privateList;
     private Thread  getMess = new Thread() {
         @Override
         public void run() {
             while (true){
+                if(close){return;}
                 controller.getMessage();
                 XmlSet buff = controller.getUserXml();
 
-                if (buff.getPreference().equals("message to all")){
+                if (buff.getPreference().equals("MessageForAll")){
                     memo.append(controller.getUserXml().getMessage()+"\n");
                     memo.append("\n");
                 }
-                if (buff.getPreference().equals("activeUser")){
+                if (buff.getPreference().equals("ActiveUsers")){
                     if(privateDialog) continue;
                     DefaultListModel<String> activeUser = new DefaultListModel<>();
                     data = controller.getUserXml().getList();
@@ -52,7 +54,7 @@ volatile private java.util.List<String> data ;
                     }
                     list.setModel(activeUser);
                 }
-                if(buff.getPreference().equals("private")) {
+                if(buff.getPreference().equals("PrivateMessage")) {
                     if(privateDialog ){
                         memo.append(buff.getMessage()+"\n");
                         memo.append("\n");
@@ -87,12 +89,11 @@ volatile private java.util.List<String> data ;
         @Override
         public void run() {
             while (true){
-                if(privateDialog){
-                    break;
-                }
-                controller.sendMessage(userSet,"activeUser");
+                if( close | privateDialog){
+                    return;}
+                controller.sendMessage(userSet,"ActiveUsers");
                 try {
-                    sleep(10000);
+                    sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -183,19 +184,25 @@ volatile private java.util.List<String> data ;
         send.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(edit.getText()==null|edit.getText().trim().equals("")){
+                    return;
+                }
                 if(privateDialog){
                     userSet.setList(data);
                     userSet.setMessage(login + ":  "+ edit.getText());
                     edit.setText("");
-                    controller.sendMessage(userSet,"private");
-                }
-                userSet.setKeyDialog(11);
-                if(edit.getText()==null|edit.getText().trim().equals("")){
+                    controller.sendMessage(userSet,"PrivateMessage");
                     return;
+                }else {
+                    userSet.setKeyDialog(11);
+                    userSet.setMessage(login + ":  "+ edit.getText());
+                    edit.setText("");
+                    controller.sendMessage(userSet,"MessageForAll");
                 }
-                userSet.setMessage(login + ":  "+ edit.getText());
-                edit.setText("");
-                controller.sendMessage(userSet,"all");
+                //
+
+
+
             }
         });
 
@@ -231,8 +238,8 @@ volatile private java.util.List<String> data ;
             }
         });
         /*
-       JMenuItem view = menu.getViewAll();
-        view.addActionListener(new ActionListener() {
+       JMenuItem client.controller.view = menu.getViewAll();
+        client.controller.view.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 DefaultListModel allUser = new DefaultListModel();
                 for (String s:data){
@@ -257,8 +264,9 @@ volatile private java.util.List<String> data ;
                                 JOptionPane.QUESTION_MESSAGE, null, options,
                                 options[0]);
                 if (n == 0) {
-                    controller.sendMessage(userSet,"close");
+                    controller.sendMessage(userSet,"Close");
                     controller.closeServer();
+                    close = true;
                     System.exit(2);
                 }
             }
