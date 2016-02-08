@@ -232,6 +232,7 @@ public class ControllerServer {
                 String messageToPrivateChat = client.getXmlUser().getMessage();
                 List<String> userList = client.getXmlUser().getList();
                 if(userList!=null) {
+                    int keyDialog=client.getXmlUser().getKeyDialog();
                     List<String> privateList = new ArrayList<>();
                     privateList.add(client.getUser().getLogin());
                     privateList.addAll(userList);
@@ -241,6 +242,7 @@ public class ControllerServer {
                             if (activeUsers.get(j).getUser().getLogin().compareToIgnoreCase(userList.get(i)) == 0) {
                                 activeUsers.get(j).getXmlUser().setMessage(messageToPrivateChat);
                                 activeUsers.get(j).getXmlUser().setList(privateList);
+                                activeUsers.get(j).getXmlUser().setKeyDialog(keyDialog);
                                 activeUsers.get(j).sendMessage(Preference.PrivateMessage.name());
                             }
                         }
