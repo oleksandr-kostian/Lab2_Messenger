@@ -303,6 +303,9 @@ public class ControllerServer {
                 break;
 
             case Edit:
+                List<String> newUser = client.getXmlUser().getList();
+                client.getUser().setLogin(newUser.get(0));
+                client.getUser().setPassword(newUser.get(1));
                 model.editUser(client.getUser());
                 client.getXmlUser().setMessage(Preference.Successfully.name());
                 client.sendMessage(Preference.Edit.name());
