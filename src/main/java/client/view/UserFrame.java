@@ -28,7 +28,7 @@ class UserFrame {
     private Controller controller;
     private XmlSet userSet;
     private String login;
-    private boolean privateDialog;
+    volatile private boolean privateDialog;
     private boolean close;
     private boolean edit;
     private JFrame viewAll;

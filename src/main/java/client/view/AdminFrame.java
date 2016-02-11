@@ -22,7 +22,7 @@ public class AdminFrame extends UserFrame {
     JList listBann;
     List<String> banUsers;
     private int elementBann;
-    Thread adminThead = new Thread(){
+    /*Thread adminThead = new Thread(){
         @Override
         public void run() {
             while (true){
@@ -30,7 +30,7 @@ public class AdminFrame extends UserFrame {
                 XmlSet buff = controller.getUserXml();
             }
         }
-    };
+    };*/
     public AdminFrame(Controller controller,List<String> banUsers){
         super(controller,"root",new AdminMenu());
         this.controller = controller;
