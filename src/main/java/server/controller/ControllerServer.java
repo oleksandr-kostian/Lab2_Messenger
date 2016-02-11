@@ -135,11 +135,15 @@ public class ControllerServer {
 
                   }
               }
+              else{
+                  client.getXmlUser().setMessage("User does not exist!");
+                  client.sendMessage(Preference.Authentication.name());
+              }
           }
           else{
               client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
               client.sendMessage(Preference.Authentication.name());
-              client.close();
+            //  client.close();
           }
       }
 
