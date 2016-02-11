@@ -28,7 +28,7 @@ public class ControllerServer {
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
     private ServerView                      serverGUI;
-   // private volatile boolean                finish = false;
+   private volatile boolean                finish = false;
 
     /**
      * Default constructor of servers controller.
@@ -185,11 +185,7 @@ public class ControllerServer {
 
   }
     public void stop() throws IOException{
-        //this.finish=true;
-        for(int i=0; i<activeUsers.size();i++){
-           // activeUsers.get(i).finish=true;
-            activeUsers.get(i).close();
-        }
+       this.finish=true;
         if (socket != null) {
                 socket.close();
             }
@@ -273,6 +269,10 @@ public class ControllerServer {
                     for(int i=0;i<activeUsers.size();i++){
                         if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan) == 0) {
                                 activeUsers.get(i).getUser().setBan(true);
+
+                                activeUsers.get(i).getXmlUser().setMessage(Preference.Ban.name());
+                                activeUsers.get(i).sendMessage(Preference.Ban.name());
+
                                 client.getXmlUser().setMessage(Preference.Successfully.name());
                                 break;
                             }
@@ -324,8 +324,13 @@ public class ControllerServer {
                     for(int i=0;i<activeUsers.size();i++){
                         if(activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
                             model.removeUser(activeUsers.get(i).getUser());
+
+                            activeUsers.get(i).getXmlUser().setMessage("Admin deleted you.");
+                            activeUsers.get(i).sendMessage(Preference.Remove.name());
+
                             activeUsers.get(i).close();
                             activeUsers.remove(activeUsers.get(i));
+
                             client.getXmlUser().setMessage(Preference.Successfully.name());
                             client.sendMessage(Preference.Remove.name());
                             break;
@@ -384,7 +389,6 @@ public class ControllerServer {
         private OutputStream         toClient;
         private XmlSet               xmlUser;
         boolean                      authentication;
-        private volatile boolean                finish = false;
         /**
          * Constructor of class.
          * @param socket socket of client.
@@ -525,8 +529,7 @@ public class ControllerServer {
          */
         public void close() {
                 try {
-                    finish=true;
-                    if (fromClient != null) {
+                   if (fromClient != null) {
                         fromClient.close();
                     }
                     if (toClient != null) {
