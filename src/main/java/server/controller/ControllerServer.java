@@ -28,7 +28,7 @@ public class ControllerServer {
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
     private ServerView                      serverGUI;
-    private volatile boolean                finish = false;
+   // private volatile boolean                finish = false;
 
     /**
      * Default constructor of servers controller.
@@ -105,7 +105,7 @@ public class ControllerServer {
                           online = true;
                           client.getXmlUser().setMessage("The user is online.");
                           client.sendMessage(Preference.Authentication.name());
-                          client.close();
+                        //  client.close();
                           break;
                       }
                   }
@@ -185,7 +185,11 @@ public class ControllerServer {
 
   }
     public void stop() throws IOException{
-        this.finish=true;
+        //this.finish=true;
+        for(int i=0; i<activeUsers.size();i++){
+           // activeUsers.get(i).finish=true;
+            activeUsers.get(i).close();
+        }
         if (socket != null) {
                 socket.close();
             }
@@ -320,7 +324,12 @@ public class ControllerServer {
                     for(int i=0;i<activeUsers.size();i++){
                         if(activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
                             model.removeUser(activeUsers.get(i).getUser());
+                            activeUsers.get(i).close();
                             activeUsers.remove(activeUsers.get(i));
+                            client.getXmlUser().setMessage(Preference.Successfully.name());
+                            client.sendMessage(Preference.Remove.name());
+                            break;
+
                         }
                     }
 
@@ -328,15 +337,18 @@ public class ControllerServer {
                     logger.debug(Preference.Remove.name()+ " removeUser");
                 }
                 else{
-                    //удаление самого пользователя
+                //удаление самого пользователя
                     model.removeUser(client.getUser());
                     activeUsers.remove(client);
+                    client.getXmlUser().setMessage(Preference.Successfully.name());
+                    client.sendMessage(Preference.Remove.name());
+                    client.close();
                     this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
                     logger.debug("Remove " + client.getUser().getLogin());
                 }
-                client.getXmlUser().setMessage(Preference.Successfully.name());
-                client.sendMessage(Preference.Remove.name());
-                break;
+               //client.getXmlUser().setMessage(Preference.Successfully.name());
+               // client.sendMessage(Preference.Remove.name());
+               break;
 
             case Close:
                 activeUsers.remove(client);
@@ -372,7 +384,7 @@ public class ControllerServer {
         private OutputStream         toClient;
         private XmlSet               xmlUser;
         boolean                      authentication;
-
+        private volatile boolean                finish = false;
         /**
          * Constructor of class.
          * @param socket socket of client.
@@ -513,6 +525,7 @@ public class ControllerServer {
          */
         public void close() {
                 try {
+                    finish=true;
                     if (fromClient != null) {
                         fromClient.close();
                     }
