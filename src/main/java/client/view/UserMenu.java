@@ -1,4 +1,4 @@
-package view;
+package client.view;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,7 +11,7 @@ public class UserMenu extends  JMenuBar{
     private JMenuItem viewAll;
     //private JMenuItem exitItem;
     private JMenuItem edit;
-    private JMenuItem exit;
+    private JMenuItem remove;
     private JMenuItem change;
 
     private JMenu fileMenu;
@@ -23,8 +23,8 @@ public class UserMenu extends  JMenuBar{
     public JMenu getFileMenu() {
         return fileMenu;
     }
-    public JMenuItem getExit() {
-        return exit;
+    public JMenuItem getRemove() {
+        return remove;
     }
 
     public JMenuItem getChange() {
@@ -54,17 +54,18 @@ public class UserMenu extends  JMenuBar{
        /* JMenu admin = new JMenu("admin");
         fileMenu.add(admin);*/
 
-         privat =  new JMenuItem("Приватный чат");
+         privat =  new JMenuItem("Private chat");
         privat.setFont(font);
         fileMenu.add(privat);
 
-         edit = new JMenuItem("Редактировать акаунт ");
+         edit = new JMenuItem("Edit account");
         edit.setFont(font);
         fileMenu.add(edit);
 
-        viewAll = new JMenuItem("Обычный чат");
+        viewAll = new JMenuItem("All chat");
         viewAll.setFont(font);
         fileMenu.add(viewAll);
+        viewAll.setEnabled(false);
 
        /* JMenu task = new JMenu("Task");
         task.setFont(font);
@@ -78,9 +79,9 @@ public class UserMenu extends  JMenuBar{
         change.setFont(font);
         task.add(change);*/
         fileMenu.addSeparator();
-        exit = new JMenuItem("Выйти");
-        exit.setFont(font);
-        fileMenu.add(exit);
+        remove = new JMenuItem("Remove");
+        remove.setFont(font);
+        fileMenu.add(remove);
 
         //fileMenu.addSeparator();
 

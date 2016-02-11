@@ -1,4 +1,4 @@
-package view;
+package client.view;
 
 import client.controller.Controller;
 import org.xml.sax.SAXException;
@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 
 /**
  * Created by Слава on 22.01.2016.
@@ -19,8 +20,8 @@ public class LoginWindow extends JFrame {
     private int id = 0;
     private JTextField loginField;
     private JPasswordField passwordField;
-    private JButton ok;
-    private JButton reg;
+    private JButton ok = new JButton() ;
+    private JButton reg = new JButton();
     private Controller controller;
 
     LoginWindow(Controller controller) {
@@ -29,8 +30,16 @@ public class LoginWindow extends JFrame {
         createGUI();
     }
     LoginWindow() {
-        super("Enter to chat");
+        super("Edit");
         createGUI();
+    }
+
+    public JTextField getLoginField() {
+        return loginField;
+    }
+
+    public JPasswordField getPasswordField() {
+        return passwordField;
     }
 
     public void createGUI(){
@@ -53,83 +62,8 @@ public class LoginWindow extends JFrame {
         box2.add(passwordField);
 
         Box box3 = Box.createHorizontalBox();
-        ok =  setButtonF();
-        ok.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                /*if(loginField.getText()!=null&&loginField.getText().equals("admin")& new String(passwordField.getPassword()).equals("admin")){
-                    AdminFrame adminFrame = new AdminFrame(null);
-                }else*/
-                if (loginField.getText() != null && !loginField.getText().trim().equals("")) {
-                    XmlSet aut = new XmlSet(id++);
-                    java.util.List<String> logPas = new ArrayList<String>();
-                    logPas.add(loginField.getText());
-                    logPas.add(new String(passwordField.getPassword()));
-                    aut.setList(logPas);
-                    aut.setKeyDialog(11);
-                    controller.sendMessage(aut, "Authentication");
-
-                    while (true) {
-                        controller.getMessage();
-                        XmlSet buff = controller.getUserXml();
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("ActiveUsers")) {
-                            closeFrame();
-                            UserFrame userFrame = new UserFrame(controller, logPas.get(0));
-                            break;
-                        }
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("Ban")) {
-                            JOptionPane.showMessageDialog(null, "You have ban!!!");
-                            break;
-                        }
-
-                        if (buff.getPreference().equals("admin")) {
-                            closeFrame();
-                            AdminFrame adminFrame = new AdminFrame(controller);
-                            break;
-                        }
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("The user is online.")) {
-                            JOptionPane.showMessageDialog(null, "The user is online.");
-                            break;
-                        }
-                        if(buff.getPreference().equals("Authentication")){
-                            JOptionPane.showMessageDialog(null,
-                                    "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
-                        }
-                    }
-                }
-            }
-
-        });
-        reg = setButtonS();
-        reg.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if ( loginField.getText()!=null&&!loginField.getText().trim().equals("")) {
-                    XmlSet aut = new XmlSet(id++);
-                    java.util.List<String> logPas = new ArrayList<String>();
-                    logPas.add(loginField.getText());
-                    logPas.add(new String(passwordField.getPassword()));
-                    aut.setList(logPas);
-                    aut.setKeyDialog(11);
-                    controller.sendMessage(aut,"Registration");
-
-                    while (true) {
-                        controller.getMessage();
-                        XmlSet buff = controller.getUserXml();
-                        if (buff.getPreference().equals("Registration") && buff.getMessage().equals("ActiveUsers")) {
-                            closeFrame();
-                            UserFrame userFrame = new UserFrame(controller, logPas.get(0));
-                            return;
-                        }
-                        if (buff.getPreference().equals("Registration") &&
-                                buff.getMessage().equals("IncorrectValue name of user. This user has already been created.")) {
-                            JOptionPane.showMessageDialog(null, "IncorrectValue name of user. This user has already been created.");
-                            return;
-                        }
-                    }
-                }
-            }
-        });
+        setEnterListener();
+        setRegListener();
         box3.add(Box.createHorizontalGlue());
         box3.add(ok);
         box3.add(Box.createHorizontalStrut(12));
@@ -154,16 +88,106 @@ public class LoginWindow extends JFrame {
         setVisible(true);
     }
 
-    public JButton setButtonF(){
-        return  new JButton("Enter");
-    }
-    public JButton setButtonS(){
-        return  new JButton("Registration");
+    public void setEnterListener(){
+        ok.setText("Enter");
+        ok.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                /*if(loginField.getText()!=null&&loginField.getText().equals("admin")& new String(passwordField.getPassword()).equals("admin")){
+                    AdminFrame adminFrame = new AdminFrame(null);
+                }else*/
+                if (loginField.getText() != null && !loginField.getText().trim().equals("")) {
+                    XmlSet aut = new XmlSet(id++);
+                    java.util.List<String> logPas = new ArrayList<String>();
+                    logPas.add(loginField.getText());
+                    logPas.add(new String(passwordField.getPassword()));
+                    aut.setList(logPas);
+                    aut.setKeyDialog(11);
+                    controller.sendMessage(aut, "Authentication");
 
+                    while (true) {
+                        controller.getMessage();
+                        XmlSet buff = controller.getUserXml();
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("ActiveUsers")) {
+                            closeFrame();
+                            UserFrame userFrame = new UserFrame(controller, logPas.get(0),new UserMenu());
+                            break;
+                        }
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("Ban")) {
+                            JOptionPane.showMessageDialog(null, "You have ban!!!");
+                            break;
+                        }
+
+                        if (buff.getPreference().equals("Admin")) {
+                            controller.sendMessage(controller.getUserXml(),"BanUsers");
+                            while (true){
+                                controller.getMessage();
+                                if(controller.getUserXml().getPreference().equals("BanUsers")&&
+                                        controller.getUserXml().getMessage().equals("BanUsers")){
+                                    closeFrame();
+                                    AdminFrame adminFrame = new AdminFrame(controller,controller.getUserXml().getList());
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("The user is online.")) {
+                            JOptionPane.showMessageDialog(null, "The user is online.");
+                            break;
+                        }
+                        if(buff.getPreference().equals("Authentication")){
+                            JOptionPane.showMessageDialog(null,
+                                    "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
+                        }
+                    }
+                }
+            }
+
+        });
+    }
+    public void setRegListener() {
+        reg.setText("Registration");
+        reg.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (loginField.getText() != null && !loginField.getText().trim().equals("")) {
+                    XmlSet aut = new XmlSet(id++);
+                    java.util.List<String> logPas = new ArrayList<String>();
+                    logPas.add(loginField.getText());
+                    logPas.add(new String(passwordField.getPassword()));
+                    aut.setList(logPas);
+                    aut.setKeyDialog(11);
+                    controller.sendMessage(aut, "Registration");
+
+                    while (true) {
+                        controller.getMessage();
+                        XmlSet buff = controller.getUserXml();
+                        if (buff.getPreference().equals("Registration") && buff.getMessage().equals("ActiveUsers")) {
+                            closeFrame();
+                            UserFrame userFrame = new UserFrame(controller, logPas.get(0), new UserMenu());
+                            return;
+                        }
+                        if (buff.getPreference().equals("Registration") &&
+                                buff.getMessage().equals("IncorrectValue name of user. This user has already been created.")) {
+                            JOptionPane.showMessageDialog(null, "IncorrectValue name of user. This user has already been created.");
+                            return;
+                        }
+                    }
+                }
+            }
+        });
     }
     public void closeFrame(){
         this.setVisible(false);
         this.dispose();
+    }
+
+    public JButton getOk() {
+        return ok;
+    }
+
+    public JButton getReg() {
+        return reg;
     }
 
     public static void main(String[] args) throws IOException, SAXException {

@@ -319,8 +319,8 @@ public class ControllerServer {
                     String removeUser = client.getXmlUser().getList().get(0);
                     for(int i=0;i<activeUsers.size();i++){
                         if(activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
-                            activeUsers.remove(activeUsers.get(i));
                             model.removeUser(activeUsers.get(i).getUser());
+                            activeUsers.remove(activeUsers.get(i));
                         }
                     }
 

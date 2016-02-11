@@ -1,4 +1,4 @@
-package view;
+package client.view;
 
 import client.controller.Controller;
 import net.miginfocom.swing.MigLayout;
@@ -23,33 +23,36 @@ class UserFrame {
     private JList list;
     private UserMenu menu;
     private JPanel listPanel;
-volatile private java.util.List<String> data ;
+    private java.util.List<String> activeUsers;
     private JTextArea memo;
-    private client.controller.Controller controller;
+    private Controller controller;
     private XmlSet userSet;
     private String login;
     private boolean privateDialog;
     private boolean close;
+    private boolean admin;
     private JFrame viewAll;
     private List<String> privateList;
     private Thread  getMess = new Thread() {
         @Override
         public void run() {
             while (true){
+                if(admin){continue;}
                 if(close){return;}
                 controller.getMessage();
                 XmlSet buff = controller.getUserXml();
 
                 if (buff.getPreference().equals("MessageForAll")){
+                    if(privateDialog) continue;
                     memo.append(controller.getUserXml().getMessage()+"\n");
                     memo.append("\n");
                 }
                 if (buff.getPreference().equals("ActiveUsers")){
                     if(privateDialog) continue;
                     DefaultListModel<String> activeUser = new DefaultListModel<>();
-                    data = controller.getUserXml().getList();
-                    data.remove(login);
-                    for (String s: data){
+                    activeUsers = controller.getUserXml().getList();
+                    activeUsers.remove(login);
+                    for (String s: activeUsers){
                         activeUser.addElement(s);
                     }
                     list.setModel(activeUser);
@@ -70,18 +73,28 @@ volatile private java.util.List<String> data ;
 
                                 privateDialog = true;
                                 DefaultListModel<String> model = new DefaultListModel<>();
-                                data = buff.getList();
-                                data.remove(login);
-                                for (String s : data) {
+                                activeUsers = buff.getList();
+                                activeUsers.remove(login);
+                                for (String s : activeUsers) {
                                     model.addElement(s);
                                 }
                                 list.setModel(model);
                                 memo.append(buff.getMessage() + "\n");
                                 memo.append("\n");
+                                menu.getViewAll().setEnabled(true);
                             }
                         }
                     }
                 }
+
+                if(buff.getPreference().equals("Edit")&& buff.getMessage().equals("Successfully")){
+                    JOptionPane.showMessageDialog(viewAll,"Edit is successful.");
+                }
+                if(buff.getPreference().equals("Remove")&&(buff.getMessage().equals("Successfully"))){
+                    JOptionPane.showMessageDialog(null,"Remove is successfully");
+                    //setAdmin(false);
+                }
+
             }
         }
     };
@@ -89,8 +102,10 @@ volatile private java.util.List<String> data ;
         @Override
         public void run() {
             while (true){
-                if( close | privateDialog){
-                    return;}
+                if(close){
+                    return;
+                }
+                if(privateDialog|admin) continue;
                 controller.sendMessage(userSet,"ActiveUsers");
                 try {
                     sleep(5000);
@@ -104,29 +119,34 @@ volatile private java.util.List<String> data ;
     /*new String[]{
         "user1","user2","user3","user4","user5","user6","user7","user8","user9","user10","user11","user12"
     };*/
-    public UserFrame(Controller controller,String login){
+    public UserFrame(Controller controller,String login,UserMenu userMenu){
         this.login = login;
         userSet = controller.getUserXml();
         this.controller = controller;
-        data =  userSet.getList();
-        data.remove(login);
+        activeUsers =  userSet.getList();
+        activeUsers.remove(login);
+        menu = userMenu;
         createGUI();
+        setMenuListener();
         getMess.start();
         sendMess.start();
     }
 
-    public UserMenu setMenu() {
-        UserMenu menu = new UserMenu();
+    public UserMenu getMenu() {
         return menu;
     }
 
-    public void setData(List<String> data) {
-        this.data = data;
+    public List<String> getActiveUsers() {
+        return activeUsers;
     }
 
-    public void setList(){
+    public void setActiveUsers(List<String> activeUsers) {
+        this.activeUsers = activeUsers;
+    }
+
+    public void setModel(){
         DefaultListModel<String> model = new DefaultListModel<>();
-        for (String s:data){
+        for (String s: activeUsers){
             model.addElement(s);
         }
         list = new JList(model);
@@ -141,12 +161,11 @@ volatile private java.util.List<String> data ;
         }
     }*/
 
-    public JPanel setListPanel() {
-        final JPanel panel = new FonPanel();
-        panel.setLayout(new MigLayout());
-        JLabel listLabel = new JLabel("User list");
-        listLabel.setForeground(Color.WHITE);
-        setList();
+    public int[] getElement() {
+        return element;
+    }
+
+    public JList setList(){
         list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         list.addListSelectionListener(
                 new ListSelectionListener() {
@@ -154,6 +173,15 @@ volatile private java.util.List<String> data ;
                         element = list.getSelectedIndices();
                     }
                 });
+        return list;
+    }
+    public JPanel setListPanel() {
+        final JPanel panel = new FonPanel();
+        panel.setLayout(new MigLayout());
+        JLabel listLabel = new JLabel("Active users");
+        listLabel.setForeground(Color.WHITE);
+        setModel();
+        list =  setList();
         JScrollPane jsp = new JScrollPane(list);
         jsp.setPreferredSize(new Dimension(120, 300));
         panel.add(listLabel,"wrap");
@@ -188,7 +216,7 @@ volatile private java.util.List<String> data ;
                     return;
                 }
                 if(privateDialog){
-                    userSet.setList(data);
+                    userSet.setList(activeUsers);
                     userSet.setMessage(login + ":  "+ edit.getText());
                     edit.setText("");
                     controller.sendMessage(userSet,"PrivateMessage");
@@ -211,45 +239,7 @@ volatile private java.util.List<String> data ;
 
         listPanel = setListPanel();
 
-        menu = setMenu();
         viewAll.setJMenuBar(menu);
-        JMenuItem priv =  menu.getPrivate();
-        priv.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (element == null) {
-                    JOptionPane.showMessageDialog(viewAll, "Choose users");
-                    return;
-                }
-                privateList = new ArrayList<String>();
-                List<String> buff =  data;
-                for(int i:element){
-                    privateList.add(buff.get(i));}
-                data = privateList;
-                userSet.setKeyDialog(12);
-                userSet.setList(privateList);
-                privateDialog = true;
-                userSet.setMessage("private chat");
-                controller.sendMessage(userSet,"private");
-                DefaultListModel privateUser = new DefaultListModel();
-                for (int i : element) {
-                    privateUser.addElement(buff.get(i));
-                }
-                list.setModel(privateUser);
-            }
-        });
-        /*
-       JMenuItem client.controller.view = menu.getViewAll();
-        client.controller.view.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                DefaultListModel allUser = new DefaultListModel();
-                for (String s:data){
-                    allUser.addElement(s);
-                }
-                list.setModel(allUser);
-
-            }
-        });*/
-
         cont.setLayout(new MigLayout());
         cont.add(jsp1);
         cont.add(listPanel,"wrap");
@@ -272,12 +262,65 @@ volatile private java.util.List<String> data ;
             }
         });
 
-        viewAll.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        viewAll.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         viewAll.pack();
         viewAll.setLocationRelativeTo(null);
         viewAll.setVisible(true);
 
     }
+    public void setMenuListener(){
+        menu.getPrivate().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (element == null) {
+                    JOptionPane.showMessageDialog(viewAll, "Choose users");
+                    return;
+                }
+                privateList = new ArrayList<String>();
+                List<String> buff = activeUsers;
+                for(int i:element){
+                    privateList.add(buff.get(i));}
+                activeUsers = privateList;
+                userSet.setKeyDialog(12);
+                userSet.setList(privateList);
+                privateDialog = true;
+                userSet.setMessage("private chat");
+                controller.sendMessage(userSet,"PrivateMessage");
+                DefaultListModel privateUser = new DefaultListModel();
+                for (int i : element) {
+                    privateUser.addElement(buff.get(i));
+                }
+                list.setModel(privateUser);
+
+                menu.getViewAll().setEnabled(true);
+            }
+        });
+        menu.getEdit().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                EditFrame editFrame = new EditFrame(userSet,controller);
+            }
+        });
+
+
+        menu.getViewAll().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                userSet.setList(activeUsers);
+                userSet.setMessage(login + ":  Exited from private chate!!!");
+                controller.sendMessage(userSet,"PrivateMessage");
+                privateDialog = false;
+                menu.getViewAll().setEnabled(false);
+            }
+        });
+
+        menu.getRemove().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                controller.sendMessage(userSet,"Remove");
+            }
+        });
+
+    }
+
 
 
 }

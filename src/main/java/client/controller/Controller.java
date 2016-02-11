@@ -17,10 +17,10 @@ import server.model.XmlSet;
  * @author Veleri Rechembei
  * @version %I%, %G%
  */
-public class Controller implements Runnable {
+public class Controller  {
 
     private String              hostName;
-    final private int           PORT=1025;
+    final private int           PORT =1025;
     private Socket              connect;
     private String              myUser;
     private InputStream         fromServer;
@@ -108,11 +108,11 @@ public class Controller implements Runnable {
         this.userXml = userXml;
     }
 
-    public XmlSet getUserXml() {
+    public synchronized XmlSet getUserXml() {
         return userXml;
     }
 
-    public void  getMessage(){
+    public synchronized void  getMessage(){
         try {
 
             BufferedReader is = new BufferedReader(new InputStreamReader(fromServer));
@@ -151,26 +151,6 @@ public class Controller implements Runnable {
     }
     public void viewActiveUser() {
 
-    }
-
-   // @Override
-    public void run() {
-
-      /*  while (true) {
-               try {
-                  XmlMessage.readXmlFromStream(connect.getInputStream());
-
-                // + print message in GUI
-            }
-        catch (IOException e) {
-            System.out.println(e.getMessage() + e);
-
-        }
-        catch(ClassNotFoundException e2) {
-            System.out.println(e2.getMessage() + e2);
-        }
-           }
-        */
     }
 
 

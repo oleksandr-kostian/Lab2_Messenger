@@ -1,4 +1,4 @@
-package view;
+package client.view;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,18 +7,28 @@ import java.awt.*;
  * Created by Слава on 24.01.2016.
  */
 public class AdminMenu extends UserMenu {
+    JMenuItem edit;
+    JMenuItem remove;
     public AdminMenu() {
         Font font = new Font("Verdana", Font.PLAIN, 11);
         JMenu admin = new JMenu("Admin");
         admin.setFont(font);
         super.add(admin);
 
-        JMenuItem edit = new JMenuItem("Ban");
+        edit = new JMenuItem("Ban");
         edit.setFont(font);
         admin.add(edit);
 
-        JMenuItem remove = new JMenuItem("Remove");
+        remove = new JMenuItem("Remove User");
         remove.setFont(font);
         admin.add(remove);
+    }
+
+    public JMenuItem getEditUser() {
+        return edit;
+    }
+
+    public JMenuItem getRemoveUser() {
+        return remove;
     }
 }
