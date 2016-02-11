@@ -14,11 +14,12 @@ import java.util.ArrayList;
  * Created by Слава on 29.01.2016.
  */
 public class EditFrame extends LoginWindow{
-    XmlSet XMLUser;
-    Controller controller;
-    public EditFrame(XmlSet xmlSet, Controller controller) {
+    private XmlSet UserSet;
+    private Controller controller;
+    private String login;
+    public EditFrame(XmlSet UserSet, Controller controller) {
         super(controller);
-        XMLUser = xmlSet;
+        this.UserSet = UserSet;
         createGUI();
         this.controller = controller;
     }
@@ -30,13 +31,14 @@ public class EditFrame extends LoginWindow{
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (getLoginField().getText() != null && !getLoginField().getText().trim().equals("")) {
+
                     java.util.List<String> logPas = new ArrayList<String>();
                     logPas.add(getLoginField().getText());
                     logPas.add(new String(getPasswordField().getPassword()));
-                    XMLUser.setList(logPas);
-                    controller.sendMessage(XMLUser, "Edit");
+                    UserSet.setList(logPas);
+                    controller.sendMessage(UserSet, "Edit");
                     setVisible(false);
-                    dispose();
+                    login = getLoginField().getText();
                     /*while(true){
                         controller.getMessage();
                         if(controller.getUserXml().getPreference().equals("Edit")&&

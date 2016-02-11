@@ -30,14 +30,14 @@ class UserFrame {
     private String login;
     private boolean privateDialog;
     private boolean close;
-    private boolean admin;
+    private boolean edit;
     private JFrame viewAll;
     private List<String> privateList;
+    private EditFrame editFrame;
     private Thread  getMess = new Thread() {
         @Override
         public void run() {
             while (true){
-                if(admin){continue;}
                 if(close){return;}
                 controller.getMessage();
                 XmlSet buff = controller.getUserXml();
@@ -88,10 +88,16 @@ class UserFrame {
                 }
 
                 if(buff.getPreference().equals("Edit")&& buff.getMessage().equals("Successfully")){
+
+                    if(edit) continue;
                     JOptionPane.showMessageDialog(viewAll,"Edit is successful.");
+                    login = editFrame.getLoginField().getText();
+                    viewAll.setTitle(login);
+                    editFrame.dispose();
+                    edit = true;
                 }
                 if(buff.getPreference().equals("Remove")&&(buff.getMessage().equals("Successfully"))){
-                    JOptionPane.showMessageDialog(null,"Remove is successfully");
+                    JOptionPane.showMessageDialog(viewAll,"Remove is successfully");
                     //setAdmin(false);
                 }
 
@@ -105,7 +111,7 @@ class UserFrame {
                 if(close){
                     return;
                 }
-                if(privateDialog|admin) continue;
+                if(privateDialog) continue;
                 controller.sendMessage(userSet,"ActiveUsers");
                 try {
                     sleep(5000);
@@ -297,7 +303,7 @@ class UserFrame {
         menu.getEdit().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                EditFrame editFrame = new EditFrame(userSet,controller);
+                 editFrame = new EditFrame(userSet,controller);
             }
         });
 
