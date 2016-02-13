@@ -12,7 +12,6 @@ public class UserMenu extends  JMenuBar{
     //private JMenuItem exitItem;
     private JMenuItem edit;
     private JMenuItem remove;
-    private JMenuItem change;
 
     private JMenu fileMenu;
 
@@ -25,10 +24,6 @@ public class UserMenu extends  JMenuBar{
     }
     public JMenuItem getRemove() {
         return remove;
-    }
-
-    public JMenuItem getChange() {
-        return change;
     }
 
     public JMenuItem getEdit() {

@@ -17,26 +17,40 @@ import java.util.List;
  * Created by Слава on 24.01.2016.
  */
 public class AdminFrame extends UserFrame {
-    Controller controller;
-    XmlSet XmlUser;
-    JList listBann;
-    List<String> banUsers;
-    private int elementBann;
-    /*Thread adminThead = new Thread(){
+    private Controller controller;
+    private XmlSet userSet;
+    private JList listBann;
+    private List<String> banUsers;
+    private int elementBann = -1;
+    private DefaultListModel<String> model;
+    private Thread adminThead = new Thread(){
         @Override
         public void run() {
             while (true){
+                if(isClose()){return;}
                 controller.getMessage();
                 XmlSet buff = controller.getUserXml();
+                System.out.println(buff.getPreference());
+                if(buff.getPreference().equals("Ban")) {
+                    banUsers.add(getActiveUsers().get(getElement()[0]));
+                    model.addElement(getActiveUsers().get(getElement()[0]));
+                    JOptionPane.showMessageDialog(null, "Ban is successfully");
+                }
+                if(buff.getPreference().equals("UnBan")) {
+                    banUsers.remove(banUsers.get(elementBann));
+                    model.remove(elementBann);
+                    JOptionPane.showMessageDialog(null, "UnBan is successfully");
+                }
             }
         }
-    };*/
+    };
     public AdminFrame(Controller controller,List<String> banUsers){
         super(controller,"root",new AdminMenu());
         this.controller = controller;
-        XmlUser = controller.getUserXml();
+        userSet = controller.getUserXml();
         this.banUsers = banUsers;
         setBanModel();
+        adminThead.start();
     }
 
     public JPanel setListPanel(){
@@ -49,7 +63,7 @@ public class AdminFrame extends UserFrame {
         setModel();
         JList list = super.setList();
         JScrollPane jsp = new JScrollPane(list);
-        final JList listBann = new JList();
+        listBann = new JList();
         listBann.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         listBann.addListSelectionListener(
                 new ListSelectionListener() {
@@ -68,15 +82,11 @@ public class AdminFrame extends UserFrame {
         return listPanel;
     }
     public void setBanModel(){
-        DefaultListModel<String> model = new DefaultListModel<>();
-        if(banUsers.size() > 0) {
-            for (String s : banUsers) {
-                model.addElement(s);
-            }
-            listBann.setModel(model);
-        }else return;
-
-
+        model = new DefaultListModel<>();
+        for (String s : banUsers) {
+            model.addElement(s);
+        }
+        listBann.setModel(model);
     }
 
     public void setMenuListener(){
@@ -89,12 +99,39 @@ public class AdminFrame extends UserFrame {
                     int user = getElement()[0];
                     List<String> login = new ArrayList<String>();
                     login.add(getActiveUsers().get(user));
-                    XmlUser.setList(login);
-                    controller.sendMessage(XmlUser, "Remove");
-                    //adminThead.start();
+                    userSet.setList(login);
+                    controller.sendMessage(userSet, "Remove");
+
                 }
             }
         });
+
+        menu.getBan().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (getElement() != null && getElement().length == 1) {
+                    List<String> login = new ArrayList<String>();
+                    login.add(getActiveUsers().get(getElement()[0]));
+                    System.out.println(getActiveUsers().get(getElement()[0])+"sdfsd");
+                    userSet.setList(login);
+                    controller.sendMessage(userSet, "Ban");
+                }
+            }
+        });
+
+        menu.getUnBan().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(elementBann != -1){
+                    List<String> login = new ArrayList<String>();
+                    login.add(banUsers.get(elementBann));
+                    System.out.println(banUsers.get(elementBann));
+                    userSet.setList(login);
+                    controller.sendMessage(userSet, "UnBan");
+                }
+            }
+        });
+
     }
 }
 

@@ -43,7 +43,7 @@ public class XmlMessage {
         try {
             builder = factory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            LOG.error("ParamLangXML err " + e);
+            LOG.error("ParamLangXML err ", e);
         }
     }
 
@@ -155,7 +155,7 @@ public class XmlMessage {
                     xmlSet.setKeyDialog(Integer.parseInt(result));
             }
         } catch (Exception e){
-            LOG.error("messageID and ID " + e);
+            LOG.error("messageID and ID ", e);
             LOG.debug("message, ID " + Arrays.toString(e.getStackTrace()));
         }
 
@@ -180,7 +180,7 @@ public class XmlMessage {
                 xmlSet.setPreference(result);
             }
         } catch (Exception e){
-            LOG.debug("else_preference " + e);
+            LOG.debug("else_preference ", e);
         }
 
         // if parsing was good return xmlSet else null

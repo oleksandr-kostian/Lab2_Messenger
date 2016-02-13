@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import org.apache.log4j.Logger;
+import server.controller.Preference;
 
 /**
  * Class that realize the model
@@ -37,9 +38,9 @@ public class Model {
                     .append("\n");
             logMess.flush();
         } catch (FileNotFoundException e) {
-            LOG.error("log for messages not found " + e);
+            LOG.error("log for messages not found ", e);
         } catch (IOException e) {
-            LOG.error("write in log of messages " + e);
+            LOG.error("write in log of messages ", e);
         }
     }
 
@@ -48,12 +49,18 @@ public class Model {
      * @param xmlSet is a instance of message;
      */
     protected static void logMessage (XmlSet xmlSet) {
-        String forWhom;
-        //if (xmlSet.getPreference().equals("all")) {
-        forWhom = "to all:";
-        //if (xmlSet.getPreference().equals("all"))
-        //forWhom = "to all: " + xmlSet.getList().toString();
-        logMessage(xmlSet.getIdUser(), xmlSet.getMessage(), forWhom);
+        String forWhom = null;
+        if (xmlSet.getPreference().equals(Preference.MessageForAll.name())) {
+            forWhom = "to all:";
+        }
+
+        if (xmlSet.getPreference().equals(Preference.PrivateMessage.name())) {
+            forWhom = "to all: " + xmlSet.getList().toString();
+        }
+
+        if (forWhom != null) {
+            logMessage(xmlSet.getIdUser(), xmlSet.getMessage(), forWhom);
+        }
     }
 
     /**
@@ -80,17 +87,41 @@ public class Model {
     }
 
     /**
-     * Method for get list with login of ban users
+     * Method for get list with login of ban users.
      * @return list
      */
     public List<String> getBanList() {
+      //  List<String> listBan =
+               // list.entrySet().stream().filter(user -> user.getValue().isBan())
+                        //.map(user -> user.getValue().getLogin()).collect(Collectors.toList());
         List<String> listBan = new ArrayList<>();
         for (Map.Entry<Integer, User> user: list.entrySet()) {
             if (user.getValue().isBan()) {
                 listBan.add(user.getValue().getLogin());
             }
         }
+
         return listBan;
+    }
+
+    /**
+     * Method that set ban for user.
+     * @param login of user.
+     * @param ban <code>true</code> for ban of user or <code>false</code>.
+     * @return <code>true</code> if user ban,
+     *         <code>false</code> if login = null.
+     */
+    public boolean setBan(String login, boolean ban) {
+        if (login == null) {
+            return false;
+        }
+
+        for (Map.Entry<Integer, User> user: list.entrySet()) {
+            if (user.getValue().getLogin().equals(login)) {
+                user.getValue().setBan(ban);
+            }
+        }
+        return true;
     }
 
     /**
@@ -106,22 +137,56 @@ public class Model {
         return null;
     }
 
-    public void addUser(User user) {
+    /**
+     * Method that add user if his login is unique.
+     * @param user type of User.
+     * @return <code>true</code> if user add,
+     *         <code>false</code> if user = null or user exist.
+     */
+    public boolean addUser(User user) {
+        if (user == null) {
+            LOG.debug("user is empty(null)");
+            return false;
+        }
+
+        for (Map.Entry<Integer, User> u : list.entrySet()) {
+            if (u.getValue().getLogin().equals(user.getLogin())) {
+                return false;
+            }
+        }
+
         list.put(user.getId(), user);
         saveHashMapOfUsers();
-        LOG.info("user add success");
+        LOG.info("user add success: " + user.getLogin());
+        LOG.debug("user add: " + user.toString());
+        return true;
     }
 
     public void removeUser(User user) {
+        if (user == null) {
+            LOG.debug("user is empty(null)");
+            return;
+        }
+
         list.remove(user.getId());
         saveHashMapOfUsers();
-        LOG.info("user remove success");
+        LOG.info("user remove success: " + user.getLogin());
+        LOG.debug("user remove: " + user.toString());
     }
 
     public void editUser(User user) {
+        if (user == null) {
+            LOG.debug("user is empty(null)");
+            return;
+        }
+
+        LOG.debug("user for change: " + getUser(user.getId()).toString());
+
         list.put(user.getId(), user);
         saveHashMapOfUsers();
-        LOG.info("user edit success");
+        LOG.info("user edit success: " + user.getLogin());
+
+        LOG.debug("user change on: " + user.toString());
     }
 
     /**
@@ -131,7 +196,7 @@ public class Model {
         USERIO  = UserIO.getInstance();
 
         try {
-            list    = USERIO.readList().getHashList();
+            list = USERIO.readList().getHashList();
         } catch (FileNotFoundException e) {
             list = new HashMap<Integer, User>();
         }
@@ -144,7 +209,7 @@ public class Model {
     public void stop() {
         saveHashMapOfUsers();
         LOG.info("server stop");
-        System.exit(0);
+        //System.exit(0);
     }
 
     /**
@@ -152,7 +217,8 @@ public class Model {
      */
     private void addAdmin() {
         for (Map.Entry<Integer, User> user: list.entrySet()) {
-            if (user.getKey().equals(0)) {
+            //if (user.getKey().equals(0)) {
+            if(user.getValue().isAdmin()) {
                 //if admin found then return.
                 return;
             }
@@ -160,7 +226,7 @@ public class Model {
 
         // if admin didn't found then create his.
         User admin = new User();
-        admin.setId(0);
+        //admin.setId(0);
         admin.setIsAdmin(true);
         admin.setLogin("root");
         admin.setPassword("root");

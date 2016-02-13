@@ -29,7 +29,8 @@ class UserFrame {
     private XmlSet userSet;
     private String login;
     volatile private boolean privateDialog;
-    private boolean close;
+    volatile private boolean close;
+    //volatile private boolean pause;
     private boolean edit;
     private JFrame viewAll;
     private List<String> privateList;
@@ -39,6 +40,7 @@ class UserFrame {
         public void run() {
             while (true){
                 if(close){return;}
+                //if(pause){continue;}
                 controller.getMessage();
                 XmlSet buff = controller.getUserXml();
 
@@ -88,7 +90,6 @@ class UserFrame {
                 }
 
                 if(buff.getPreference().equals("Edit")&& buff.getMessage().equals("Successfully")){
-
                     if(edit) continue;
                     JOptionPane.showMessageDialog(viewAll,"Edit is successful.");
                     login = editFrame.getLoginField().getText();
@@ -98,7 +99,7 @@ class UserFrame {
                 }
                 if(buff.getPreference().equals("Remove")&&(buff.getMessage().equals("Successfully"))){
                     JOptionPane.showMessageDialog(viewAll,"Remove is successfully");
-                    //setAdmin(false);
+
                 }
 
             }
@@ -108,6 +109,7 @@ class UserFrame {
         @Override
         public void run() {
             while (true){
+               // if(pause){continue;}
                 if(close){
                     return;
                 }
@@ -148,6 +150,14 @@ class UserFrame {
 
     public void setActiveUsers(List<String> activeUsers) {
         this.activeUsers = activeUsers;
+    }
+
+    /*public void setPause(boolean pause) {
+        this.pause = pause;
+    }*/
+
+    public boolean isClose() {
+        return close;
     }
 
     public void setModel(){
@@ -260,9 +270,9 @@ class UserFrame {
                                 JOptionPane.QUESTION_MESSAGE, null, options,
                                 options[0]);
                 if (n == 0) {
+                    close = true;
                     controller.sendMessage(userSet,"Close");
                     controller.closeServer();
-                    close = true;
                     System.exit(2);
                 }
             }
