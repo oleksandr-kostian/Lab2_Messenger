@@ -135,10 +135,14 @@ public class LoginWindow extends JFrame {
                             JOptionPane.showMessageDialog(null, "The user is online.");
                             break;
                         }
-                        if(buff.getPreference().equals("Authentication")){
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("User does not exist!")) {
+                            JOptionPane.showMessageDialog(null, "User does not exist or you enter wrong password!");
+                            break;
+                        }
+                        /*if(buff.getPreference().equals("Authentication")){
                             JOptionPane.showMessageDialog(null,
                                     "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
-                        }
+                        }*/
                     }
                 }
             }

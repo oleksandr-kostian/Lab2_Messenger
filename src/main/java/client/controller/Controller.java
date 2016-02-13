@@ -11,6 +11,7 @@ import org.xml.sax.SAXException;
 import server.controller.ControllerServer;
 import server.model.XmlMessage;
 import server.model.XmlSet;
+import server.view.ServerView;
 
 /**
  * Client's controller
@@ -108,11 +109,11 @@ public class Controller  {
         this.userXml = userXml;
     }
 
-    public synchronized XmlSet getUserXml() {
+    public XmlSet getUserXml() {
         return userXml;
     }
 
-    public synchronized void  getMessage(){
+    public void  getMessage(){
         try {
 
             BufferedReader is = new BufferedReader(new InputStreamReader(fromServer));
@@ -134,7 +135,7 @@ public class Controller  {
 
 
 
-    public void sendMessage(XmlSet xml, String message) {
+    public  void sendMessage(XmlSet xml, String message) {
         try {
             xml.setPreference(message);
 
@@ -162,7 +163,7 @@ public class Controller  {
     }
 
     public static void main(String[] args) throws IOException, ParseException, SAXException {
-        server.controller.ControllerServer controllerServer = new ControllerServer();
+        ServerView view = new ServerView();
       //  client.sendMessage();
 
     }
