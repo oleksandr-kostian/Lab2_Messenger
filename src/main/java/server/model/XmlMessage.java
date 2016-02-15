@@ -24,21 +24,21 @@ import java.util.List;
  * @version %I%, %G%
  */
 public class XmlMessage {
-    private static Logger          LOG              = Logger.getLogger(XmlMessage.class);
-    private static DocumentBuilder builder;
-    private static final String    ROOT_ELEMENT     = "XmlMessage";
-    private static final String    ID_USER          = "IdUser";
-    private static final String    ELSE_PREFERENCE  = "preference";
-    private static final String    ID               = "id";
-    private static final String    NAME             = "name";
-    private static final String    MESSAGE          = "message";
-    private static final String    DIALOG_ID        = "dialogID";
-    private static final String    LIST_USER        = "list_user";
+    private static       Logger      LOG              = Logger.getLogger(XmlMessage.class);
+    private static final String      ROOT_ELEMENT     = "XmlMessage";
+    private static final String      ID_USER          = "IdUser";
+    private static final String      ELSE_PREFERENCE  = "preference";
+    private static final String      ID               = "id";
+    private static final String      NAME             = "name";
+    private static final String      MESSAGE          = "message";
+    private static final String      DIALOG_ID        = "dialogID";
+    private static final String      LIST_USER        = "list_user";
+    protected static DocumentBuilder builder;
 
     /**
      * method create factory for work with XML.
      */
-    private static  void paramLangXML() {
+    protected static  void paramLangXML() {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             builder = factory.newDocumentBuilder();

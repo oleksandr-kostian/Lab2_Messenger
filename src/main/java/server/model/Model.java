@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 import server.controller.Preference;
 
 /**
@@ -121,6 +122,7 @@ public class Model {
                 user.getValue().setBan(ban);
             }
         }
+        saveHashMapOfUsers();
         return true;
     }
 
@@ -193,6 +195,7 @@ public class Model {
      * method for start server
      */
     public void start() {
+        gracefulReload();
         USERIO  = UserIO.getInstance();
 
         try {
@@ -233,5 +236,21 @@ public class Model {
 
         addUser(admin);
         LOG.debug("create admin " + admin.getLogin() + admin.getPassword());
+    }
+
+    /**
+     * Server re-reads its configuration files.
+     * * @return <code>true</code> if reload success,
+     *           <code>false</code> if configuration file has error.
+     */
+    public boolean gracefulReload() {
+        try {
+           if (XmlMessageServer.loadProperties()) {
+               return true;
+           }
+        } catch (IOException | SAXException e) {
+            LOG.error("read properties", e);
+        }
+        return false;
     }
 }
