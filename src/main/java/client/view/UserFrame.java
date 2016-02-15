@@ -30,8 +30,8 @@ class UserFrame {
     private String login;
     volatile private boolean privateDialog;
     volatile private boolean close;
-    //volatile private boolean pause;
-    private boolean edit;
+    private boolean ban;
+    //private boolean edit;
     private JFrame viewAll;
     private List<String> privateList;
     private EditFrame editFrame;
@@ -90,16 +90,33 @@ class UserFrame {
                 }
 
                 if(buff.getPreference().equals("Edit")&& buff.getMessage().equals("Successfully")){
-                    if(edit) continue;
+                    //if(edit) continue;
                     JOptionPane.showMessageDialog(viewAll,"Edit is successful.");
                     login = editFrame.getLoginField().getText();
                     viewAll.setTitle(login);
                     editFrame.dispose();
-                    edit = true;
+                    //edit = true;
                 }
                 if(buff.getPreference().equals("Remove")&&(buff.getMessage().equals("Successfully"))){
-                    JOptionPane.showMessageDialog(viewAll,"Remove is successfully");
+                    JOptionPane.showMessageDialog(viewAll,"You was remove");
+                    close = true;
+                    closeFrame();
+                    System.exit(3);
+                }
+                if(buff.getPreference().equals("Remove")&&(buff.getMessage().equals("Admin deleted you."))){
+                    JOptionPane.showMessageDialog(viewAll,"Admin deleted you!");
+                    close = true;
+                    closeFrame();
+                    System.exit(4);
+                }
 
+                if(buff.getPreference().equals("Ban")&&(buff.getMessage().equals("Ban"))){
+                    ban = true;
+                    JOptionPane.showMessageDialog(viewAll,"Admin baned you!");
+                }
+                if(buff.getPreference().equals("UnBan")&&(buff.getMessage().equals("You was unban"))){
+                    ban = false;
+                    JOptionPane.showMessageDialog(viewAll,"Admin unban you!");
                 }
 
             }
@@ -109,7 +126,7 @@ class UserFrame {
         @Override
         public void run() {
             while (true){
-               // if(pause){continue;}
+                if(ban){continue;}
                 if(close){
                     return;
                 }
@@ -127,7 +144,8 @@ class UserFrame {
     /*new String[]{
         "user1","user2","user3","user4","user5","user6","user7","user8","user9","user10","user11","user12"
     };*/
-    public UserFrame(Controller controller,String login,UserMenu userMenu){
+    public UserFrame(Controller controller,String login,UserMenu userMenu,boolean ban){
+        this.ban = ban;
         this.login = login;
         userSet = controller.getUserXml();
         this.controller = controller;
@@ -228,7 +246,8 @@ class UserFrame {
         send.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(edit.getText()==null|edit.getText().trim().equals("")){
+
+                if(ban || edit.getText()==null || edit.getText().trim().equals("")){
                     return;
                 }
                 if(privateDialog){
@@ -306,17 +325,15 @@ class UserFrame {
                     privateUser.addElement(buff.get(i));
                 }
                 list.setModel(privateUser);
-
                 menu.getViewAll().setEnabled(true);
             }
         });
         menu.getEdit().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                 editFrame = new EditFrame(userSet,controller);
+                editFrame = new EditFrame(userSet,controller);
             }
         });
-
 
         menu.getViewAll().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -331,10 +348,33 @@ class UserFrame {
         menu.getRemove().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                controller.sendMessage(userSet,"Remove");
+                Object[] options = {"Yes", "No"};
+                int n = JOptionPane
+                        .showOptionDialog(viewAll, "Are you sure?",
+                                "Confirmation", JOptionPane.YES_NO_OPTION,
+                                JOptionPane.QUESTION_MESSAGE, null, options,
+                                options[0]);
+                if (n == 0) {
+                    controller.sendMessage(userSet,"Remove");
+                }
             }
         });
 
+        /*menu.getExitItem().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                controller.sendMessage(userSet,"Close");
+                close = true;
+                closeFrame();
+                new LoginWindow(controller);
+            }
+        });*/
+
+    }
+
+    public  void closeFrame(){
+        viewAll.setVisible(false);
+        viewAll.dispose();
     }
 
 

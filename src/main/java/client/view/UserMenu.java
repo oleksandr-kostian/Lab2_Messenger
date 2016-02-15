@@ -12,16 +12,15 @@ public class UserMenu extends  JMenuBar{
     //private JMenuItem exitItem;
     private JMenuItem edit;
     private JMenuItem remove;
-
     private JMenu fileMenu;
 
     public UserMenu() {
         setMenu();
 
     }
-    public JMenu getFileMenu() {
+   /* public JMenu getFileMenu() {
         return fileMenu;
-    }
+    }*/
     public JMenuItem getRemove() {
         return remove;
     }
@@ -80,15 +79,9 @@ public class UserMenu extends  JMenuBar{
 
         //fileMenu.addSeparator();
 
-       /* exitItem = new JMenuItem("Exit");
+/*        exitItem = new JMenuItem("Exit");
         exitItem.setFont(font);
-        fileMenu.add(exitItem);
-        exitItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });*/
-
+        fileMenu.add(exitItem);*/
         this.add(fileMenu);
     }
 }

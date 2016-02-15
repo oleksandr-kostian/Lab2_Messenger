@@ -110,11 +110,13 @@ public class LoginWindow extends JFrame {
                         XmlSet buff = controller.getUserXml();
                         if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("ActiveUsers")) {
                             closeFrame();
-                            UserFrame userFrame = new UserFrame(controller, logPas.get(0),new UserMenu());
+                            UserFrame userFrame = new UserFrame(controller, logPas.get(0),new UserMenu(),false);
                             break;
                         }
                         if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("Ban")) {
                             JOptionPane.showMessageDialog(null, "You have ban!!!");
+                            closeFrame();
+                            UserFrame userFrame = new UserFrame(controller, logPas.get(0),new UserMenu(),true);
                             break;
                         }
 
@@ -168,7 +170,7 @@ public class LoginWindow extends JFrame {
                         XmlSet buff = controller.getUserXml();
                         if (buff.getPreference().equals("Registration") && buff.getMessage().equals("ActiveUsers")) {
                             closeFrame();
-                            UserFrame userFrame = new UserFrame(controller, logPas.get(0), new UserMenu());
+                            UserFrame userFrame = new UserFrame(controller, logPas.get(0), new UserMenu(),false);
                             return;
                         }
                         if (buff.getPreference().equals("Registration") &&

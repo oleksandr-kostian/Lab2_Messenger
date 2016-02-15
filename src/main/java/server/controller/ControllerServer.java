@@ -286,12 +286,12 @@ public class ControllerServer {
                     }
                     for(int i=0;i<activeUsers.size();i++){
                         if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan) == 0) {
-                            if(activeUsers.get(i).getUser().isBan()){
+                            //if(activeUsers.get(i).getUser().isBan()){
                                 activeUsers.get(i).getXmlUser().setMessage(Preference.Ban.name());
                                 activeUsers.get(i).sendMessage(Preference.Ban.name());
                                 break;
 
-                            }
+                           // }
                         }
                     }
                 }

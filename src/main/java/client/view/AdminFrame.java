@@ -30,7 +30,6 @@ public class AdminFrame extends UserFrame {
                 if(isClose()){return;}
                 controller.getMessage();
                 XmlSet buff = controller.getUserXml();
-                System.out.println(buff.getPreference());
                 if(buff.getPreference().equals("Ban")) {
                     banUsers.add(getActiveUsers().get(getElement()[0]));
                     model.addElement(getActiveUsers().get(getElement()[0]));
@@ -45,7 +44,7 @@ public class AdminFrame extends UserFrame {
         }
     };
     public AdminFrame(Controller controller,List<String> banUsers){
-        super(controller,"root",new AdminMenu());
+        super(controller,"root",new AdminMenu(),false);
         this.controller = controller;
         userSet = controller.getUserXml();
         this.banUsers = banUsers;
@@ -112,7 +111,6 @@ public class AdminFrame extends UserFrame {
                 if (getElement() != null && getElement().length == 1) {
                     List<String> login = new ArrayList<String>();
                     login.add(getActiveUsers().get(getElement()[0]));
-                    System.out.println(getActiveUsers().get(getElement()[0])+"sdfsd");
                     userSet.setList(login);
                     controller.sendMessage(userSet, "Ban");
                 }
@@ -125,7 +123,6 @@ public class AdminFrame extends UserFrame {
                 if(elementBann != -1){
                     List<String> login = new ArrayList<String>();
                     login.add(banUsers.get(elementBann));
-                    System.out.println(banUsers.get(elementBann));
                     userSet.setList(login);
                     controller.sendMessage(userSet, "UnBan");
                 }
