@@ -15,11 +15,10 @@ import server.view.ServerView;
 
 /**
  * Client's controller
- * @author Veleri Rechembei
+ * @author Veleri Rechembei, Slavik Miroshnychenko
  * @version %I%, %G%
  */
 public class Controller  {
-
     private String              hostName;
     final private int           PORT =1025;
     private Socket              connect;

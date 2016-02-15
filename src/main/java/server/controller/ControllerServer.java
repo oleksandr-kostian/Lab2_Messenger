@@ -1,6 +1,7 @@
 package server.controller;
 
 
+import com.sun.org.apache.bcel.internal.generic.GOTO;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import server.model.Model;
@@ -28,7 +29,7 @@ public class ControllerServer {
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
     private ServerView                      serverGUI;
-   private volatile boolean                finish = false;
+    private volatile boolean                finish = false;
 
     /**
      * Default constructor of servers controller.
@@ -58,19 +59,23 @@ public class ControllerServer {
         createUser.setPassword(password);
         createUser.setBan(false);
         createUser.setIsAdmin(false);
-        client.getXmlUser().setIdUser(createUser.getId());
-        client.setUser(createUser);
-        model.addUser(createUser);
-        //  activeUser.put(model.getUser(createUser.getId()), client);
-        activeUsers.add(client);
-        client.setAuthentication(true);
+        if(model.addUser(createUser)) {
+            client.getXmlUser().setIdUser(createUser.getId());
+            client.setUser(createUser);
+            activeUsers.add(client);
+            client.setAuthentication(true);
 
-        client.getXmlUser().setList(getUserListString());
-        client.getXmlUser().setMessage(Preference.ActiveUsers.name());
-        client.sendMessage(Preference.Registration.name());
+            client.getXmlUser().setList(getUserListString());
+            client.getXmlUser().setMessage(Preference.ActiveUsers.name());
+            client.sendMessage(Preference.Registration.name());
 
-        this.displayInfoLog("New user: "+client.getUser().getLogin()+"  is welcome.");
-        logger.debug("Create new user " + client.getUser().getLogin());
+            this.displayInfoLog("New user: " + client.getUser().getLogin() + "  is welcome.");
+            logger.debug("Create new user " + client.getUser().getLogin());
+        }
+        else{
+            throw new IllegalArgumentException("This user has already been created.");
+
+        }
     }
 
     /**
@@ -85,11 +90,16 @@ public class ControllerServer {
       int idUser = model.authorizationUser(data.get(0), data.get(1));
       /// регистрация
       if (preference.compareToIgnoreCase(Preference.Registration.name()) == 0){
-          if(idUser==-1) {
-              registration(client, data.get(0), data.get(1));
+          try {
+              if (idUser == -1) {
+                  registration(client, data.get(0), data.get(1));
+              }
+              else {
+                  throw new IllegalArgumentException("This user has already been created.");
+              }
           }
-          else{
-              client.getXmlUser().setMessage(Preference.IncorrectValue.name()+" name of user. This user has already been created.");
+          catch (IllegalArgumentException e){
+              client.getXmlUser().setMessage(Preference.IncorrectValue.name() + " name of user. This user has already been created.");
               client.sendMessage(Preference.Registration.name());
           }
       }
@@ -105,13 +115,11 @@ public class ControllerServer {
                           online = true;
                           client.getXmlUser().setMessage("The user is online.");
                           client.sendMessage(Preference.Authentication.name());
-                        //  client.close();
                           break;
                       }
                   }
                   if (!online) {
                       activeUsers.add(client);
-                      //   activeUser.put(model.getUser(idUser), client);
                       client.setAuthentication(true);
                       logger.debug("Authentications user is " + client.getUser().getLogin());
                       if (client.getUser().isAdmin()) {
@@ -123,13 +131,14 @@ public class ControllerServer {
                       client.getXmlUser().setList(getUserListString());
                       if (client.getUser().isBan()) {
                           client.getXmlUser().setMessage(Preference.Ban.name());
-                      } else {
+                      }
+                      else {
                           client.getXmlUser().setMessage(Preference.ActiveUsers.name());
                       }
-
                       if (client.getUser().isAdmin()) {
                           client.sendMessage(Preference.Admin.name());
-                      } else {
+                      }
+                      else {
                           client.sendMessage(Preference.Authentication.name());
                       }
 
@@ -140,10 +149,10 @@ public class ControllerServer {
                   client.sendMessage(Preference.Authentication.name());
               }
           }
+
           else{
               client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
               client.sendMessage(Preference.Authentication.name());
-            //  client.close();
           }
       }
 
@@ -166,7 +175,7 @@ public class ControllerServer {
      * @param message is exception of server.
      */
     public void catchGuiException(Exception message) {
-        logger.error("Server GUI: " + message);
+        logger.error("Server GUI: " , message);
 
     }
     /**
@@ -185,6 +194,7 @@ public class ControllerServer {
               Socket client = socket.accept();
               logger.debug("Connection from " + client.getInetAddress().getHostName());
               new ServerThread(client);
+
       }
 
   }
@@ -194,7 +204,7 @@ public class ControllerServer {
                 socket.close();
             }
         this.displayInfoLog("\n" + "Server is stopped." + "\n");
-
+        model.stop();
 
     }
 
@@ -269,35 +279,47 @@ public class ControllerServer {
 
             case Ban:
                 if(client.getUser().isAdmin()) {
-                   String infoFoBan = client.getXmlUser().getList().get(0);
+                    String infoFoBan = client.getXmlUser().getList().get(0);
+                    if (model.setBan(infoFoBan, true)) {
+                        client.getXmlUser().setMessage(Preference.Successfully.name());
+                        client.sendMessage(Preference.Ban.name());
+                    }
                     for(int i=0;i<activeUsers.size();i++){
                         if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan) == 0) {
-                                activeUsers.get(i).getUser().setBan(true);
-
+                            if(activeUsers.get(i).getUser().isBan()){
                                 activeUsers.get(i).getXmlUser().setMessage(Preference.Ban.name());
                                 activeUsers.get(i).sendMessage(Preference.Ban.name());
-
-                                client.getXmlUser().setMessage(Preference.Successfully.name());
                                 break;
-                            }
-                    }
-                    this.displayInfoLog("Admin "+ Preference.Ban.name()+" user:  " + infoFoBan);
-                }
 
-                client.sendMessage(Preference.Ban.name());
+                            }
+                        }
+                    }
+                }
                 break;
 
             case UnBan:
                 if(client.getUser().isAdmin()) {
-                    String infoFoBan = client.getXmlUser().getList().get(0);
-                    for(int i=0;i<activeUsers.size();i++){
-                        if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan) == 0) {
-                            activeUsers.get(i).getUser().setBan(false);
-                            client.getXmlUser().setMessage(Preference.Successfully.name());
-                            break;
+                    String infoFoBan2 = client.getXmlUser().getList().get(0);
+                    List<String> banUsers = model.getBanList();
+                    for(int i=0;i<banUsers.size();i++){
+                        if (banUsers.get(i).compareToIgnoreCase(infoFoBan2) == 0) {
+                             if(model.setBan(infoFoBan2,false)) {
+                                client.getXmlUser().setMessage(Preference.Successfully.name());
+                                break;
+                            }
                         }
                     }
-                    this.displayInfoLog("Admin "+ Preference.UnBan.name()+" user:  " + infoFoBan);
+                    for(int i=0;i<activeUsers.size();i++){
+                        if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan2) == 0) {
+                            if(!activeUsers.get(i).getUser().isBan()){
+                                activeUsers.get(i).getXmlUser().setMessage("You was unban");
+                                activeUsers.get(i).sendMessage(Preference.UnBan.name());
+                                break;
+
+                            }
+                        }
+                    }
+                    this.displayInfoLog("Admin "+ Preference.UnBan.name()+" user:  " + infoFoBan2);
                 }
 
                 client.sendMessage(Preference.UnBan.name());
@@ -378,9 +400,6 @@ public class ControllerServer {
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
         new ControllerServer(new ServerView());
-      //  ControllerServer cr = new ControllerServer();
-      // cr.run();
-
     }
 
     /**
@@ -407,6 +426,8 @@ public class ControllerServer {
             this.setDaemon(true);
             start();
         }
+
+
         /**
          * Method that return XmlSet of user.
          * @return XmlSet of user.
@@ -461,7 +482,7 @@ public class ControllerServer {
          * Method of read message from client to server.
          * @throws IOException of read line.
          */
-        public  void getMessage() throws IOException,org.xml.sax.SAXException{
+        public  void getMessage() throws IOException,org.xml.sax.SAXException,java.lang.InterruptedException{
                 BufferedReader is = new BufferedReader(new InputStreamReader(fromClient));
                 StringBuffer ans = new StringBuffer();
                 while (true) {
@@ -471,7 +492,8 @@ public class ControllerServer {
                         break;
                     }
                 }
-               this.setXmlUser(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+                this.setXmlUser(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+
 
 }
 
@@ -491,6 +513,9 @@ public class ControllerServer {
                             this.getMessage();
                         }
                         catch (IOException e) {
+                            continue;
+                        }
+                        catch (InterruptedException e) {
                             continue;
                         }
                             if (getXmlUser() != null) {
