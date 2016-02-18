@@ -108,7 +108,7 @@ public class LoginWindow extends JFrame {
                     while (true) {
                         controller.getMessage();
                         XmlSet buff = controller.getUserXml();
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("ActiveUsers")) {
+                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("Successfully")) {
                             closeFrame();
                             UserFrame userFrame = new UserFrame(controller, logPas.get(0),new UserMenu(),false);
                             break;
@@ -121,7 +121,7 @@ public class LoginWindow extends JFrame {
                         }
 
                         if (buff.getPreference().equals("Admin")) {
-                            controller.sendMessage(controller.getUserXml(),"BanUsers");
+                            controller.sendMessage(controller.getUserXml(), "BanUsers");
                             while (true){
                                 controller.getMessage();
                                 if(controller.getUserXml().getPreference().equals("BanUsers")&&
@@ -168,7 +168,7 @@ public class LoginWindow extends JFrame {
                     while (true) {
                         controller.getMessage();
                         XmlSet buff = controller.getUserXml();
-                        if (buff.getPreference().equals("Registration") && buff.getMessage().equals("ActiveUsers")) {
+                        if (buff.getPreference().equals("Registration") && buff.getMessage().equals("Successfully")) {
                             closeFrame();
                             UserFrame userFrame = new UserFrame(controller, logPas.get(0), new UserMenu(),false);
                             return;

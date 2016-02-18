@@ -1,7 +1,7 @@
 package server.controller;
 
 
-import com.sun.org.apache.bcel.internal.generic.GOTO;
+
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import server.model.Model;
@@ -9,20 +9,20 @@ import server.model.User;
 import server.model.XmlMessage;
 import server.model.XmlSet;
 import server.view.ServerView;
-//import org.apache.log4j.Logger;
 
+import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.text.ParseException;
-import java.time.Period;
 import java.util.*;
 /**
  * Server's controller
  * @author Veleri Rechembei
  * @version %I%, %G%
  */
-public class ControllerServer {
+public class ControllerServer extends Observable {
     private final int                       PORT=1025;
     private ServerSocket                    socket;
     private List<ServerThread>              activeUsers;
@@ -31,10 +31,40 @@ public class ControllerServer {
     private ServerView                      serverGUI;
     private volatile boolean                finish = false;
 
+    private static final String  USER_IS_ALREADY = "This user has already been created.";
+    private static final String  ONLINE_USER = "The user is online.";
+    private static final String  EXIST_USER = "User does not exist!";
+    private static final String  WRONG_COMMAND = "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.";
+    private static final String  UNBAN =  "You was unban";
+    private static final String  DELETE = "Admin deleted you.";
+
+    /**
+     *  Method, that add ServerThread of client to list of active users.
+     * @param activeUser ServerThread of client.
+     */
+    public void addActiveUser(ServerThread activeUser){
+        activeUsers.add(activeUser);
+        this.setChanged();
+        notifyObservers();
+    }
+
+    /**
+     * Method, that remove ServerThread of client from list of active users.
+     * @param activeUser ServerThread of client.
+     */
+    public void removeActiveUser(ServerThread activeUser){
+        activeUsers.remove(activeUser);
+        this.setChanged();
+        notifyObservers();
+    }
+
+
     /**
      * Default constructor of servers controller.
+     * @throws IOException if port don't build; wrong of client's socket.
+     * @throws SAXException if ServerThread has mistake of xml.
      */
-    public ControllerServer()throws  IOException,org.xml.sax.SAXException{
+    public ControllerServer()throws  IOException, SAXException{
         run();
     }
     /**
@@ -50,9 +80,9 @@ public class ControllerServer {
      * @param client thread of client.
      * @param login is String login of user.
      * @param password is String password of user.
-     * @throws javax.xml.transform.TransformerException if method send() has mistake.
+     * @throws TransformerException if method send() has mistake.
      */
-    public synchronized void registration (ServerThread client, String login, String password)throws javax.xml.transform.TransformerException{
+    public synchronized void registration (ServerThread client, String login, String password)throws TransformerException{
 
         User createUser = new User();
         createUser.setLogin(login);
@@ -62,98 +92,93 @@ public class ControllerServer {
         if(model.addUser(createUser)) {
             client.getXmlUser().setIdUser(createUser.getId());
             client.setUser(createUser);
-            activeUsers.add(client);
+            addActiveUser(client);
             client.setAuthentication(true);
-
-            client.getXmlUser().setList(getUserListString());
-            client.getXmlUser().setMessage(Preference.ActiveUsers.name());
+            client.getXmlUser().setMessage(Preference.Successfully.name());
             client.sendMessage(Preference.Registration.name());
-
             this.displayInfoLog("New user: " + client.getUser().getLogin() + "  is welcome.");
             logger.debug("Create new user " + client.getUser().getLogin());
         }
         else{
-            throw new IllegalArgumentException("This user has already been created.");
-
+            throw new IllegalArgumentException(USER_IS_ALREADY);
         }
     }
 
     /**
      * Authenticates the user on the server.
      * @param client thread of client.
-     * @throws javax.xml.transform.TransformerException if method send() has mistake.
+     * @throws TransformerException if method send() has mistake.
      */
-  public synchronized void authorization(ServerThread client)throws javax.xml.transform.TransformerException{
-      boolean online=false;
+  public synchronized void authorization(ServerThread client)throws TransformerException{
+      boolean online = false;
       String preference = client.getXmlUser().getPreference();
+      Preference command = Preference.fromString(preference);
       List<String> data = client.getXmlUser().getList();
       int idUser = model.authorizationUser(data.get(0), data.get(1));
-      /// регистрация
-      if (preference.compareToIgnoreCase(Preference.Registration.name()) == 0){
-          try {
-              if (idUser == -1) {
-                  registration(client, data.get(0), data.get(1));
+
+      switch (command){
+          case Registration:
+              try {
+                  if (idUser == -1) {
+                      registration(client, data.get(0), data.get(1));
+                  }
+                  else {
+                      throw new IllegalArgumentException(USER_IS_ALREADY);
+                  }
               }
-              else {
-                  throw new IllegalArgumentException("This user has already been created.");
+              catch (IllegalArgumentException e){
+                  client.getXmlUser().setMessage(Preference.IncorrectValue.name() + " name of user. "+USER_IS_ALREADY);
+                  client.sendMessage(Preference.Registration.name());
               }
-          }
-          catch (IllegalArgumentException e){
-              client.getXmlUser().setMessage(Preference.IncorrectValue.name() + " name of user. This user has already been created.");
-              client.sendMessage(Preference.Registration.name());
-          }
-      }
-      ///авторизация
-      else {
-          if (preference.compareToIgnoreCase(Preference.Authentication.name()) == 0) {
+              break;
+          case Authentication:
               if (idUser != -1) {
                   client.getXmlUser().setIdUser(idUser);
                   client.setUser(model.getUser(idUser));
-                  //проверка пользователя
+
                   for (int i = 0; i < activeUsers.size(); i++) {
                       if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(client.getUser().getLogin()) == 0) {
                           online = true;
-                          client.getXmlUser().setMessage("The user is online.");
+                          client.getXmlUser().setMessage(ONLINE_USER);
                           client.sendMessage(Preference.Authentication.name());
                           break;
                       }
                   }
                   if (!online) {
-                      activeUsers.add(client);
+                      addActiveUser(client);
                       client.setAuthentication(true);
-                      logger.debug("Authentications user is " + client.getUser().getLogin());
-                      if (client.getUser().isAdmin()) {
-                          this.displayInfoLog("Admin: " + client.getUser().getLogin() + " is welcome.");
-                      } else {
-                          this.displayInfoLog(client.getUser().getLogin() + " is welcome.");
-                      }
                       //send message to client of active user list and data of client
-                      client.getXmlUser().setList(getUserListString());
                       if (client.getUser().isBan()) {
                           client.getXmlUser().setMessage(Preference.Ban.name());
                       }
-                      else {
-                          client.getXmlUser().setMessage(Preference.ActiveUsers.name());
+                      else{
+                          client.getXmlUser().setMessage(Preference.Successfully.name());
                       }
                       if (client.getUser().isAdmin()) {
                           client.sendMessage(Preference.Admin.name());
+                      } else {
+                          client.sendMessage(Preference.Authentication.name());
+                      }
+
+                      logger.debug("Authentications user is " + client.getUser().getLogin());
+                      if (client.getUser().isAdmin()) {
+                          this.displayInfoLog("Admin: " + client.getUser().getLogin() + " is welcome.");
                       }
                       else {
-                          client.sendMessage(Preference.Authentication.name());
+                          this.displayInfoLog(client.getUser().getLogin() + " is welcome.");
                       }
 
                   }
               }
               else{
-                  client.getXmlUser().setMessage("User does not exist!");
+                  client.getXmlUser().setMessage(EXIST_USER);
                   client.sendMessage(Preference.Authentication.name());
               }
-          }
-
-          else{
-              client.getXmlUser().setMessage("The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
+              break;
+          default:
+              client.getXmlUser().setMessage(WRONG_COMMAND);
               client.sendMessage(Preference.Authentication.name());
-          }
+              break;
       }
 
   }
@@ -175,15 +200,15 @@ public class ControllerServer {
      * @param message is exception of server.
      */
     public void catchGuiException(Exception message) {
-        logger.error("Server GUI: " , message);
+        logger.error("Server GUI: ", message);
 
     }
     /**
      * Method for start work of server.
      * @throws IOException if port don't build; wrong of client's socket.
-     * @throws org.xml.sax.SAXException if ServerThread has mistake of xml
+     * @throws SAXException if ServerThread has mistake of xml.
      */
-  public void run()throws IOException, org.xml.sax.SAXException{
+  public void run()throws IOException, SAXException{
       model = new Model();
       activeUsers = new ArrayList<>();
       this.displayInfoLog("Building to port " + this.PORT + ", please wait  ...");
@@ -193,7 +218,7 @@ public class ControllerServer {
       while (true) {
               Socket client = socket.accept();
               logger.debug("Connection from " + client.getInetAddress().getHostName());
-              new ServerThread(client);
+              this.addObserver(new ServerThread(client));
 
       }
 
@@ -224,9 +249,9 @@ public class ControllerServer {
      * Method, that reads client's preference, handles it and sends answer to client.
      * @param client thread of client.
      * @param preference preference of client's message.
-     * @throws javax.xml.transform.TransformerException if transformation xml to OutputStream has mistake.
+     * @throws TransformerException if transformation xml to OutputStream has mistake.
      */
-    public synchronized void readCommand(ServerThread client,Preference preference) throws javax.xml.transform.TransformerException{
+    public synchronized void readCommand(ServerThread client,Preference preference) throws TransformerException{
         switch (preference){
 
             case MessageForAll:
@@ -269,14 +294,6 @@ public class ControllerServer {
 
                 break;
 
-            case ActiveUsers:
-                client.getXmlUser().setList(getUserListString());
-                client.getXmlUser().setMessage(Preference.ActiveUsers.name());
-                client.sendMessage(Preference.ActiveUsers.name());
-               // this.displayInfoLog("Send list of active user to user: " + client.getUser().getLogin());
-               // this.displayInfoLog(getUserListString().toString());
-                break;
-
             case Ban:
                 if(client.getUser().isAdmin()) {
                     String infoFoBan = client.getXmlUser().getList().get(0);
@@ -286,12 +303,12 @@ public class ControllerServer {
                     }
                     for(int i=0;i<activeUsers.size();i++){
                         if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan) == 0) {
-                            //if(activeUsers.get(i).getUser().isBan()){
+                                activeUsers.get(i).getUser().setBan(true);
                                 activeUsers.get(i).getXmlUser().setMessage(Preference.Ban.name());
                                 activeUsers.get(i).sendMessage(Preference.Ban.name());
                                 break;
 
-                           // }
+
                         }
                     }
                 }
@@ -311,12 +328,13 @@ public class ControllerServer {
                     }
                     for(int i=0;i<activeUsers.size();i++){
                         if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan2) == 0) {
-                            if(!activeUsers.get(i).getUser().isBan()){
-                                activeUsers.get(i).getXmlUser().setMessage("You was unban");
+                           // if(!activeUsers.get(i).getUser().isBan()){
+                                activeUsers.get(i).getUser().setBan(false);
+                                activeUsers.get(i).getXmlUser().setMessage(UNBAN);
                                 activeUsers.get(i).sendMessage(Preference.UnBan.name());
                                 break;
 
-                            }
+                          //  }
                         }
                     }
                     this.displayInfoLog("Admin "+ Preference.UnBan.name()+" user:  " + infoFoBan2);
@@ -344,19 +362,15 @@ public class ControllerServer {
                 break;
 
             case Remove:
-                //проверка на админа
                 if(client.getUser().isAdmin()){
                     String removeUser = client.getXmlUser().getList().get(0);
                     for(int i=0;i<activeUsers.size();i++){
                         if(activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
                             model.removeUser(activeUsers.get(i).getUser());
-
-                            activeUsers.get(i).getXmlUser().setMessage("Admin deleted you.");
+                            activeUsers.get(i).getXmlUser().setMessage(DELETE);
                             activeUsers.get(i).sendMessage(Preference.Remove.name());
-
                             activeUsers.get(i).close();
-                            activeUsers.remove(activeUsers.get(i));
-
+                            removeActiveUser(activeUsers.get(i));
                             client.getXmlUser().setMessage(Preference.Successfully.name());
                             client.sendMessage(Preference.Remove.name());
                             break;
@@ -370,10 +384,11 @@ public class ControllerServer {
                 else{
                 //удаление самого пользователя
                     model.removeUser(client.getUser());
-                    activeUsers.remove(client);
+                    removeActiveUser(client);
                     client.getXmlUser().setMessage(Preference.Successfully.name());
                     client.sendMessage(Preference.Remove.name());
                     client.close();
+                    deleteObserver(client);
                     this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
                     logger.debug("Remove " + client.getUser().getLogin());
                 }
@@ -382,7 +397,8 @@ public class ControllerServer {
                break;
 
             case Close:
-                activeUsers.remove(client);
+                deleteObserver(client);
+                removeActiveUser(client);
                 client.close();
                 this.displayInfoLog("User: " + client.getUser().getLogin() + " close.");
                 break;
@@ -391,11 +407,6 @@ public class ControllerServer {
                 client.sendMessage(Preference.IncorrectValue.name());
                 break;
         }
-
-
-
-
-
     }
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
@@ -405,20 +416,21 @@ public class ControllerServer {
     /**
      * Class of client's thread.
      */
-    public class ServerThread extends Thread {
+    public class ServerThread extends Thread implements Observer{
         private User                 user;
         private Socket               socket;
         private InputStream          fromClient;
         private OutputStream         toClient;
         private XmlSet               xmlUser;
         boolean                      authentication;
+
         /**
          * Constructor of class.
          * @param socket socket of client.
          * @throws IOException if socket has mistake.
-         * @throws org.xml.sax.SAXException if method start() has mistake of xml.
+         * @throws SAXException if method start() has mistake of xml.
          */
-        public ServerThread(Socket socket) throws  IOException,org.xml.sax.SAXException{
+        public ServerThread(Socket socket) throws  IOException,SAXException{
             this.socket = socket;
             this.authentication=false;
             fromClient = socket.getInputStream();
@@ -427,6 +439,26 @@ public class ControllerServer {
             start();
         }
 
+        /**
+         * Method for update information of list of active users and send it to client.
+         * @param o class "ControllerServer"
+         * @param arg object of class "ControllerServer", that was updated.
+         */
+        @Override
+        public void update(Observable o, Object arg) {
+            this.getXmlUser().setList(((ControllerServer) o).getUserListString());
+            try{
+                sendMessage(Preference.ActiveUsers.name());
+            }
+            catch (TransformerException e) {
+                try{
+                    readCommand(this,Preference.Close);
+                }
+                catch (TransformerException e1) {
+                    logger.error(e1);
+                }
+            }
+        }
 
         /**
          * Method that return XmlSet of user.
@@ -481,8 +513,9 @@ public class ControllerServer {
         /**
          * Method of read message from client to server.
          * @throws IOException of read line.
+         * @throws SAXException if read xml.
          */
-        public  void getMessage() throws IOException,org.xml.sax.SAXException,java.lang.InterruptedException{
+        public  void getMessage() throws IOException,SAXException{
                 BufferedReader is = new BufferedReader(new InputStreamReader(fromClient));
                 StringBuffer ans = new StringBuffer();
                 while (true) {
@@ -508,36 +541,29 @@ public class ControllerServer {
                        this.close();
                        return;
                    }
-                        //+timeout of client
-                        try {
-                            this.getMessage();
+                    try {
+                        this.getMessage();
+                    }
+                    catch (IOException e) {
+                        continue;
+                    }
+                    if (getXmlUser() != null) {
+                        if (!this.isAuthentication()) {
+                            authorization(this);
                         }
-                        catch (IOException e) {
-                            continue;
-                        }
-                        catch (InterruptedException e) {
-                            continue;
-                        }
-                            if (getXmlUser() != null) {
-                            if (!this.isAuthentication()) {
-                                authorization(this);
-                            } else {
-                                //try to read command from client!!!!!!!!
-                                String preference = getXmlUser().getPreference();
-                                Preference command = Preference.fromString(preference);
-                                readCommand(this, command);
-
-                            }
-
+                        else {
+                            String preference = getXmlUser().getPreference();
+                            Preference command = Preference.fromString(preference);
+                            readCommand(this, command);
 
                         }
+                    }
                 }
-
             }
-            catch (org.xml.sax.SAXException e) {
+            catch (SAXException e) {
                 logger.error(e);
             }
-            catch (javax.xml.transform.TransformerException e){
+            catch (TransformerException e){
                 logger.error(e);
             }
 
@@ -546,9 +572,9 @@ public class ControllerServer {
         /**
          * Method of send message to client.
          * @param message is a String message to client.
-         * @throws javax.xml.transform.TransformerException if transformation xml to OutputStream has mistake.
+         * @throws TransformerException if transformation xml to OutputStream has mistake.
          */
-        public void sendMessage(String message) throws javax.xml.transform.TransformerException {
+        public void sendMessage(String message) throws TransformerException {
                 getXmlUser().setPreference(message);
                 XmlMessage.writeXMLinStream(getXmlUser(), toClient);
         }
