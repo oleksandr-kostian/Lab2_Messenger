@@ -23,14 +23,11 @@ public class User implements Cloneable {
      */
     public User() {
         this.id = System.currentTimeMillis();
-        /*long g = System.currentTimeMillis();
-        this.id = (int) g;
-        try {
-            Thread.sleep(1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(id);*/
+        /*long g = System.currentTimeMillis(); this.id = (int) g;
+        try { Thread.sleep(1);} catch (InterruptedException e) {e.printStackTrace();})
+        //
+        int f = (int) g << 32;
+        this.id = (int) (f ^ (g >> 32))*/
 
     }
 

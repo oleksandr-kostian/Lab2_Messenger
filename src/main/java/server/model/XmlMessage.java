@@ -142,7 +142,7 @@ public class XmlMessage {
 
         // parsing id of user
         if ((result = readChild(document, ID_USER)) != null) {
-            xmlSet.setIdUser(Integer.parseInt(result));
+            xmlSet.setIdUser(Long.parseLong(result));
         }
 
         // parsing messageID and message

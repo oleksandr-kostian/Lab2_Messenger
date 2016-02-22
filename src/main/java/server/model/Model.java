@@ -56,7 +56,13 @@ public class Model {
         }
 
         if (xmlSet.getPreference().equals(Preference.PrivateMessage.name())) {
-            forWhom = "to all: " + xmlSet.getList().toString();
+            forWhom = "to private, with: ";
+
+            List<String> l = xmlSet.getList();
+            for (int i = 0; i < l.size() - 1 ; i++) {
+                forWhom += l.get(i) + ", ";
+            }
+            forWhom += l.get(l.size() - 1) + ".";
         }
 
         if (forWhom != null) {
