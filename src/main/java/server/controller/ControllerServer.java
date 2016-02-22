@@ -39,7 +39,7 @@ public class ControllerServer extends Observable {
     private static final String  DELETE = "Admin deleted you.";
 
     /**
-     *  Method, that add ServerThread of client to list of active users.
+     * Method, that add ServerThread of client to list of active users.
      * @param activeUser ServerThread of client.
      */
     public void addActiveUser(ServerThread activeUser){
@@ -261,7 +261,6 @@ public class ControllerServer extends Observable {
                     activeUsers.get(i).getXmlUser().setList(getUserListString());
                     activeUsers.get(i).sendMessage(Preference.MessageForAll.name());
                 }
-                // this.displayInfoLog("User: "+client.getUser().getLogin()+" send message to all. ");
                 Model.logMessage(client.getXmlUser());
                 break;
 
@@ -290,8 +289,6 @@ public class ControllerServer extends Observable {
                     client.getXmlUser().setMessage(Preference.IncorrectValue.name());
                     client.sendMessage(Preference.PrivateMessage.name());
                 }
-                // this.displayInfoLog("User: "+client.getUser().getLogin()+" send private message to users: "+userList.toString());
-
                 break;
 
             case Ban:
@@ -328,13 +325,11 @@ public class ControllerServer extends Observable {
                     }
                     for(int i=0;i<activeUsers.size();i++){
                         if (activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(infoFoBan2) == 0) {
-                           // if(!activeUsers.get(i).getUser().isBan()){
                                 activeUsers.get(i).getUser().setBan(false);
                                 activeUsers.get(i).getXmlUser().setMessage(UNBAN);
                                 activeUsers.get(i).sendMessage(Preference.UnBan.name());
                                 break;
 
-                          //  }
                         }
                     }
                     this.displayInfoLog("Admin "+ Preference.UnBan.name()+" user:  " + infoFoBan2);
@@ -351,15 +346,18 @@ public class ControllerServer extends Observable {
                 break;
 
             case Edit:
-                List<String> newUser = client.getXmlUser().getList();
-                client.getUser().setLogin(newUser.get(0));
-                client.getUser().setPassword(newUser.get(1));
-                model.editUser(client.getUser());
-                client.getXmlUser().setMessage(Preference.Successfully.name());
-                client.sendMessage(Preference.Edit.name());
-                this.displayInfoLog("Edit of user: " + client.getUser().getLogin() + " is successful. ");
-                logger.debug(Preference.Edit.name()+" user: "+client.getUser().getLogin());
-                break;
+
+                    List<String> newUser = client.getXmlUser().getList();
+                    client.getUser().setLogin(newUser.get(0));
+                    client.getUser().setPassword(newUser.get(1));
+                    model.editUser(client.getUser());
+                    client.getXmlUser().setMessage(Preference.Successfully.name());
+                    client.sendMessage(Preference.Edit.name());
+                    this.displayInfoLog("Edit of user: " + client.getUser().getLogin() + " is successful. ");
+                    logger.debug(Preference.Edit.name() + " user: " + client.getUser().getLogin());
+                    this.setChanged();
+                    this.notifyObservers();
+                    break;
 
             case Remove:
                 if(client.getUser().isAdmin()){
@@ -382,7 +380,7 @@ public class ControllerServer extends Observable {
                     logger.debug(Preference.Remove.name()+ " removeUser");
                 }
                 else{
-                //удаление самого пользователя
+                //remove user
                     model.removeUser(client.getUser());
                     removeActiveUser(client);
                     client.getXmlUser().setMessage(Preference.Successfully.name());
@@ -392,8 +390,6 @@ public class ControllerServer extends Observable {
                     this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
                     logger.debug("Remove " + client.getUser().getLogin());
                 }
-               //client.getXmlUser().setMessage(Preference.Successfully.name());
-               // client.sendMessage(Preference.Remove.name());
                break;
 
             case Close:
@@ -536,6 +532,7 @@ public class ControllerServer extends Observable {
         @Override
         public void run() {
             try {
+                boolean isEditRepeat=false;
                 while (true) {
                    if (finish) {
                        this.close();
@@ -543,6 +540,10 @@ public class ControllerServer extends Observable {
                    }
                     try {
                         this.getMessage();
+                        if(isEditRepeat==true){
+                            isEditRepeat=false;
+                            continue;
+                        }
                     }
                     catch (IOException e) {
                         continue;
@@ -555,7 +556,9 @@ public class ControllerServer extends Observable {
                             String preference = getXmlUser().getPreference();
                             Preference command = Preference.fromString(preference);
                             readCommand(this, command);
-
+                            if(preference.equals(Preference.Edit.name())){
+                                isEditRepeat=true;
+                            }
                         }
                     }
                 }
@@ -566,6 +569,7 @@ public class ControllerServer extends Observable {
             catch (TransformerException e){
                 logger.error(e);
             }
+
 
         }
 
