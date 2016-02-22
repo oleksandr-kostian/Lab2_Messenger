@@ -9,27 +9,27 @@ import java.util.List;
  * @version %I%, %G%
  */
 public class XmlSet {
-    private int          idUser;
+    private long         idUser;
     private String       message;
     private int          keyMessage;
     private List<String> list;
     private String       preference;
 
-    public XmlSet(int id) {
+    public XmlSet(long id) {
         this.idUser = id;
     }
 
     /**
      * @param id of user
      */
-    public void setIdUser(int id) {
+    public void setIdUser(long id) {
         this.idUser = id;
     }
 
     /**
      * @return id of user
      */
-    public int getIdUser() {
+    public long getIdUser() {
         return idUser;
     }
 

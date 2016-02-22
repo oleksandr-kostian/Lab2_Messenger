@@ -16,7 +16,7 @@ import server.controller.Preference;
 public class Model {
     private static Logger          LOG = Logger.getLogger(Model.class);
     private static UserIO          USERIO;
-    private HashMap<Integer, User> list;
+    private HashMap<Long, User> list;
 
     public Model() {
         start();
@@ -29,7 +29,7 @@ public class Model {
      * @param message  ia a String with text.
      * @param forWhom is a String with direction.
      */
-    protected static void logMessage(Integer id, String message, String forWhom) {
+    protected static void logMessage(Long id, String message, String forWhom) {
         try (Writer logMess = new BufferedWriter(new FileWriter("logMessage.txt", true))) {
             String number = String.format("%11d", id);
             logMess.append("id: <").append(number).append("> ")
@@ -76,8 +76,8 @@ public class Model {
      * @param password of user
      * @return return id of user. If this user did not found then return -1
      */
-    public int authorizationUser(String login, String password) {
-        for (Map.Entry<Integer, User> user: list.entrySet()) {
+    public long authorizationUser(String login, String password) {
+        for (Map.Entry<Long, User> user: list.entrySet()) {
             if (user.getValue().getLogin().equals(login)) {
                 if (user.getValue().getPassword().equals(password)) {
                     return user.getKey();
@@ -96,7 +96,7 @@ public class Model {
                // list.entrySet().stream().filter(user -> user.getValue().isBan())
                         //.map(user -> user.getValue().getLogin()).collect(Collectors.toList());
         List<String> listBan = new ArrayList<>();
-        for (Map.Entry<Integer, User> user: list.entrySet()) {
+        for (Map.Entry<Long, User> user: list.entrySet()) {
             if (user.getValue().isBan()) {
                 listBan.add(user.getValue().getLogin());
             }
@@ -117,7 +117,7 @@ public class Model {
             return false;
         }
 
-        for (Map.Entry<Integer, User> user: list.entrySet()) {
+        for (Map.Entry<Long, User> user: list.entrySet()) {
             if (user.getValue().getLogin().equals(login)) {
                 user.getValue().setBan(ban);
             }
@@ -130,8 +130,8 @@ public class Model {
      * @param id of user
      * @return NEW clone of user
      */
-    public User getUser(int id) {
-        for (Map.Entry<Integer, User> user: list.entrySet()) {
+    public User getUser(long id) {
+        for (Map.Entry<Long, User> user: list.entrySet()) {
             if (user.getKey().equals(id)) {
                 return  user.getValue().clone();
             }
@@ -151,7 +151,7 @@ public class Model {
             return false;
         }
 
-        for (Map.Entry<Integer, User> u : list.entrySet()) {
+        for (Map.Entry<Long, User> u : list.entrySet()) {
             if (u.getValue().getLogin().equals(user.getLogin())) {
                 return false;
             }
@@ -201,7 +201,7 @@ public class Model {
         try {
             list = USERIO.readList().getHashList();
         } catch (FileNotFoundException e) {
-            list = new HashMap<Integer, User>();
+            list = new HashMap<Long, User>();
         }
         LOG.info("server start");
     }
@@ -219,7 +219,7 @@ public class Model {
      * Method for create the administrator if it does not exist.
      */
     private void addAdmin() {
-        for (Map.Entry<Integer, User> user: list.entrySet()) {
+        for (Map.Entry<Long, User> user: list.entrySet()) {
             //if (user.getKey().equals(0)) {
             if(user.getValue().isAdmin()) {
                 //if admin found then return.
@@ -240,8 +240,8 @@ public class Model {
 
     /**
      * Server re-reads its configuration files.
-     * * @return <code>true</code> if reload success,
-     *           <code>false</code> if configuration file has error.
+     * @return <code>true</code> if reload success,
+     *         <code>false</code> if configuration file has error.
      */
     public boolean gracefulReload() {
         try {

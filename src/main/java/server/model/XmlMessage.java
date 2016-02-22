@@ -60,7 +60,7 @@ public class XmlMessage {
      * @throws TransformerException if xml can not transform in out
      */
     public static void writeXMLinStream(XmlSet xmlSet, OutputStream out) throws TransformerException {
-        Model.logMessage(xmlSet);                  //log message!!!
+      //  Model.logMessage(xmlSet);                  //log message!!!
 
         paramLangXML();
 

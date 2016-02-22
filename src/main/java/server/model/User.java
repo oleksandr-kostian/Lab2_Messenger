@@ -12,7 +12,7 @@ import java.util.Objects;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class User implements Cloneable {
-    private int     id;
+    private long    id;
     private String  password;
     private String  login;
     private boolean ban;
@@ -22,14 +22,19 @@ public class User implements Cloneable {
      * Constructor that set a unique id when you create user.
      */
     public User() {
-        this.id = (int) System.currentTimeMillis();
+        this.id = System.currentTimeMillis();
+        /*long g = System.currentTimeMillis();
+        this.id = (int) g;
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(id);*/
+
     }
 
- /*   protected void setId (int id) {
-        this.id = id;
-    }*/
-
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -115,7 +120,7 @@ public class User implements Cloneable {
 
     @Override
     public int hashCode() {
-        int result = id;
+        int result = (int) id;
         result = 31 * result + (login != null ? login.hashCode() : 0);
         return result;
     }

@@ -26,8 +26,8 @@ class ListUser {
     /**
      * @param listUser is HashMap of users
      */
-    public void setList(HashMap<Integer, User> listUser) {
-        for (Map.Entry<Integer, User> ent: listUser.entrySet()) {
+    public void setList(HashMap<Long, User> listUser) {
+        for (Map.Entry<Long, User> ent: listUser.entrySet()) {
             list.add(ent.getValue());
         }
     }
@@ -42,8 +42,8 @@ class ListUser {
     /**
      * @return list as HashMap<Integer, User>
      */
-    public HashMap<Integer, User> getHashList() {
-        HashMap<Integer, User> hash = new HashMap<>();
+    public HashMap<Long, User> getHashList() {
+        HashMap<Long, User> hash = new HashMap<>();
         for (User u: list) {
             hash.put(u.getId(), u);
         }

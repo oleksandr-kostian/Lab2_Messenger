@@ -34,7 +34,7 @@ final class UserIO {
     /**
      * @param listUser that you need write in file
      */
-    protected void writeList(HashMap<Integer, User> listUser) {
+    protected void writeList(HashMap<Long, User> listUser) {
         ListUser list = new ListUser();
         list.setList(listUser);
 
