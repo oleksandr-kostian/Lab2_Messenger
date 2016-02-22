@@ -114,7 +114,7 @@ public class ControllerServer extends Observable {
       String preference = client.getXmlUser().getPreference();
       Preference command = Preference.fromString(preference);
       List<String> data = client.getXmlUser().getList();
-      int idUser = model.authorizationUser(data.get(0), data.get(1));
+      long idUser = model.authorizationUser(data.get(0), data.get(1));
 
       switch (command){
           case Registration:
@@ -262,7 +262,7 @@ public class ControllerServer extends Observable {
                     activeUsers.get(i).sendMessage(Preference.MessageForAll.name());
                 }
                 // this.displayInfoLog("User: "+client.getUser().getLogin()+" send message to all. ");
-                logger.debug("Send message to all: " + messageToChat);
+                Model.logMessage(client.getXmlUser());
                 break;
 
             case PrivateMessage:
@@ -284,7 +284,7 @@ public class ControllerServer extends Observable {
                             }
                         }
                     }
-                    logger.debug("Send private message: " +messageToPrivateChat+" to users: "+userList.toString());
+                    Model.logMessage(client.getXmlUser());
                 }
                 else{
                     client.getXmlUser().setMessage(Preference.IncorrectValue.name());
