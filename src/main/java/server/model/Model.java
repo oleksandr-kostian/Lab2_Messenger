@@ -49,7 +49,7 @@ public class Model {
      * Method for log of all message.
      * @param xmlSet is a instance of message;
      */
-    protected static void logMessage (XmlSet xmlSet) {
+    public static void logMessage (XmlSet xmlSet) {
         String forWhom = null;
         if (xmlSet.getPreference().equals(Preference.MessageForAll.name())) {
             forWhom = "to all:";
