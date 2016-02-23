@@ -9,6 +9,7 @@ import server.model.User;
 import server.model.XmlMessage;
 import server.model.XmlSet;
 import server.view.ServerView;
+import server.view.View;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -28,7 +29,7 @@ public class ControllerServer extends Observable {
     private List<ServerThread>              activeUsers;
     private Model                           model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
-    private ServerView                      serverGUI;
+    private View                            serverGUI;
     private volatile boolean                finish = false;
 
     private static final String  USER_IS_ALREADY = "This user has already been created.";
@@ -57,7 +58,6 @@ public class ControllerServer extends Observable {
         this.setChanged();
         notifyObservers();
     }
-
 
     /**
      * Default constructor of servers controller.
@@ -147,7 +147,6 @@ public class ControllerServer extends Observable {
                   if (!online) {
                       addActiveUser(client);
                       client.setAuthentication(true);
-                      //send message to client of active user list and data of client
                       if (client.getUser().isBan()) {
                           client.getXmlUser().setMessage(Preference.Ban.name());
                       }
@@ -184,17 +183,25 @@ public class ControllerServer extends Observable {
   }
 
     /**
-     * Method for display information on servers GUI or info message of lOG.
+     * Method for display information on servers GUI or console, if GUI is null and on info message of lOG.
      * @param message is String information of server.
      */
     public void displayInfoLog(String message){
         if(serverGUI!=null){
             serverGUI.display(message);
         }
+        else{
+            System.out.println(message);
+        }
             logger.info(message);
-
     }
 
+    /**
+     * Method for start gracefulReload.
+     */
+    public void gracefulReload(){
+        this.model.gracefulReload();
+    }
     /**
      * Method for write exception on servers GUI to LOG error message.
      * @param message is exception of server.
@@ -348,16 +355,25 @@ public class ControllerServer extends Observable {
             case Edit:
 
                     List<String> newUser = client.getXmlUser().getList();
-                    client.getUser().setLogin(newUser.get(0));
-                    client.getUser().setPassword(newUser.get(1));
-                    model.editUser(client.getUser());
-                    client.getXmlUser().setMessage(Preference.Successfully.name());
-                    client.sendMessage(Preference.Edit.name());
-                    this.displayInfoLog("Edit of user: " + client.getUser().getLogin() + " is successful. ");
-                    logger.debug(Preference.Edit.name() + " user: " + client.getUser().getLogin());
-                    this.setChanged();
-                    this.notifyObservers();
-                    break;
+                    try {
+                        client.getUser().setLogin(newUser.get(0));
+                        client.getUser().setPassword(newUser.get(1));
+                        if(!model.editUser(client.getUser())){
+                            throw  new IllegalArgumentException("Not unique name!");
+                        }
+                        client.getXmlUser().setMessage(Preference.Successfully.name());
+                        client.sendMessage(Preference.Edit.name());
+                        this.displayInfoLog("Edit of user: " + client.getUser().getLogin() + " is successful. ");
+                        logger.debug(Preference.Edit.name() + " user: " + client.getUser().getLogin());
+                        this.setChanged();
+                        this.notifyObservers();
+                        break;
+                    }
+                    catch (IllegalArgumentException e ){
+                        client.getXmlUser().setMessage(Preference.IncorrectValue.name());
+                        client.sendMessage(Preference.Edit.name());
+                        break;
+                    }
 
             case Remove:
                 if(client.getUser().isAdmin()){
@@ -406,7 +422,7 @@ public class ControllerServer extends Observable {
     }
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
-        new ControllerServer(new ServerView());
+       new ControllerServer(new ServerView());
     }
 
     /**
