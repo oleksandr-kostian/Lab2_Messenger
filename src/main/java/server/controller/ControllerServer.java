@@ -369,7 +369,7 @@ public class ControllerServer extends Observable {
                             activeUsers.get(i).sendMessage(Preference.Remove.name());
                             activeUsers.get(i).close();
                             removeActiveUser(activeUsers.get(i));
-                            client.getXmlUser().setMessage(Preference.Successfully.name());
+                            client.getXmlUser().setMessage(Preference.Admin.name());
                             client.sendMessage(Preference.Remove.name());
                             break;
 
