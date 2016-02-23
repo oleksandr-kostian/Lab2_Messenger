@@ -10,97 +10,62 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 
 /**
  * Created by Слава on 24.01.2016.
  */
-public class AdminFrame extends UserFrame {
+public class AdminFrame extends UserFrame implements AdminView{
     private Controller controller;
-    private XmlSet userSet;
     private JList listBann;
-    private List<String> banUsers;
-    private int elementBann = -1;
     private DefaultListModel<String> model;
-    private Thread adminThead = new Thread(){
-        @Override
-        public void run() {
-            while (true){
-                if(isClose()){return;}
-                controller.getMessage();
-                XmlSet buff = controller.getUserXml();
-                if(buff.getPreference().equals("Ban")) {
-                    banUsers.add(getActiveUsers().get(getElement()[0]));
-                    model.addElement(getActiveUsers().get(getElement()[0]));
-                    JOptionPane.showMessageDialog(null, "Ban is successfully");
-                }
-                if(buff.getPreference().equals("UnBan")) {
-                    banUsers.remove(banUsers.get(elementBann));
-                    model.remove(elementBann);
-                    JOptionPane.showMessageDialog(null, "UnBan is successfully");
+    private AdminPanel adminPanel;
+
+
+    public AdminFrame(Controller controller){
+        super(controller,"root",new AdminMenu());
+        this.controller = controller;
+        adminPanel = (AdminPanel) getAllChat();
+    }
+
+    @Override
+    public void createAllChat(List<String> activeUsers) {
+        setAllChat(new AdminPanel(activeUsers,controller));
+        getAllChat().getSend().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String message =  getAllChat().getMessage();
+                if(message != null){
+                    controller.sendAllMessage(message);
                 }
             }
-        }
-    };
-    public AdminFrame(Controller controller,List<String> banUsers){
-        super(controller,"root",new AdminMenu(),false);
-        this.controller = controller;
-        userSet = controller.getUserXml();
-        this.banUsers = banUsers;
-        setBanModel();
-        adminThead.start();
-    }
+        });
+        getAllChat().getEdit().addKeyListener(new KeyAdapter() {
 
-    public JPanel setListPanel(){
-        JPanel listPanel = new FonPanel();
-        listPanel.setLayout(new MigLayout());
-        JLabel allView = new JLabel("Active users");
-        allView.setForeground(Color.white);
-        JLabel bannView = new JLabel("Ban users");
-        bannView.setForeground(Color.white);
-        setModel();
-        JList list = super.setList();
-        JScrollPane jsp = new JScrollPane(list);
-        listBann = new JList();
-        listBann.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        listBann.addListSelectionListener(
-                new ListSelectionListener() {
-                    public void valueChanged(ListSelectionEvent e) {
-                        elementBann = listBann.getSelectedIndex();
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && e.isControlDown()) {
+                    String message = getAllChat().getMessage();
+                    if (message != null) {
+                        controller.sendAllMessage(message);
                     }
-                });
+                }
+            }
 
-        JScrollPane jsp1 = new JScrollPane(listBann);
-        jsp.setPreferredSize(new Dimension(120, 140));
-        jsp1.setPreferredSize(new Dimension(120, 140));
-        listPanel.add(allView,"wrap");
-        listPanel.add(jsp,"wrap");
-        listPanel.add(bannView,"wrap");
-        listPanel.add(jsp1);
-        return listPanel;
+        });
+        getTabbedPane().addTab("All chat",getAllChat());
     }
-    public void setBanModel(){
-        model = new DefaultListModel<>();
-        for (String s : banUsers) {
-            model.addElement(s);
-        }
-        listBann.setModel(model);
-    }
-
     public void setMenuListener(){
         super.setMenuListener();
         AdminMenu menu =(AdminMenu) super.getMenu();
         menu.getRemoveUser().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if( getElement()!=null && getElement().length==1 ) {
-                    int user = getElement()[0];
-                    List<String> login = new ArrayList<String>();
-                    login.add(getActiveUsers().get(user));
-                    userSet.setList(login);
-                    controller.sendMessage(userSet, "Remove");
-
+                if( getAllChat().getElement()!=null && getAllChat().getElement().length==1 ) {
+                    int userIndex = getAllChat().getElement()[0];
+                    controller.remove(getActiveUsers().get(userIndex));
                 }
             }
         });
@@ -108,11 +73,8 @@ public class AdminFrame extends UserFrame {
         menu.getBan().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (getElement() != null && getElement().length == 1) {
-                    List<String> login = new ArrayList<String>();
-                    login.add(getActiveUsers().get(getElement()[0]));
-                    userSet.setList(login);
-                    controller.sendMessage(userSet, "Ban");
+                if (getAllChat().getElement() != null && getAllChat().getElement().length == 1) {
+                    controller.ban(getActiveUsers().get(getAllChat().getElement()[0]));
                 }
             }
         });
@@ -120,15 +82,17 @@ public class AdminFrame extends UserFrame {
         menu.getUnBan().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(elementBann != -1){
-                    List<String> login = new ArrayList<String>();
-                    login.add(banUsers.get(elementBann));
-                    userSet.setList(login);
-                    controller.sendMessage(userSet, "UnBan");
+                if(adminPanel.getElementBann() != -1){
+                  controller.unBan(adminPanel.getBanUsers().get(adminPanel.getElementBann()));
                 }
             }
         });
 
+    }
+
+    @Override
+    public void setBanUsers(List<String> banUsers) {
+        adminPanel.setBanUsers(banUsers);
     }
 }
 

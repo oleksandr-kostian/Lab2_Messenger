@@ -9,6 +9,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -93,92 +95,21 @@ public class LoginWindow extends JFrame {
         ok.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                /*if(loginField.getText()!=null&&loginField.getText().equals("admin")& new String(passwordField.getPassword()).equals("admin")){
-                    AdminFrame adminFrame = new AdminFrame(null);
-                }else*/
-                if (loginField.getText() != null && !loginField.getText().trim().equals("")) {
-                    XmlSet aut = new XmlSet(id++);
-                    java.util.List<String> logPas = new ArrayList<String>();
-                    logPas.add(loginField.getText());
-                    logPas.add(new String(passwordField.getPassword()));
-                    aut.setList(logPas);
-                    aut.setKeyDialog(11);
-                    controller.sendMessage(aut, "Authentication");
-
-                    while (true) {
-                        controller.getMessage();
-                        XmlSet buff = controller.getUserXml();
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("Successfully")) {
-                            closeFrame();
-                            UserFrame userFrame = new UserFrame(controller, logPas.get(0),new UserMenu(),false);
-                            break;
-                        }
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("Ban")) {
-                            JOptionPane.showMessageDialog(null, "You have ban!!!");
-                            closeFrame();
-                            UserFrame userFrame = new UserFrame(controller, logPas.get(0),new UserMenu(),true);
-                            break;
-                        }
-
-                        if (buff.getPreference().equals("Admin")) {
-                            controller.sendMessage(controller.getUserXml(), "BanUsers");
-                            while (true){
-                                controller.getMessage();
-                                if(controller.getUserXml().getPreference().equals("BanUsers")&&
-                                        controller.getUserXml().getMessage().equals("BanUsers")){
-                                    closeFrame();
-                                    AdminFrame adminFrame = new AdminFrame(controller,controller.getUserXml().getList());
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("The user is online.")) {
-                            JOptionPane.showMessageDialog(null, "The user is online.");
-                            break;
-                        }
-                        if (buff.getPreference().equals("Authentication") && buff.getMessage().equals("User does not exist!")) {
-                            JOptionPane.showMessageDialog(null, "User does not exist or you enter wrong password!");
-                            break;
-                        }
-                        /*if(buff.getPreference().equals("Authentication")){
-                            JOptionPane.showMessageDialog(null,
-                                    "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.");
-                        }*/
-                    }
+                if (loginField.getText() != null && !loginField.getText().trim().equals("") && passwordField!=null) {
+                    controller.authentication(loginField.getText(),new String(passwordField.getPassword()));
                 }
             }
 
         });
+
     }
     public void setRegListener() {
         reg.setText("Registration");
         reg.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (loginField.getText() != null && !loginField.getText().trim().equals("")) {
-                    XmlSet aut = new XmlSet(id++);
-                    java.util.List<String> logPas = new ArrayList<String>();
-                    logPas.add(loginField.getText());
-                    logPas.add(new String(passwordField.getPassword()));
-                    aut.setList(logPas);
-                    aut.setKeyDialog(11);
-                    controller.sendMessage(aut, "Registration");
-
-                    while (true) {
-                        controller.getMessage();
-                        XmlSet buff = controller.getUserXml();
-                        if (buff.getPreference().equals("Registration") && buff.getMessage().equals("Successfully")) {
-                            closeFrame();
-                            UserFrame userFrame = new UserFrame(controller, logPas.get(0), new UserMenu(),false);
-                            return;
-                        }
-                        if (buff.getPreference().equals("Registration") &&
-                                buff.getMessage().equals("IncorrectValue name of user. This user has already been created.")) {
-                            JOptionPane.showMessageDialog(null, "IncorrectValue name of user. This user has already been created.");
-                            return;
-                        }
-                    }
+                if (loginField.getText() != null && !loginField.getText().trim().equals("") && passwordField!=null) {
+                   controller.registration(loginField.getText(),new String(passwordField.getPassword()));
                 }
             }
         });
@@ -199,7 +130,7 @@ public class LoginWindow extends JFrame {
     public static void main(String[] args) throws IOException, SAXException {
         String serverAddress = "localhost";
         Controller client = new Controller(serverAddress);
-        client.connectToServer();
-        LoginWindow loginWindow = new LoginWindow(client);
+        client.createView(ChatViewSwing.getFactory());
+        client.run();
     }
 }

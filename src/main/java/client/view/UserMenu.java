@@ -13,6 +13,7 @@ public class UserMenu extends  JMenuBar{
     private JMenuItem edit;
     private JMenuItem remove;
     private JMenu fileMenu;
+    private JMenuItem removePrivate;
 
     public UserMenu() {
         setMenu();
@@ -25,6 +26,10 @@ public class UserMenu extends  JMenuBar{
         return remove;
     }
 
+    public JMenuItem getRemovePrivate() {
+        return removePrivate;
+    }
+
     public JMenuItem getEdit() {
         return edit;
     }
@@ -33,7 +38,7 @@ public class UserMenu extends  JMenuBar{
         return privat;
     }
 
-    public JMenuItem getViewAll() {
+   /* public JMenuItem getViewAll() {
         return viewAll;
     }
 
@@ -56,7 +61,7 @@ public class UserMenu extends  JMenuBar{
         edit.setFont(font);
         fileMenu.add(edit);
 
-        viewAll = new JMenuItem("All chat");
+        /*viewAll = new JMenuItem("All chat");
         viewAll.setFont(font);
         fileMenu.add(viewAll);
         viewAll.setEnabled(false);
@@ -77,6 +82,9 @@ public class UserMenu extends  JMenuBar{
         remove.setFont(font);
         fileMenu.add(remove);
 
+        removePrivate = new JMenuItem("Remove Private Chat");
+        removePrivate.setFont(font);
+        fileMenu.add(removePrivate);
         //fileMenu.addSeparator();
 
 /*        exitItem = new JMenuItem("Exit");
