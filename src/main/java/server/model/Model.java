@@ -31,7 +31,7 @@ public class Model {
      */
     protected static void logMessage(Long id, String message, String forWhom) {
         try (Writer logMess = new BufferedWriter(new FileWriter("logMessage.txt", true))) {
-            String number = String.format("%11d", id);
+            String number = String.format("%15d", id);
             logMess.append("id: <").append(number).append("> ")
                     .append(new Date(System.currentTimeMillis()).toString())
                     .append(" - send ").append(forWhom).append(" ")
@@ -78,6 +78,7 @@ public class Model {
     }
 
     /**
+     * Method for authorization user on server.
      * @param login of user
      * @param password of user
      * @return return id of user. If this user did not found then return -1
@@ -118,7 +119,7 @@ public class Model {
      * @return <code>true</code> if user ban,
      *         <code>false</code> if login = null.
      */
-    public boolean setBan(String login, boolean ban) {
+    public synchronized boolean setBan(String login, boolean ban) {
         if (login == null) {
             return false;
         }
@@ -151,7 +152,7 @@ public class Model {
      * @return <code>true</code> if user add,
      *         <code>false</code> if user = null or user exist.
      */
-    public boolean addUser(User user) {
+    public synchronized boolean addUser(User user) {
         if (user == null) {
             LOG.debug("user is empty(null)");
             return false;
@@ -170,22 +171,36 @@ public class Model {
         return true;
     }
 
-    public void removeUser(User user) {
+    public synchronized boolean removeUser(User user) {
         if (user == null) {
             LOG.debug("user is empty(null)");
-            return;
+            return false;
         }
 
         list.remove(user.getId());
         saveHashMapOfUsers();
         LOG.info("user remove success: " + user.getLogin());
         LOG.debug("user remove: " + user.toString());
+        return true;
     }
 
-    public void editUser(User user) {
+    /**
+     * Method that edit user.
+     * @param user type of User.
+     * @return <code>true</code> if user edit,
+     *         <code>false</code> if user = null or login exists.
+     */
+    public synchronized boolean editUser(User user) {
         if (user == null) {
             LOG.debug("user is empty(null)");
-            return;
+            return false;
+        }
+
+        for (Map.Entry<Long, User> u : list.entrySet()) {
+            if (u.getValue().getLogin().equals(user.getLogin()) &&
+                    u.getValue().getId() != user.getId()) {
+                return false;
+            }
         }
 
         LOG.debug("user for change: " + getUser(user.getId()).toString());
@@ -194,7 +209,8 @@ public class Model {
         saveHashMapOfUsers();
         LOG.info("user edit success: " + user.getLogin());
 
-        LOG.debug("user change on: " + user.toString());
+        LOG.debug("user change on: " + getUser(user.getId()).toString());
+        return true;
     }
 
     /**

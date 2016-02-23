@@ -1,6 +1,9 @@
 package client.controller;
 
+import client.view.ViewFactory;
 import server.model.XmlSet;
+
+import java.util.List;
 
 /**
  * Interface that describes method of client controller
@@ -16,11 +19,6 @@ public interface ControllerActionsClient {
      *         <code>false</code> if user has not been connected.
      */
     boolean connectToServer();
-
-    /**
-     * Method for disconnect the connection with server.
-     */
-    void closeServer();
 
     /**
      * Method that set class of type 'XmlSet' for work with it.
@@ -41,13 +39,52 @@ public interface ControllerActionsClient {
 
     /**
      * Method for send message to server.
-     * @param xml for server
-     * @param message is a 'String' message to server.
+     * @param msg is a 'String' message to server.
      */
-    void sendMessage(XmlSet xml, String message);
+    void sendAllMessage(String msg);
 
-    void displayToChat(String message);
-    void viewActiveUser();
-    String getMyUser();
-    void setMyUser(String user);
+    /**
+     * Method for send private message.
+     * @param users     list for dialog.
+     * @param msg       of user.
+     * @param keyDialog is unique key of dialog.
+     */
+    void sendPrivateMessage(List<String> users, String msg, int keyDialog);
+
+    /**
+     * Method for close chat.
+     */
+    void closeChat();
+
+    /**
+     * Method for registration user on server.
+     * @param login    of user
+     * @param password of user
+     */
+    void registration(String login, String password);
+    /**
+     * Method for authentication user on server.
+     * @param login    of user
+     * @param password of user
+     */
+    void authentication(String login, String password);
+
+    /**
+     * Method that create view for user.
+     * @param factory of view.
+     */
+    void createView(ViewFactory factory);
+
+    /**
+     * Method for remove of user.
+     * @param removeUser is login of user.
+     */
+    void remove(String removeUser);
+
+    /**
+     * Method for edit login or password of user.
+     * @param newLogin    of user.
+     * @param newPassword of user.
+     */
+    void editUser(String newLogin,String newPassword);
 }
