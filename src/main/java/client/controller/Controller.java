@@ -137,6 +137,9 @@ public class Controller implements Runnable,ControllerActionsClient {
             this.setUserXml(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
         } catch (org.xml.sax.SAXException e1) {
             System.out.println(" SAXException.Authorization is not passed successfully. " + e1);
+            JOptionPane.showMessageDialog(null,"Server is down");
+            close = true;
+            System.exit(1);
         } catch (IOException e) {
             System.out.println(" Exception reading Streams: " + e);
             JOptionPane.showMessageDialog(null,"Server is down");
