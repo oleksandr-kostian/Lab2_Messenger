@@ -4,10 +4,7 @@ package server.controller;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
-import server.model.Model;
-import server.model.User;
-import server.model.XmlMessage;
-import server.model.XmlSet;
+import server.model.*;
 import server.view.ServerView;
 import server.view.View;
 
@@ -20,14 +17,15 @@ import java.text.ParseException;
 import java.util.*;
 /**
  * Server's controller
+ *
  * @author Veleri Rechembei
  * @version %I%, %G%
  */
-public class ControllerServer extends Observable {
+public class ControllerServer extends Observable implements Server{
     private final int                       PORT=1025;
     private ServerSocket                    socket;
     private List<ServerThread>              activeUsers;
-    private Model                           model;
+    private ModelActions                    model;
     private static final Logger             logger = Logger.getLogger(ControllerServer.class);
     private View                            serverGUI;
     private volatile boolean                finish = false;
@@ -64,17 +62,58 @@ public class ControllerServer extends Observable {
      * @throws IOException if port don't build; wrong of client's socket.
      * @throws SAXException if ServerThread has mistake of xml.
      */
-    public ControllerServer()throws  IOException, SAXException{
+    public ControllerServer(ModelActions model)throws  IOException, SAXException{
+        this.model = model;
         run();
     }
     /**
      * GUI constructor of servers controller.
      * @param serverGUI GUI of servers controller.
      */
-    public ControllerServer(ServerView serverGUI){
+    public ControllerServer(View serverGUI,ModelActions model){
         this.serverGUI = serverGUI;
+        this.model = model;
+        this.serverGUI.setServer(this);
     }
 
+    /**
+     * Method, that start GUI of server.
+     * @return String value <code>start</code> if server is running,
+     *         String value <code>stop</code>  if server is stopped.
+     */
+    @Override
+    public String startGUI(){
+        if(this.serverGUI!=null){
+            if (!serverGUI.isServerStart()) {
+                new Thread(new Runnable() {
+                   public void run() {
+                        try {
+                            model.start();
+                            serverGUI.getServer().run();
+                        }
+                        catch (org.xml.sax.SAXException e) {
+                            catchGuiException(e);
+                        }
+                        catch (IOException  e){
+                            catchGuiException(e);
+                        }
+                   }
+                }).start();
+                serverGUI.setServerStart(true);
+                return "Stop";
+            }
+            if (serverGUI.isServerStart()) {
+                try {
+                    this.stop();
+                    serverGUI.setServerStart(false);
+                    return ("Start");
+                } catch (IOException e3) {
+                   catchGuiException(e3);
+                }
+            }
+        }
+        return "";
+    }
     /**
      * Registration the user on the server.
      * @param client thread of client.
@@ -186,6 +225,7 @@ public class ControllerServer extends Observable {
      * Method for display information on servers GUI or console, if GUI is null and on info message of lOG.
      * @param message is String information of server.
      */
+    @Override
     public void displayInfoLog(String message){
         if(serverGUI!=null){
             serverGUI.display(message);
@@ -199,6 +239,7 @@ public class ControllerServer extends Observable {
     /**
      * Method for start gracefulReload.
      */
+    @Override
     public void gracefulReload(){
         this.model.gracefulReload();
     }
@@ -206,6 +247,7 @@ public class ControllerServer extends Observable {
      * Method for write exception on servers GUI to LOG error message.
      * @param message is exception of server.
      */
+    @Override
     public void catchGuiException(Exception message) {
         logger.error("Server GUI: ", message);
 
@@ -215,8 +257,8 @@ public class ControllerServer extends Observable {
      * @throws IOException if port don't build; wrong of client's socket.
      * @throws SAXException if ServerThread has mistake of xml.
      */
-  public void run()throws IOException, SAXException{
-      model = new Model();
+    @Override
+    public void run()throws IOException, SAXException{
       activeUsers = new ArrayList<>();
       this.displayInfoLog("Building to port " + this.PORT + ", please wait  ...");
       socket = new ServerSocket(PORT);
@@ -229,7 +271,12 @@ public class ControllerServer extends Observable {
 
       }
 
-  }
+    }
+
+    /**
+     * Method for stop server's controller.
+     * @throws IOException if steams has error.
+     */
     public void stop() throws IOException{
        this.finish=true;
         if (socket != null) {
@@ -422,7 +469,7 @@ public class ControllerServer extends Observable {
     }
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
-       new ControllerServer(new ServerView());
+       new ControllerServer(new ServerView(), new Model());
     }
 
     /**
@@ -571,9 +618,11 @@ public class ControllerServer extends Observable {
                         else {
                             String preference = getXmlUser().getPreference();
                             Preference command = Preference.fromString(preference);
-                            readCommand(this, command);
-                            if(preference.equals(Preference.Edit.name())){
-                                isEditRepeat=true;
+                           if(!finish) {
+                                readCommand(this, command);
+                                if (preference.equals(Preference.Edit.name())) {
+                                    isEditRepeat = true;
+                                }
                             }
                         }
                     }

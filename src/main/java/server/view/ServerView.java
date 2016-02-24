@@ -7,27 +7,71 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import server.controller.ControllerServer;
+import server.controller.Server;
+import server.model.ModelActions;
+
 import javax.swing.*;
     /**
      * GUI of server's controller
+     *
      * @author Veleri Rechembei
      * @version %I%, %G%
      */
-public class ServerView extends JFrame implements View, Runnable{
+public class ServerView extends JFrame implements View{
     private JPanel                  viewPanel;
     private Font                    font;
     private static JTextArea        memo;
     private JButton                 startButton;
-    private ControllerServer        server;
+    private Server                  server;
     private JButton                 gracefulReload;
+    private boolean                 clickStart;
     /**
      * Constructor of server GUI.
      */
     public ServerView() {
         super("Server");
-        this.server=null;
         this.createGUI();
+        clickStart=false;
     }
+
+     /**
+     * Method for set server.
+     * @param server is server.
+    */
+    @Override
+    public void setServer(Server server) {
+        this.server = server;
+    }
+
+    /**
+     * Method for get server.
+     * @return server.
+     */
+    @Override
+     public Server getServer() {
+        return server;
+     }
+
+     /**
+     * Method for get boolean status of server.
+     * @return <code>true</code> if server is running.
+      *         <code>false</code> if server is stopped.
+      */
+     @Override
+     public boolean isServerStart() {
+       return clickStart;
+      }
+
+     /**
+     * Method for set status of server.
+     @param isStart is status for server.
+                    <code>true</code> if server is running.
+                    <code>false</code> if server is stopped.
+     */
+     @Override
+     public void setServerStart(boolean isStart) {
+        this.clickStart = isStart;
+     }
 
     /**
      * Method, that create GUI of server.
@@ -98,7 +142,8 @@ public class ServerView extends JFrame implements View, Runnable{
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                start();
+                String text = server.startGUI();
+                startButton.setText(text);
             }
         });
 
@@ -108,13 +153,8 @@ public class ServerView extends JFrame implements View, Runnable{
         gracefulReload.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
                     gracefulReload();
                     display("Graceful Reload is successful.");
-                }
-                catch (NullPointerException e2 ){
-                    display("Start the server and try again!");
-                }
             }
         });
         return buttonPanel;
@@ -134,46 +174,5 @@ public class ServerView extends JFrame implements View, Runnable{
         text += "\n" +display;
         memo.setText(text);
     }
-
-     /**
-      * Method for creates thread that starts running the controller of server. Method also stops controller of server.
-      */
-     @Override
-     public void start() {
-         if (server== null) {
-             server= new ControllerServer(this);
-             new Thread(this).start();
-             startButton.setText("Stop");
-             return;
-         }
-         if (server != null) {
-             try {
-                 server.stop();
-                 server = null;
-                 startButton.setText("Start");
-                 return;
-             } catch (IOException e3) {
-                 server.catchGuiException(e3);
-             }
-         }
-
-     }
-
-      /**
-       * Method for starting controller of server.
-       */
-      @Override
-      public void run() {
-          try{
-              server.run();
-          }
-          catch (org.xml.sax.SAXException e) {
-              server.catchGuiException(e);
-          }
-          catch (IOException  e){
-              server.catchGuiException(e);
-          }
-
-      }
 
     }
