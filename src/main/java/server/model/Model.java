@@ -225,6 +225,8 @@ public class Model implements ModelActions {
     public void start() {
         if (statusWork) {
             return;
+        } else {
+            statusWork = true;
         }
 
         gracefulReload();
