@@ -244,7 +244,8 @@ public class Controller implements Runnable,ControllerActionsClient {
         // user.add(myUser);
         userSet.setKeyDialog(keyDialog);
         userSet.setList(users);
-        userSet.setMessage(myUser + ":  " + msg);
+        msg = msg.replaceAll("\\n", "<br>");
+        userSet.setMessage(myUser + ": <br>" + msg);
         sendMessage(userSet, Preference.PrivateMessage.name());
 
     }
@@ -410,6 +411,7 @@ public class Controller implements Runnable,ControllerActionsClient {
 
                 if (buff.getPreference().equals(Preference.PrivateMessage.name())) {
                     if (ban) continue;
+                    String msg = buff.getMessage().replaceAll("<br>", "\n");
                     Map<Integer, PrivateChat> privateChatMap;
                     if (admin) {
                         privateChatMap = views.get(0).getAdminFrame().getMap();
@@ -419,11 +421,11 @@ public class Controller implements Runnable,ControllerActionsClient {
                     if (privateChatMap.containsKey(buff.getKeyDialog())) {
                         if (admin) {
                             for (ChatView cv : views) {
-                                cv.getAdminFrame().setPrivateMessage(buff.getMessage(), buff.getKeyDialog());
+                                cv.getAdminFrame().setPrivateMessage(msg, buff.getKeyDialog());
                             }
                         } else {
                             for (ChatView cv : views) {
-                                cv.getUserFrame().setPrivateMessage(buff.getMessage(), buff.getKeyDialog());
+                                cv.getUserFrame().setPrivateMessage(msg, buff.getKeyDialog());
                             }
                         }
                     } else {
