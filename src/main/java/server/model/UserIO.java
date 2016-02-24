@@ -32,6 +32,11 @@ final class UserIO {
     }
 
     /**
+     * Default construct prohibits to create instance of class.
+     */
+    private UserIO() {}
+
+    /**
      * @param listUser that you need write in file
      */
     protected void writeList(HashMap<Long, User> listUser) {

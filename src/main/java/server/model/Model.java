@@ -13,7 +13,7 @@ import server.controller.Preference;
  * @author Sasha Kostyan
  * @version %I%, %G%
  */
-public class Model {
+public class Model implements ModelActions {
     private static Logger          LOG = Logger.getLogger(Model.class);
     private static UserIO          USERIO;
     private HashMap<Long, User> list;
