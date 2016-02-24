@@ -85,6 +85,7 @@ public class ControllerServer extends Observable implements Server{
     public String startGUI(){
         if(this.serverGUI!=null){
             if (!serverGUI.isServerStart()) {
+                this.finish=false;
                 new Thread(new Runnable() {
                    public void run() {
                         try {
@@ -265,6 +266,9 @@ public class ControllerServer extends Observable implements Server{
       this.displayInfoLog("Server started.");
       this.displayInfoLog("Waiting a client... ");
       while (true) {
+          if(this.finish){
+              return;
+          }
               Socket client = socket.accept();
               logger.debug("Connection from " + client.getInetAddress().getHostName());
               this.addObserver(new ServerThread(client));
