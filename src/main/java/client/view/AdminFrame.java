@@ -1,6 +1,7 @@
 package client.view;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 import net.miginfocom.swing.MigLayout;
 import server.model.XmlSet;
 
@@ -19,43 +20,23 @@ import java.util.List;
  * Created by Слава on 24.01.2016.
  */
 public class AdminFrame extends UserFrame implements AdminView{
-    private Controller controller;
+    private ControllerActionsClient controller;
     private JList listBann;
     private DefaultListModel<String> model;
     private AdminPanel adminPanel;
 
 
-    public AdminFrame(Controller controller){
+    public AdminFrame(ControllerActionsClient controller){
         super(controller,"root",new AdminMenu());
         this.controller = controller;
-        adminPanel = (AdminPanel) getAllChat();
     }
 
     @Override
     public void createAllChat(List<String> activeUsers) {
-        setAllChat(new AdminPanel(activeUsers,controller));
-        getAllChat().getSend().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String message =  getAllChat().getMessage();
-                if(message != null){
-                    controller.sendAllMessage(message);
-                }
-            }
-        });
-        getAllChat().getEdit().addKeyListener(new KeyAdapter() {
 
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER && e.isControlDown()) {
-                    String message = getAllChat().getMessage();
-                    if (message != null) {
-                        controller.sendAllMessage(message);
-                    }
-                }
-            }
-
-        });
-        getTabbedPane().addTab("All chat",getAllChat());
+        adminPanel =new AdminPanel(activeUsers,getController());
+        setAllChat(adminPanel);
+        getTabbedPane().addTab("All chat",adminPanel);
     }
     public void setMenuListener(){
         super.setMenuListener();

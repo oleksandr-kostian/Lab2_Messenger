@@ -24,7 +24,7 @@ import javax.swing.*;
  * @author Veleri Rechembei, Slavik Miroshnychenko
  * @version %I%, %G%
  */
-public class Controller implements Runnable {
+public class Controller implements Runnable,ControllerActionsClient {
     private String hostName;
     final private int PORT = 1025;
     private Socket connect;
@@ -73,7 +73,7 @@ public class Controller implements Runnable {
     public void closeChat() {
         try {
             close = true;
-            sendMessage(userSet,"Close");
+            sendMessage(userSet, "Close");
             if (fromServer != null) fromServer.close();
         } catch (Exception e) {/*logger.error(e);*/}
         try {
@@ -124,7 +124,7 @@ public class Controller implements Runnable {
 
     public void getMessage() {
         try {
-
+            if(fromServer == null) throw new IOException();
             BufferedReader is = new BufferedReader(new InputStreamReader(fromServer));
             StringBuffer ans = new StringBuffer();
             while (true) {
@@ -139,6 +139,8 @@ public class Controller implements Runnable {
             System.out.println(" SAXException.Authorization is not passed successfully. " + e1);
         } catch (IOException e) {
             System.out.println(" Exception reading Streams: " + e);
+            JOptionPane.showMessageDialog(null,"Server is down");
+            close = true;
         }
     }
 
@@ -156,7 +158,7 @@ public class Controller implements Runnable {
     }
 
     public void registration(String login, String password) {
-        if (login!= null && !login.trim().equals("") && password!= null) {
+        if (login != null && !login.trim().equals("") && password != null) {
             XmlSet aut = new XmlSet(3);
             java.util.List<String> logPas = new ArrayList<String>();
             setMyUser(login);
@@ -169,7 +171,7 @@ public class Controller implements Runnable {
     }
 
     public void authentication(String login, String password) {
-        if (login!= null && !login.trim().equals("") && password!= null) {
+        if (login != null && !login.trim().equals("") && password != null) {
             XmlSet aut = new XmlSet(4);
             java.util.List<String> logPas = new ArrayList<String>();
             setMyUser(login);
@@ -181,7 +183,7 @@ public class Controller implements Runnable {
         }
     }
 
-    public void remove(){
+    public void remove() {
         Object[] options = {"Yes", "No"};
         int n = JOptionPane
                 .showOptionDialog(null, "Are you sure?",
@@ -192,14 +194,15 @@ public class Controller implements Runnable {
             sendMessage(userXml, Preference.Remove.name());
         }
     }
-    public void ban(String banUser){
+
+    public void ban(String banUser) {
         List<String> login = new ArrayList<String>();
         login.add(banUser);
         userSet.setList(login);
         sendMessage(userSet, Preference.Ban.name());
     }
 
-    public void remove(String removeUser){
+    public void remove(String removeUser) {
         List<String> login = new ArrayList<String>();
         login.add(removeUser);
         userSet.setList(login);
@@ -207,7 +210,7 @@ public class Controller implements Runnable {
 
     }
 
-    public void unBan(String unBanUser){
+    public void unBan(String unBanUser) {
         List<String> login = new ArrayList<String>();
         login.add(unBanUser);
         userSet.setList(login);
@@ -215,21 +218,21 @@ public class Controller implements Runnable {
         sendMessage(userSet, Preference.UnBan.name());
     }
 
-    public void sendPrivateMessage(List<String> users,String msg,int keyDialog){
-        if(ban)return;
+    public void sendPrivateMessage(List<String> users, String msg, int keyDialog) {
+        if (ban) return;
         Map<Integer, PrivateChat> mainPanelMap;
-        if(admin){
-             mainPanelMap = views.get(0).getAdminFrame().getMap();
-        }else {
-             mainPanelMap = views.get(0).getUserFrame().getMap();
+        if (admin) {
+            mainPanelMap = views.get(0).getAdminFrame().getMap();
+        } else {
+            mainPanelMap = views.get(0).getUserFrame().getMap();
         }
-        if(keyDialog==0 ){
-            if(!admin) {
+        if (keyDialog == 0) {
+            if (!admin) {
                 for (ChatView cv : views) {
                     keyDialog = (int) System.currentTimeMillis();
                     cv.getUserFrame().createPrivateChat(users, keyDialog);
                 }
-            }else {
+            } else {
                 for (ChatView cv : views) {
                     keyDialog = (int) System.currentTimeMillis();
                     cv.getAdminFrame().createPrivateChat(users, keyDialog);
@@ -238,30 +241,33 @@ public class Controller implements Runnable {
 
         }
         //privateDialog = true;
-       // user.add(myUser);
+        // user.add(myUser);
         userSet.setKeyDialog(keyDialog);
         userSet.setList(users);
-        userSet.setMessage(myUser + ":  "+msg);
-        sendMessage(userSet,Preference.PrivateMessage.name());
+        userSet.setMessage(myUser + ":  " + msg);
+        sendMessage(userSet, Preference.PrivateMessage.name());
 
     }
 
-    public void sendAllMessage(String msg){
-        if(ban)return;
-         userSet.setKeyDialog(11);
-        userSet.setMessage(myUser + ":  "+msg);
-        sendMessage(userSet,Preference.MessageForAll.name());
+    public void sendAllMessage(String msg) {
+        if (ban) return;
+        userSet.setKeyDialog(11);
+       /* msg.replaceAll("\n","s");
+        System.out.println(msg);*/
+        msg = msg.replaceAll("\\n", "<br>");
+        userSet.setMessage(myUser + ": <br>" + msg);
+        /*System.out.println("fffffffffffffffffffffffff");
+        System.out.println(userSet.getMessage());*/
+        sendMessage(userSet, Preference.MessageForAll.name());
     }
 
-    public void editUser(String newLogin,String newPassword){
+    public void editUser(String newLogin, String newPassword) {
         java.util.List<String> logPas = new ArrayList<String>();
         logPas.add(newLogin);
         logPas.add(newPassword);
         userSet.setList(logPas);
         sendMessage(userSet, Preference.Edit.name());
     }
-
-
 
 
     public void displayToChat(String message) {
@@ -281,172 +287,168 @@ public class Controller implements Runnable {
         this.myUser = user;
     }
 
-    public static void main(String[] args) throws IOException, ParseException, SAXException {
-        ServerView view = new ServerView();
-        //  client.sendMessage();
-
-    }
 
     @Override
     public void run() {
         while (true) {
-            if(close) break;
+            if (close) break;
             getMessage();
             XmlSet buff = getUserXml();
-            System.out.println(buff.getPreference());
-            if(!authentication) {
-                if (buff.getPreference().equals(Preference.Registration.name()) &&
-                        buff.getMessage().equals(Preference.Successfully.name())) {
-                    userSet = getUserXml();
-                    for (ChatView cv : views) {
-                        cv.closeEnterToChat();
-                        cv.createUserView();
-                        cv.getUserFrame().setActiveUsers(activeUsers);
+            if (buff != null) {
+                if (!authentication) {
+                    if (buff.getPreference().equals(Preference.Registration.name()) &&
+                            buff.getMessage().equals(Preference.Successfully.name())) {
+                        userSet = getUserXml();
+                        for (ChatView cv : views) {
+                            cv.closeEnterToChat();
+                            cv.createUserView();
+                            cv.getUserFrame().setActiveUsers(activeUsers);
+                        }
+                        authentication = true;
                     }
-                    authentication = true;
-                }
-                if (buff.getPreference().equals(Preference.Registration.name()) &&
-                        buff.getMessage().equals("IncorrectValue name of user. This user has already been created.")) {
-                    JOptionPane.showMessageDialog(null, "IncorrectValue name of user. This user has already been created.");
-                }
-                if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(Preference.Successfully.name())) {
-                    userSet = getUserXml();
-                    for (ChatView cv : views) {
-                        cv.closeEnterToChat();
-                        cv.createUserView();
-                        cv.getUserFrame().setActiveUsers(activeUsers);
+                    if (buff.getPreference().equals(Preference.Registration.name()) &&
+                            buff.getMessage().equals("IncorrectValue name of user. This user has already been created.")) {
+                        JOptionPane.showMessageDialog(null, "IncorrectValue name of user. This user has already been created.");
                     }
-                    authentication = true;
-                }
-                if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(Preference.Ban.name())) {
-                    JOptionPane.showMessageDialog(null, "You have ban!!!");
-                    userSet = getUserXml();
-                    ban = true;
-                    for (ChatView cv : views) {
-                        cv.closeEnterToChat();
-                        cv.createUserView();
+                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(Preference.Successfully.name())) {
+                        userSet = getUserXml();
+                        for (ChatView cv : views) {
+                            cv.closeEnterToChat();
+                            cv.createUserView();
+                            cv.getUserFrame().setActiveUsers(activeUsers);
+                        }
+                        authentication = true;
                     }
-                    authentication = true;
-                }
+                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(Preference.Ban.name())) {
+                        JOptionPane.showMessageDialog(null, "You have ban!!!");
+                        userSet = getUserXml();
+                        ban = true;
+                        for (ChatView cv : views) {
+                            cv.closeEnterToChat();
+                            cv.createUserView();
+                        }
+                        authentication = true;
+                    }
 
-                if (buff.getPreference().equals(Preference.Admin.name())) {
-                    admin = true;
-                    userSet = getUserXml();
-                    sendMessage(getUserXml(), Preference.BanUsers.name());
-                    authentication = true;
-                }
+                    if (buff.getPreference().equals(Preference.Admin.name())) {
+                        admin = true;
+                        userSet = getUserXml();
+                        sendMessage(getUserXml(), Preference.BanUsers.name());
+                        authentication = true;
+                    }
 
-                if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals("ONLINE_USER")) {
-                    JOptionPane.showMessageDialog(null, "The user is online");
+                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals("The user is online")) {
+                        JOptionPane.showMessageDialog(null, "The user is online");
 
-                }
-                if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals("User does not exist!")) {
-                    JOptionPane.showMessageDialog(null, "User does not exist or you enter wrong password!");
-                }
-            }
-            if(admin) {
-                if (getUserXml().getPreference().equals(Preference.BanUsers.name()) &&
-                        getUserXml().getMessage().equals(Preference.BanUsers.name())) {
-                    banUsers = buff.getList();
-                    for (ChatView cv : views) {
-                        cv.closeEnterToChat();
-                        cv.createAdminView();
-                        cv.getAdminFrame().setBanUsers(buff.getList());
-                        cv.getAdminFrame().setActiveUsers(activeUsers);
+                    }
+                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals("User does not exist!")) {
+                        JOptionPane.showMessageDialog(null, "User does not exist or you enter wrong password!");
                     }
                 }
-                if(buff.getPreference().equals(Preference.Remove.name())&&(buff.getMessage().equals(Preference.Successfully.name()))){
-                    JOptionPane.showMessageDialog(null,"Remove is successfully");
-                }
-                if (buff.getPreference().equals(Preference.Ban.name())) {
-                    JOptionPane.showMessageDialog(null, "Ban is successfully");
-                    banUsers.add(buff.getList().get(0));
-                    for(ChatView cv:views ){
-                        cv.getAdminFrame().setBanUsers(banUsers);
-                    }
-                }
-                if (buff.getPreference().equals(Preference.UnBan.name())) {
-                    JOptionPane.showMessageDialog(null, "UnBan is successfully");
-                    banUsers.remove(buff.getList().get(0));
-                    for(ChatView cv:views ){
-                        cv.getAdminFrame().setBanUsers(banUsers);
-                    }
-                }
-            }
-            if (buff.getPreference().equals(Preference.MessageForAll.name())) {
-                if(ban)continue;
                 if (admin) {
-                    for (ChatView cv : views) {
-                        cv.getAdminFrame().setAllMessage(buff.getMessage());
+                    if (getUserXml().getPreference().equals(Preference.BanUsers.name()) &&
+                            getUserXml().getMessage().equals(Preference.BanUsers.name())) {
+                        banUsers = buff.getList();
+                        for (ChatView cv : views) {
+                            cv.closeEnterToChat();
+                            cv.createAdminView();
+                            cv.getAdminFrame().setBanUsers(buff.getList());
+                            cv.getAdminFrame().setActiveUsers(activeUsers);
+                        }
                     }
-                }else {
-                    for (ChatView cv : views) {
-                        cv.getUserFrame().setAllMessage(buff.getMessage());
+                    if (buff.getPreference().equals(Preference.Remove.name()) && (buff.getMessage().equals(Preference.Admin.name()))) {
+                        JOptionPane.showMessageDialog(null, "Removed is successfully");
+                    }
+                    if (buff.getPreference().equals(Preference.Ban.name())) {
+                        JOptionPane.showMessageDialog(null, "Ban is successfully");
+                        banUsers.add(buff.getList().get(0));
+                        for (ChatView cv : views) {
+                            cv.getAdminFrame().setBanUsers(banUsers);
+                        }
+                    }
+                    if (buff.getPreference().equals(Preference.UnBan.name())) {
+                        JOptionPane.showMessageDialog(null, "UnBan is successfully");
+                        banUsers.remove(buff.getList().get(0));
+                        for (ChatView cv : views) {
+                            cv.getAdminFrame().setBanUsers(banUsers);
+                        }
                     }
                 }
-            }
-            if (buff.getPreference().equals(Preference.ActiveUsers.name())){
-                //if(privateDialog) continue;
-                activeUsers = buff.getList();
-                activeUsers.remove(myUser);
-                for(String s:activeUsers){
-                    System.out.println(s);
-                }
-                if (views.get(0).getUserFrame() == null & views.get(0).getAdminFrame() == null) continue;
-                //if (views.get(0).getUserFrame() == null) continue;
-                if (admin) {
-                    for (ChatView cv : views) {
-                        cv.getAdminFrame().setActiveUsers(activeUsers);
-                    }
-                }else {
-                    for (ChatView cv : views) {
-                        cv.getUserFrame().setActiveUsers(activeUsers);
-                    }
-                }
-
-            }
-
-            if(buff.getPreference().equals(Preference.PrivateMessage.name())) {
-                if (ban) continue;
-                Map<Integer, PrivateChat> privateChatMap;
-                if (admin) {
-                    privateChatMap = views.get(0).getAdminFrame().getMap();
-                } else {
-                    privateChatMap = views.get(0).getUserFrame().getMap();
-                }
-                if (privateChatMap.containsKey(buff.getKeyDialog())) {
+                if (buff.getPreference().equals(Preference.MessageForAll.name())) {
+                    if (ban) continue;
+                    String msg = buff.getMessage().replaceAll("<br>", "\n");
                     if (admin) {
                         for (ChatView cv : views) {
-                            cv.getAdminFrame().setPrivateMessage(buff.getMessage(), buff.getKeyDialog());
+                            cv.getAdminFrame().setAllMessage(msg);
                         }
                     } else {
                         for (ChatView cv : views) {
-                            cv.getUserFrame().setPrivateMessage(buff.getMessage(), buff.getKeyDialog());
+                            cv.getUserFrame().setAllMessage(msg);
                         }
                     }
-                } else {
-                    if (buff.getList().contains(myUser)) {
-                        Object[] options = {"Yes", "No"};
-                        int n = JOptionPane
-                                .showOptionDialog(null, "Do you want to enter the private chat?",
-                                        "Confirmation", JOptionPane.YES_NO_OPTION,
-                                        JOptionPane.QUESTION_MESSAGE, null, options,
-                                        options[0]);
-                        if (n == 0) {
+                }
+                if (buff.getPreference().equals(Preference.ActiveUsers.name())) {
+                    //if(privateDialog) continue;
+                    activeUsers = buff.getList();
+                    activeUsers.remove(myUser);
+                    for (String s : activeUsers) {
+                        System.out.println(s);
+                    }
+                    if (views.get(0).getUserFrame() == null & views.get(0).getAdminFrame() == null) continue;
+                    //if (views.get(0).getUserFrame() == null) continue;
+                    if (admin) {
+                        for (ChatView cv : views) {
+                            cv.getAdminFrame().setActiveUsers(activeUsers);
+                        }
+                    } else {
+                        for (ChatView cv : views) {
+                            cv.getUserFrame().setActiveUsers(activeUsers);
+                        }
+                    }
 
-                            //privateDialog = true;
-                            DefaultListModel<String> model = new DefaultListModel<>();
-                            List<String> privateUser = buff.getList();
-                            privateUser.remove(myUser);
-                            if (admin) {
-                                for (ChatView cv : views) {
-                                    cv.getAdminFrame().createPrivateChat(privateUser, buff.getKeyDialog());
-                                }
-                            } else {
-                                for (ChatView cv : views) {
-                                    cv.getUserFrame().createPrivateChat(privateUser, buff.getKeyDialog());
-                                }
+                }
+
+                if (buff.getPreference().equals(Preference.PrivateMessage.name())) {
+                    if (ban) continue;
+                    Map<Integer, PrivateChat> privateChatMap;
+                    if (admin) {
+                        privateChatMap = views.get(0).getAdminFrame().getMap();
+                    } else {
+                        privateChatMap = views.get(0).getUserFrame().getMap();
+                    }
+                    if (privateChatMap.containsKey(buff.getKeyDialog())) {
+                        if (admin) {
+                            for (ChatView cv : views) {
+                                cv.getAdminFrame().setPrivateMessage(buff.getMessage(), buff.getKeyDialog());
                             }
+                        } else {
+                            for (ChatView cv : views) {
+                                cv.getUserFrame().setPrivateMessage(buff.getMessage(), buff.getKeyDialog());
+                            }
+                        }
+                    } else {
+                        if (buff.getList().contains(myUser)) {
+                            Object[] options = {"Yes", "No"};
+                            int n = JOptionPane
+                                    .showOptionDialog(null, "Do you want to enter the private chat?",
+                                            "Confirmation", JOptionPane.YES_NO_OPTION,
+                                            JOptionPane.QUESTION_MESSAGE, null, options,
+                                            options[0]);
+                            if (n == 0) {
+
+                                //privateDialog = true;
+                                DefaultListModel<String> model = new DefaultListModel<>();
+                                List<String> privateUser = buff.getList();
+                                privateUser.remove(myUser);
+                                if (admin) {
+                                    for (ChatView cv : views) {
+                                        cv.getAdminFrame().createPrivateChat(privateUser, buff.getKeyDialog());
+                                    }
+                                } else {
+                                    for (ChatView cv : views) {
+                                        cv.getUserFrame().createPrivateChat(privateUser, buff.getKeyDialog());
+                                    }
+                                }
 
                            /* privateUser.remove(login);
                             for (String s : activeUsers) {
@@ -457,41 +459,47 @@ public class Controller implements Runnable {
                             memo.append("\n");
                             menu.getViewAll().setEnabled(true);
                         */
+                            }
                         }
                     }
                 }
-            }
 
-            if(buff.getPreference().equals(Preference.Edit.name())&& buff.getMessage().equals(Preference.Successfully.name())){
-                //if(edit) continue;
-                JOptionPane.showMessageDialog(null,"Edit is successful.");
-                myUser = userSet.getList().get(0);
-                for(ChatView cv:views){
-                    cv.getUserFrame().editLogin(myUser);
+                if (buff.getPreference().equals(Preference.Edit.name()) && buff.getMessage().equals(Preference.Successfully.name())) {
+                    //if(edit) continue;
+                    JOptionPane.showMessageDialog(null, "Edit is successful.");
+                    myUser = userSet.getList().get(0);
+                    for (ChatView cv : views) {
+                        cv.getUserFrame().editLogin(myUser);
+                    }
+                    //edit = true;
                 }
-                //edit = true;
-            }
+                if (buff.getPreference().equals(Preference.Edit.name()) && buff.getMessage().equals(Preference.IncorrectValue.name())) {
+                    //if(edit) continue;
+                    JOptionPane.showMessageDialog(null, Preference.IncorrectValue.name());
+                    //edit = true;
+                }
 
-            if(buff.getPreference().equals(Preference.Remove.name())&&(buff.getMessage().equals(Preference.Successfully.name()))){
-                JOptionPane.showMessageDialog(null,"You was remove");
-                closeChat();
-                System.exit(3);
-            }
-            if(buff.getPreference().equals(Preference.Remove.name())&&(buff.getMessage().equals("Delete"))){
-                JOptionPane.showMessageDialog(null,"Admin deleted you!");
-                closeChat();
-                System.exit(4);
-            }
+                if (buff.getPreference().equals(Preference.Remove.name()) && (buff.getMessage().equals(Preference.Successfully.name()))) {
+                    JOptionPane.showMessageDialog(null, "You was remove");
+                    closeChat();
+                    System.exit(3);
+                }
+                if (buff.getPreference().equals(Preference.Remove.name()) && (buff.getMessage().equals("Admin deleted you."))) {
+                    JOptionPane.showMessageDialog(null, "Admin deleted you!");
+                    closeChat();
+                    System.exit(4);
+                }
 
-            if (buff.getPreference().equals(Preference.Ban.name()) && (buff.getMessage().equals(Preference.Ban.name()))) {
-                ban = true;
-                JOptionPane.showMessageDialog(null, "Admin baned you!");
-            }
-            if (buff.getPreference().equals(Preference.UnBan.name()) && (buff.getMessage().equals("You was unban"))) {
-                ban = false;
-                JOptionPane.showMessageDialog(null, "Admin unban you!");
-            }
+                if (buff.getPreference().equals(Preference.Ban.name()) && (buff.getMessage().equals(Preference.Ban.name()))) {
+                    ban = true;
+                    JOptionPane.showMessageDialog(null, "Admin baned you!");
+                }
+                if (buff.getPreference().equals(Preference.UnBan.name()) && (buff.getMessage().equals("You was unban"))) {
+                    ban = false;
+                    JOptionPane.showMessageDialog(null, "Admin unban you!");
+                }
 
+            }
         }
     }
 
@@ -500,7 +508,13 @@ public class Controller implements Runnable {
         ChatView view = factory.createView(this);
         views.add(view);
         view.createEnterToChat();
+    }
 
+    public static void main(String[] args) throws IOException, SAXException {
+        String serverAddress = "localhost";
+        Controller client = new Controller(serverAddress);
+        client.createView(ChatViewSwing.getFactory());
+        client.run();
     }
 }
 

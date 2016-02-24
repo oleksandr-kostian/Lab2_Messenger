@@ -1,6 +1,7 @@
 package client.view;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,9 +14,9 @@ import java.util.List;
  */
 public class PrivatePanel extends MainPanel implements PrivateChat {
     private int key;
-    private Controller controller;
+    private ControllerActionsClient controller;
 
-    public PrivatePanel(List<String> activeUsers, Controller controller) {
+    public PrivatePanel(List<String> activeUsers, ControllerActionsClient controller) {
         super(activeUsers, controller);
         this.controller = controller;
     }

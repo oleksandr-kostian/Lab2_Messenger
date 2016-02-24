@@ -75,11 +75,7 @@ public interface ControllerActionsClient {
      */
     void createView(ViewFactory factory);
 
-    /**
-     * Method for remove of user.
-     * @param removeUser is login of user.
-     */
-    void remove(String removeUser);
+
 
     /**
      * Method for edit login or password of user.
@@ -87,4 +83,31 @@ public interface ControllerActionsClient {
      * @param newPassword of user.
      */
     void editUser(String newLogin,String newPassword);
+
+    /**
+     * Method for remove of user.
+    */
+    void remove();
+
+    /**
+     * Ban sat for user.
+     * @param banUser is login of user.
+     */
+    void ban(String banUser);
+
+    /**
+     * Ban cancel for user.
+     * @param unBanUser is login of user.
+     */
+    void unBan(String unBanUser);
+    /**
+     * Method for remove of user.
+     * @param removeUser is login of user.
+     */
+    void remove(String removeUser);
+
+    /**
+     * Get user, whom use controler.
+     */
+     String getMyUser();
 }

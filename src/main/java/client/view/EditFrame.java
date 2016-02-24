@@ -3,6 +3,7 @@ package client.view;
 //import net.miginfocom.swing.MigLayout;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 import server.model.XmlSet;
 
 import javax.swing.*;
@@ -14,9 +15,9 @@ import java.util.ArrayList;
  * Created by Слава on 29.01.2016.
  */
 public class EditFrame extends LoginWindow{
-    private Controller controller;
+    private ControllerActionsClient controller;
     private String login;
-    public EditFrame( Controller controller) {
+    public EditFrame( ControllerActionsClient controller) {
         super(controller);
         createGUI();
         this.controller = controller;

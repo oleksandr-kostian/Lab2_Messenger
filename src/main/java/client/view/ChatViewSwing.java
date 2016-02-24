@@ -1,6 +1,7 @@
 package client.view;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 
 import java.util.ArrayList;
 
@@ -10,12 +11,11 @@ import java.util.ArrayList;
 public class ChatViewSwing implements ChatView {
     private UserFrame userFrame;
     private AdminFrame adminFrame;
-    private Controller controller;
+    private ControllerActionsClient controller;
     LoginWindow loginWindow;
 
-    public ChatViewSwing(Controller controller) {
+    public ChatViewSwing(ControllerActionsClient controller) {
         this.controller = controller;
-
     }
 
     public static ViewFactory getFactory() {

@@ -1,6 +1,7 @@
 package client.view;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -22,9 +23,9 @@ public class MainPanel  extends FonPanel{
     private JTextArea edit;
     private JPanel listPanel;
     private JButton send;
-    private Controller controller;
+    private ControllerActionsClient controller;
 
-    public MainPanel(java.util.List<String> activeUsers, Controller controller) {
+    public MainPanel(java.util.List<String> activeUsers, ControllerActionsClient controller) {
         this.activeUsers = activeUsers;
         this.controller = controller;
         createGUI();
@@ -94,6 +95,17 @@ public class MainPanel  extends FonPanel{
         memo = new JTextArea(20,32);
         memo.setLineWrap(true);
         memo.setWrapStyleWord(true);
+        memo.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                memo.setEnabled(false);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                memo.setEnabled(true);
+            }
+        });
         edit = new JTextArea(2,32);
         edit.setWrapStyleWord(true);
         edit.setLineWrap(true);
@@ -120,16 +132,23 @@ public class MainPanel  extends FonPanel{
             @Override
             public void actionPerformed(ActionEvent e) {
                 String sendMessage = getMessage();
-                if(sendMessage == null) return;
+                if(sendMessage == null){
+                    return;
+                }else{
                     controller.sendAllMessage(sendMessage);
+                }
             }
         });
         getEdit().addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && e.isControlDown()) {
                     String sendMessage = getMessage();
-                    if(sendMessage == null) return;
-                    controller.sendAllMessage(sendMessage);
+                    System.out.println(controller);
+                    if(sendMessage == null){
+                        return;
+                    }else{
+                        controller.sendAllMessage(sendMessage);
+                    }
                 }
 
             }

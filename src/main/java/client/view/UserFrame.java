@@ -1,6 +1,7 @@
 package client.view;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 import server.model.XmlSet;
 
 import javax.swing.*;
@@ -18,13 +19,13 @@ public class UserFrame implements UserView {
     private PrivatePanel privateChat;
     private UserMenu menu;
     private java.util.List<String> activeUsers = new ArrayList<>();
-    private Controller controller;
+    private ControllerActionsClient controller;
     private String login;
     private boolean close;
     private JFrame viewAll;
     private Map<Integer,PrivateChat> keys = new TreeMap<>();
     private List<String> privateList;
-    public UserFrame(Controller controller,String login,UserMenu userMenu){
+    public UserFrame(ControllerActionsClient controller, String login, UserMenu userMenu){
         this.login = login;
         this.controller = controller;
         menu = userMenu;
@@ -34,6 +35,10 @@ public class UserFrame implements UserView {
 
     public void setAllChat(MainPanel allChat) {
         this.allChat = allChat;
+    }
+
+    public ControllerActionsClient getController() {
+        return controller;
     }
 
     public JTabbedPane getTabbedPane() {
@@ -67,7 +72,7 @@ public class UserFrame implements UserView {
         privateChat = new PrivatePanel(privateList,controller);
         privateChat.setKey(keyDialog);
         keys.put(keyDialog,privateChat);
-       tabbedPane.addTab("Private chat", privateChat);
+        tabbedPane.addTab("Private chat", privateChat);
     }
 
 
@@ -79,6 +84,7 @@ public class UserFrame implements UserView {
 
     @Override
     public void setAllMessage(String msg) {
+        //System.out.println(msg);
         allChat.getMemo().append(msg + "\n");
         allChat.getMemo().append(" \n");
     }

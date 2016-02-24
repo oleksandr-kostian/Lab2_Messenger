@@ -1,6 +1,7 @@
 package client.view;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -17,7 +18,8 @@ public class AdminPanel extends MainPanel {
     private JList listBann;
     private List<String> banUsers = new ArrayList<>();
     private int elementBann = -1;
-    public AdminPanel(List<String> activeUsers, Controller controller) {
+
+    public AdminPanel(List<String> activeUsers, ControllerActionsClient controller) {
         super(activeUsers,controller);
     }
     public JPanel setListPanel(){

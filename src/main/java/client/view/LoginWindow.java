@@ -1,6 +1,7 @@
 package client.view;
 
 import client.controller.Controller;
+import client.controller.ControllerActionsClient;
 import org.xml.sax.SAXException;
 import server.model.XmlSet;
 
@@ -24,9 +25,9 @@ public class LoginWindow extends JFrame {
     private JPasswordField passwordField;
     private JButton ok = new JButton() ;
     private JButton reg = new JButton();
-    private Controller controller;
+    private ControllerActionsClient controller;
 
-    LoginWindow(Controller controller) {
+    LoginWindow(ControllerActionsClient controller) {
         super("Enter to chat");
         this.controller = controller;
         createGUI();
@@ -127,10 +128,5 @@ public class LoginWindow extends JFrame {
         return reg;
     }
 
-    public static void main(String[] args) throws IOException, SAXException {
-        String serverAddress = "localhost";
-        Controller client = new Controller(serverAddress);
-        client.createView(ChatViewSwing.getFactory());
-        client.run();
-    }
+
 }
