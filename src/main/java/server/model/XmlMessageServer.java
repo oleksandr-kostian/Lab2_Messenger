@@ -19,7 +19,7 @@ import java.io.IOException;
  */
 public class XmlMessageServer extends XmlMessage {
 
-    protected static boolean loadProperties() throws IOException, SAXException {
+    protected synchronized static boolean loadProperties() throws IOException, SAXException {
         paramLangXML();
 
         Document document = builder.parse(new File("MessengerConf.xml"));

@@ -16,11 +16,11 @@ import server.controller.Preference;
 public class Model implements ModelActions {
     private static Logger          LOG = Logger.getLogger(Model.class);
     private static UserIO          USERIO;
+    private static boolean         statusWork;
     private HashMap<Long, User> list;
 
     public Model() {
         start();
-        addAdmin();
     }
 
     /**
@@ -171,6 +171,12 @@ public class Model implements ModelActions {
         return true;
     }
 
+    /**
+     * Method that delete user.
+     * @param user for delete.
+     * @return <code>true</code> if user delete,
+     *         <code>false</code> if user = null.
+     */
     public synchronized boolean removeUser(User user) {
         if (user == null) {
             LOG.debug("user is empty(null)");
@@ -214,9 +220,13 @@ public class Model implements ModelActions {
     }
 
     /**
-     * method for start server
+     * method for start server.
      */
     public void start() {
+        if (statusWork) {
+            return;
+        }
+
         gracefulReload();
         USERIO  = UserIO.getInstance();
 
@@ -225,14 +235,17 @@ public class Model implements ModelActions {
         } catch (FileNotFoundException e) {
             list = new HashMap<Long, User>();
         }
+
+        addAdmin();
         LOG.info("server start");
     }
 
     /**
-     * method for stop server
+     * method for stop server.
      */
     public void stop() {
         saveHashMapOfUsers();
+        statusWork = false;
         LOG.info("server stop");
         //System.exit(0);
     }
