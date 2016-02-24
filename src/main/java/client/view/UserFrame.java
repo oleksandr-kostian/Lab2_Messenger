@@ -174,15 +174,6 @@ public class UserFrame implements UserView {
                 }
             }
         });
-        /*menu.getViewAll().addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                userSet.setList(activeUsers);
-                userSet.setMessage(login + ":  Exited from private chate!!!");
-                controller.sendMessage(userSet,"PrivateMessage");
-                privateDialog = false;
-                menu.getViewAll().setEnabled(false);
-            }
-        });*/
 
         menu.getRemove().addActionListener(new ActionListener() {
             @Override
@@ -190,18 +181,6 @@ public class UserFrame implements UserView {
                 controller.remove();
             }
         });
-
-
-        /*menu.getExitItem().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                controller.sendMessage(userSet,"Close");
-                close = true;
-                closeFrame();
-                new LoginWindow(controller);
-            }
-        });*/
-
     }
 
     public  void closeFrame(){

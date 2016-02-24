@@ -1,28 +1,25 @@
 package client.view;
 
-//import net.miginfocom.swing.MigLayout;
-
-import client.controller.Controller;
 import client.controller.ControllerActionsClient;
-import server.model.XmlSet;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 /**
  * Created by Слава on 29.01.2016.
  */
 public class EditFrame extends LoginWindow{
     private ControllerActionsClient controller;
-    private String login;
     public EditFrame( ControllerActionsClient controller) {
         super(controller);
         createGUI();
         this.controller = controller;
     }
-  @Override
+    @Override
+    /**
+     * Method that set listener on the button for edit user
+     */
     public void setEnterListener(){
         JButton edit = super.getOk();
         edit.setText("Edit");
@@ -32,21 +29,13 @@ public class EditFrame extends LoginWindow{
                 if (getLoginField().getText() != null && !getLoginField().getText().trim().equals("")) {
                     controller.editUser(getLoginField().getText(),new String(getPasswordField().getPassword()));
                     closeFrame();
-                    /*while(true){
-                        controller.getMessage();
-                        if(controller.getUserXml().getPreference().equals("Edit")&&
-                                controller.getUserXml().getMessage().equals("Successfully")){
-                            JOptionPane.showMessageDialog(null,"Edit is successful.");
-                            return;
-                        }
-
-                    }*/
-
                 }
             }
         });
     }
-
+    /**
+     * Method that set listener on the button for close form
+     */
     @Override
     public void setRegListener(){
         JButton reg = super.getReg();

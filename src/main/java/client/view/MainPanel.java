@@ -143,7 +143,6 @@ public class MainPanel  extends FonPanel{
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && e.isControlDown()) {
                     String sendMessage = getMessage();
-                    System.out.println(controller);
                     if(sendMessage == null){
                         return;
                     }else{

@@ -5,17 +5,17 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import client.view.*;
+import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import server.controller.Preference;
 import server.model.XmlMessage;
 import server.model.XmlSet;
-import server.view.ServerView;
+
 
 import javax.swing.*;
 
@@ -25,8 +25,27 @@ import javax.swing.*;
  * @version %I%, %G%
  */
 public class Controller implements Runnable,ControllerActionsClient {
-    private String hostName;
+
+    private static final Logger logger = Logger.getLogger(Controller.class);
+    private static final String  ONLINE_USER = "The user is online.";
+    private static final String  EXIST_USER = "User does not exist!";
+    private static final String  WRONG_COMMAND = "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.";
+    private static final String  UNBAN =  "You was unban";
+    private static final String  BAN = "You was ban";
+    private static final String  REMOVE ="You was remove";
+    private static final String  DELETE = "Admin deleted you.";
+    private static final String  REMOVE_ADMIN = "Removed is successfully";
+    private static final String  EDIT = "Edit is successfully";
+    private static final String  BAN_ADMIN = "Ban is successfully";
+    private static final String  UNBAN_ADMIN = "UnBan is successfully";
+    private static final String  INCORECT_REGISTRATION = "IncorrectValue name of user. This user has already been created.";
+    private static final String  ENTER_TO_PRIVATE = "Do you want to enter the private chat?";
+    private static final String  SURE = "Are you sure?";
     final private int PORT = 1025;
+
+
+
+    private String hostName;
     private Socket connect;
     private String myUser;
     private List<String> activeUsers = new ArrayList<>();
@@ -39,10 +58,7 @@ public class Controller implements Runnable,ControllerActionsClient {
     private boolean close;
     private boolean authentication;
     private List<String> banUsers;
-    //private EnterToChat enterToChat;
     private List<ChatView> views = new ArrayList();
-    // private static final Logger logger = Logger.getLogger(Controller.class);
-    //ClientGUI = gui
 
     public Controller(String hostName) {
         this.hostName = hostName;
@@ -52,19 +68,16 @@ public class Controller implements Runnable,ControllerActionsClient {
     public boolean connectToServer() {
         try {
             connect = new Socket(hostName, PORT);
-            System.out.println("Connected: " + connect);
+            logger.info("Connected: " + connect);
             toServer = connect.getOutputStream();
             fromServer = connect.getInputStream();
         } catch (UnknownHostException uhe) {
-            // logger.error("Host unknown: " + uhe.getMessage());
-            System.out.println("Host unknown: " + uhe.getMessage());
+            logger.error("Host unknown: " + uhe.getMessage());
             return false;
         } catch (IOException e) {
-            //  logger.error(e);
-            System.out.println("Unexpected exception: " + e.getMessage());
+            logger.error("Unexpected exception: ",e);
             return false;
         }
-        //   new Thread(this).start();
 
         return true;
 
@@ -75,38 +88,27 @@ public class Controller implements Runnable,ControllerActionsClient {
             close = true;
             sendMessage(userSet, "Close");
             if (fromServer != null) fromServer.close();
-        } catch (Exception e) {/*logger.error(e);*/}
-        try {
             if (toServer != null) toServer.close();
-        } catch (Exception e) {/*logger.error(e);*/}
-        try {
             if (connect != null) connect.close();
-        } catch (Exception e) {/*logger.error(e);*/}
+        } catch (Exception e) {
+            logger.error("Exception close: ",e);}
 
-        // inform the client GUI
-        /*if(gui != null)
-            gui.connectionFailed();
-        */
     }
 
     public static boolean pingServer(InetAddress serAddress, int port, int timeout) {
-        //  logger.info("Ping Server.");
-        System.out.println("Ping Server.");
+        logger.info("Ping Server.");
         Socket pingSocket = new Socket();
         Exception exception = null;
         try {
             pingSocket.connect(new InetSocketAddress(serAddress, port), timeout);
-            System.out.println("ping...");
         } catch (IOException e) {
-            //logger.error("IOException ping server." + e);
-            System.out.println("Exception ping server: " + e);
+            logger.error("IOException ping server.",e);
 
         } finally {
             try {
                 pingSocket.close();
             } catch (IOException e) {
-                System.out.println("socket.close: " + e);
-                // logger.error("IOException socket.close." + e);
+                logger.error("IOException socket.close.", e);
             }
         }
 
@@ -136,12 +138,12 @@ public class Controller implements Runnable,ControllerActionsClient {
             }
             this.setUserXml(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
         } catch (org.xml.sax.SAXException e1) {
-            System.out.println(" SAXException.Authorization is not passed successfully. " + e1);
+            logger.error(" SAXException.Authorization is not passed successfully. ", e1);
             JOptionPane.showMessageDialog(null,"Server is down");
             close = true;
             System.exit(1);
         } catch (IOException e) {
-            System.out.println(" Exception reading Streams: " + e);
+            logger.error(" Exception reading Streams: ", e);
             JOptionPane.showMessageDialog(null,"Server is down");
             close = true;
             System.exit(1);
@@ -157,7 +159,7 @@ public class Controller implements Runnable,ControllerActionsClient {
 
 
         } catch (javax.xml.transform.TransformerException e1) {
-            System.out.println(" TransformerException " + e1);
+            logger.error(" TransformerException ", e1);
         }
     }
 
@@ -190,7 +192,7 @@ public class Controller implements Runnable,ControllerActionsClient {
     public void remove() {
         Object[] options = {"Yes", "No"};
         int n = JOptionPane
-                .showOptionDialog(null, "Are you sure?",
+                .showOptionDialog(null, SURE,
                         "Confirmation", JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE, null, options,
                         options[0]);
@@ -203,6 +205,7 @@ public class Controller implements Runnable,ControllerActionsClient {
         List<String> login = new ArrayList<String>();
         login.add(banUser);
         userSet.setList(login);
+        //sendAllMessage(banUser + " is ban");
         sendMessage(userSet, Preference.Ban.name());
     }
 
@@ -218,7 +221,7 @@ public class Controller implements Runnable,ControllerActionsClient {
         List<String> login = new ArrayList<String>();
         login.add(unBanUser);
         userSet.setList(login);
-
+        //sendAllMessage(unBanUser + " is unBan");
         sendMessage(userSet, Preference.UnBan.name());
     }
 
@@ -244,8 +247,6 @@ public class Controller implements Runnable,ControllerActionsClient {
             }
 
         }
-        //privateDialog = true;
-        // user.add(myUser);
         userSet.setKeyDialog(keyDialog);
         userSet.setList(users);
         msg = msg.replaceAll("\\n", "<br>");
@@ -257,12 +258,8 @@ public class Controller implements Runnable,ControllerActionsClient {
     public void sendAllMessage(String msg) {
         if (ban) return;
         userSet.setKeyDialog(11);
-       /* msg.replaceAll("\n","s");
-        System.out.println(msg);*/
         msg = msg.replaceAll("\\n", "<br>");
         userSet.setMessage(myUser + ": <br>" + msg);
-        /*System.out.println("fffffffffffffffffffffffff");
-        System.out.println(userSet.getMessage());*/
         sendMessage(userSet, Preference.MessageForAll.name());
     }
 
@@ -273,16 +270,6 @@ public class Controller implements Runnable,ControllerActionsClient {
         userSet.setList(logPas);
         sendMessage(userSet, Preference.Edit.name());
     }
-
-
-    public void displayToChat(String message) {
-
-    }
-
-    public void viewActiveUser() {
-
-    }
-
 
     public String getMyUser() {
         return this.myUser;
@@ -312,8 +299,8 @@ public class Controller implements Runnable,ControllerActionsClient {
                         authentication = true;
                     }
                     if (buff.getPreference().equals(Preference.Registration.name()) &&
-                            buff.getMessage().equals("IncorrectValue name of user. This user has already been created.")) {
-                        JOptionPane.showMessageDialog(null, "IncorrectValue name of user. This user has already been created.");
+                            buff.getMessage().equals(INCORECT_REGISTRATION)) {
+                        JOptionPane.showMessageDialog(null, INCORECT_REGISTRATION);
                     }
                     if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(Preference.Successfully.name())) {
                         userSet = getUserXml();
@@ -325,7 +312,7 @@ public class Controller implements Runnable,ControllerActionsClient {
                         authentication = true;
                     }
                     if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(Preference.Ban.name())) {
-                        JOptionPane.showMessageDialog(null, "You have ban!!!");
+                        JOptionPane.showMessageDialog(null, BAN);
                         userSet = getUserXml();
                         ban = true;
                         for (ChatView cv : views) {
@@ -342,12 +329,15 @@ public class Controller implements Runnable,ControllerActionsClient {
                         authentication = true;
                     }
 
-                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals("The user is online")) {
-                        JOptionPane.showMessageDialog(null, "The user is online");
+                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(ONLINE_USER)) {
+                        JOptionPane.showMessageDialog(null, ONLINE_USER);
 
                     }
-                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals("User does not exist!")) {
-                        JOptionPane.showMessageDialog(null, "User does not exist or you enter wrong password!");
+                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(EXIST_USER)) {
+                        JOptionPane.showMessageDialog(null, EXIST_USER);
+                    }
+                    if (buff.getPreference().equals(Preference.Authentication.name()) && buff.getMessage().equals(WRONG_COMMAND)) {
+                        JOptionPane.showMessageDialog(null, WRONG_COMMAND);
                     }
                 }
                 if (admin) {
@@ -362,17 +352,17 @@ public class Controller implements Runnable,ControllerActionsClient {
                         }
                     }
                     if (buff.getPreference().equals(Preference.Remove.name()) && (buff.getMessage().equals(Preference.Admin.name()))) {
-                        JOptionPane.showMessageDialog(null, "Removed is successfully");
+                        JOptionPane.showMessageDialog(null, REMOVE_ADMIN);
                     }
                     if (buff.getPreference().equals(Preference.Ban.name())) {
-                        JOptionPane.showMessageDialog(null, "Ban is successfully");
+                        JOptionPane.showMessageDialog(null, BAN_ADMIN);
                         banUsers.add(buff.getList().get(0));
                         for (ChatView cv : views) {
                             cv.getAdminFrame().setBanUsers(banUsers);
                         }
                     }
                     if (buff.getPreference().equals(Preference.UnBan.name())) {
-                        JOptionPane.showMessageDialog(null, "UnBan is successfully");
+                        JOptionPane.showMessageDialog(null, UNBAN_ADMIN);
                         banUsers.remove(buff.getList().get(0));
                         for (ChatView cv : views) {
                             cv.getAdminFrame().setBanUsers(banUsers);
@@ -393,14 +383,9 @@ public class Controller implements Runnable,ControllerActionsClient {
                     }
                 }
                 if (buff.getPreference().equals(Preference.ActiveUsers.name())) {
-                    //if(privateDialog) continue;
                     activeUsers = buff.getList();
                     activeUsers.remove(myUser);
-                    for (String s : activeUsers) {
-                        System.out.println(s);
-                    }
                     if (views.get(0).getUserFrame() == null & views.get(0).getAdminFrame() == null) continue;
-                    //if (views.get(0).getUserFrame() == null) continue;
                     if (admin) {
                         for (ChatView cv : views) {
                             cv.getAdminFrame().setActiveUsers(activeUsers);
@@ -436,14 +421,11 @@ public class Controller implements Runnable,ControllerActionsClient {
                         if (buff.getList().contains(myUser)) {
                             Object[] options = {"Yes", "No"};
                             int n = JOptionPane
-                                    .showOptionDialog(null, "Do you want to enter the private chat?",
+                                    .showOptionDialog(null, ENTER_TO_PRIVATE,
                                             "Confirmation", JOptionPane.YES_NO_OPTION,
                                             JOptionPane.QUESTION_MESSAGE, null, options,
                                             options[0]);
                             if (n == 0) {
-
-                                //privateDialog = true;
-                                DefaultListModel<String> model = new DefaultListModel<>();
                                 List<String> privateUser = buff.getList();
                                 privateUser.remove(myUser);
                                 if (admin) {
@@ -455,54 +437,40 @@ public class Controller implements Runnable,ControllerActionsClient {
                                         cv.getUserFrame().createPrivateChat(privateUser, buff.getKeyDialog());
                                     }
                                 }
-
-                           /* privateUser.remove(login);
-                            for (String s : activeUsers) {
-                                model.addElement(s);
-                            }
-                            list.setModel(model);
-                            memo.append(buff.getMessage() + "\n");
-                            memo.append("\n");
-                            menu.getViewAll().setEnabled(true);
-                        */
                             }
                         }
                     }
                 }
 
                 if (buff.getPreference().equals(Preference.Edit.name()) && buff.getMessage().equals(Preference.Successfully.name())) {
-                    //if(edit) continue;
-                    JOptionPane.showMessageDialog(null, "Edit is successful.");
+                    JOptionPane.showMessageDialog(null, EDIT);
                     myUser = userSet.getList().get(0);
                     for (ChatView cv : views) {
                         cv.getUserFrame().editLogin(myUser);
                     }
-                    //edit = true;
                 }
                 if (buff.getPreference().equals(Preference.Edit.name()) && buff.getMessage().equals(Preference.IncorrectValue.name())) {
-                    //if(edit) continue;
                     JOptionPane.showMessageDialog(null, Preference.IncorrectValue.name());
-                    //edit = true;
                 }
 
                 if (buff.getPreference().equals(Preference.Remove.name()) && (buff.getMessage().equals(Preference.Successfully.name()))) {
-                    JOptionPane.showMessageDialog(null, "You was remove");
+                    JOptionPane.showMessageDialog(null, REMOVE);
                     closeChat();
                     System.exit(3);
                 }
-                if (buff.getPreference().equals(Preference.Remove.name()) && (buff.getMessage().equals("Admin deleted you."))) {
-                    JOptionPane.showMessageDialog(null, "Admin deleted you!");
+                if (buff.getPreference().equals(Preference.Remove.name()) && (buff.getMessage().equals(DELETE))) {
+                    JOptionPane.showMessageDialog(null, DELETE);
                     closeChat();
                     System.exit(4);
                 }
 
                 if (buff.getPreference().equals(Preference.Ban.name()) && (buff.getMessage().equals(Preference.Ban.name()))) {
                     ban = true;
-                    JOptionPane.showMessageDialog(null, "Admin baned you!");
+                    JOptionPane.showMessageDialog(null, BAN);
                 }
-                if (buff.getPreference().equals(Preference.UnBan.name()) && (buff.getMessage().equals("You was unban"))) {
+                if (buff.getPreference().equals(Preference.UnBan.name()) && (buff.getMessage().equals(UNBAN))) {
                     ban = false;
-                    JOptionPane.showMessageDialog(null, "Admin unban you!");
+                    JOptionPane.showMessageDialog(null, UNBAN);
                 }
 
             }

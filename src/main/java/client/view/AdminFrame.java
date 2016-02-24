@@ -21,8 +21,6 @@ import java.util.List;
  */
 public class AdminFrame extends UserFrame implements AdminView{
     private ControllerActionsClient controller;
-    private JList listBann;
-    private DefaultListModel<String> model;
     private AdminPanel adminPanel;
 
 
@@ -44,9 +42,13 @@ public class AdminFrame extends UserFrame implements AdminView{
         menu.getRemoveUser().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                int select = getTabbedPane().getSelectedIndex();
+                if (select != 0){
+                    JOptionPane.showMessageDialog(null, "For remove use AllChat!");
+                    return;
+                }
                 if( getAllChat().getElement()!=null && getAllChat().getElement().length==1 ) {
-                    int userIndex = getAllChat().getElement()[0];
-                    controller.remove(getActiveUsers().get(userIndex));
+                    controller.remove(getActiveUsers().get(getAllChat().getElement()[0]));
                 }
             }
         });
@@ -54,6 +56,11 @@ public class AdminFrame extends UserFrame implements AdminView{
         menu.getBan().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                int select = getTabbedPane().getSelectedIndex();
+                if (select != 0){
+                    JOptionPane.showMessageDialog(null, "For ban use AllChat!");
+                    return;
+                }
                 if (getAllChat().getElement() != null && getAllChat().getElement().length == 1) {
                     controller.ban(getActiveUsers().get(getAllChat().getElement()[0]));
                 }

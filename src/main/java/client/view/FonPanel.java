@@ -10,6 +10,10 @@ import java.io.IOException;
  * Created by Слава on 29.01.2016.
  */
 class FonPanel extends JPanel {
+    /**
+     * method for set fon to panel
+     * @param g
+     */
     public void paintComponent(Graphics g){
         Image im = null;
         try {
