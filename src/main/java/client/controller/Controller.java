@@ -141,7 +141,7 @@ public class Controller implements Runnable,ControllerActionsClient {
             System.out.println(" Exception reading Streams: " + e);
             JOptionPane.showMessageDialog(null,"Server is down");
             close = true;
-          //  System.exit(1);
+            System.exit(1);
         }
     }
 
