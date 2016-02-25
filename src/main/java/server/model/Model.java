@@ -285,7 +285,7 @@ public class Model implements ModelActions {
            if (XmlMessageServer.loadProperties()) {
                return true;
            }
-        } catch (IOException | SAXException e) {
+        } catch (SAXException e) {
             LOG.error("read properties", e);
         }
         return false;
