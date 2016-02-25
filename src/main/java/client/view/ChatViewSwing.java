@@ -20,7 +20,7 @@ public class ChatViewSwing implements ChatView {
 
     public static ViewFactory getFactory() {
         return new ViewFactory() {
-            public ChatView createView(Controller controller) {
+            public ChatView createView(ControllerActionsClient controller) {
                 return new ChatViewSwing(controller);
             }
         };
