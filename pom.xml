@@ -17,17 +17,6 @@
 
     <build>
 
-        <resources>
-            <resource>
-                <directory>src</directory>
-                <includes>
-                    <include>MessengerConf.xml</include>
-                    <include>fon.jpg</include>
-                </includes>
-
-            </resource>
-        </resources>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -76,6 +65,8 @@
                 </executions>
             </plugin>
         </plugins>
+
+
     </build>
 
     <dependencies>
