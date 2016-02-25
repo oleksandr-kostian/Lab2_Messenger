@@ -94,28 +94,7 @@ public class Controller implements Runnable,ControllerActionsClient {
             logger.error("Exception close: ",e);}
 
     }
-
-    public static boolean pingServer(InetAddress serAddress, int port, int timeout) {
-        logger.info("Ping Server.");
-        Socket pingSocket = new Socket();
-        Exception exception = null;
-        try {
-            pingSocket.connect(new InetSocketAddress(serAddress, port), timeout);
-        } catch (IOException e) {
-            logger.error("IOException ping server.",e);
-
-        } finally {
-            try {
-                pingSocket.close();
-            } catch (IOException e) {
-                logger.error("IOException socket.close.", e);
-            }
-        }
-
-        return exception == null;
-
-    }
-
+    
     public void setUserXml(XmlSet userXml) {
         this.userXml = userXml;
     }
