@@ -17,8 +17,13 @@ class FonPanel extends JPanel {
     public void paintComponent(Graphics g){
         Image im = null;
         try {
-            im = ImageIO.read(new File("fon.jpg"));
+            if (new File("classes/fon.jpg").exists()){
+                im = ImageIO.read(new File("classes/fon.jpg"));
+            } else {
+                im = ImageIO.read(new File("src/main/resources/fon.jpg"));
+            }
         } catch (IOException e) {}
         g.drawImage(im, 0, 0, null);
     }
 }
+
