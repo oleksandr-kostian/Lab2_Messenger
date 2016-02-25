@@ -71,8 +71,8 @@ public class Controller implements Runnable,ControllerActionsClient {
             logger.info("Connected: " + connect);
             toServer = connect.getOutputStream();
             fromServer = connect.getInputStream();
-        } catch (UnknownHostException uhe) {
-            logger.error("Host unknown: " + uhe.getMessage());
+        } catch (UnknownHostException e) {
+            logger.error("Host unknown: ",e);
             return false;
         } catch (IOException e) {
             logger.error("Unexpected exception: ",e);
