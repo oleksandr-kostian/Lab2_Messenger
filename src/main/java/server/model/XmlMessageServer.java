@@ -107,6 +107,7 @@ public class XmlMessageServer extends XmlMessage {
         Transformer t=  TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
+        t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
         t.transform(new DOMSource(doc), new StreamResult(new FileOutputStream("MessengerConf.xml")));
     }
 
