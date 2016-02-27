@@ -18,6 +18,7 @@ public class Model implements ModelActions {
     private static UserIO          USERIO;
     private static boolean         statusWork;
     private static boolean         isGui;
+    private static int             port;
     private HashMap<Long, User> list;
 
     public Model() {
@@ -285,6 +286,7 @@ public class Model implements ModelActions {
         try {
             ConfigParameters conf = XmlMessageServer.loadProperties();
             isGui = conf.isGUI();
+            port = conf.getPort();
             return true;
         } catch (SAXException e) {
             LOG.error("read properties", e);
@@ -300,5 +302,13 @@ public class Model implements ModelActions {
      */
     public boolean isGUI() {
         return isGui;
+    }
+
+    /**
+     * Method that return number of port.
+     * @return number of port.
+     */
+    public static int getPort() {
+        return port;
     }
 }

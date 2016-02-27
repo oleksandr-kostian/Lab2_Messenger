@@ -25,7 +25,14 @@ import java.io.IOException;
  * @version %I%, %G%
  */
 public class XmlMessageServer extends XmlMessage {
-    private static Logger LOG = Logger.getLogger(XmlMessageServer.class);
+    private static final int    DEFAULTPORT = 1506;
+    private static final String NAMEOFFILE  = "MessengerConf.xml";
+    private static final String ROOTNAME    = "Preference";
+    private static final String INCLUDLOG   = "logger";
+    private static final String LEVELLOG    = "levelLogger";
+    private static final String SERVERGUI   = "serverGUI";
+    private static final String PORT        = "Port";
+    private static       Logger LOG         = Logger.getLogger(XmlMessageServer.class);
 
     /**
      * Method for read properties.
@@ -37,11 +44,12 @@ public class XmlMessageServer extends XmlMessage {
 
         Document document = null;
         try {
-            document = builder.parse(new File("MessengerConf.xml"));
+            document = builder.parse(new File(NAMEOFFILE));
         } catch (IOException e) {
             try {
                 ConfigParameters conf = new ConfigParameters();
                 conf.setGUI(false);
+                conf.setPort(DEFAULTPORT);
 
                 writeProperties(conf);
                 return conf;
@@ -51,15 +59,15 @@ public class XmlMessageServer extends XmlMessage {
         }
         document.getDocumentElement().normalize();
 
-        NodeList nList = document.getElementsByTagName("logger");
+        NodeList nList = document.getElementsByTagName(INCLUDLOG);
         Node node = nList.item(0);
         String log  = node.getTextContent();
 
         if (log.equalsIgnoreCase("true")) {
-            nList = document.getElementsByTagName("levelLogger");
+            nList = document.getElementsByTagName(LEVELLOG);
             node = nList.item(0);
-
             String level  = node.getTextContent();
+
             if (!setLevelLog(level)) {
                 LOG.error("MessengerConf.xml in 'levelLogger' has mistake.");
             }
@@ -73,7 +81,8 @@ public class XmlMessageServer extends XmlMessage {
 
         ConfigParameters conf = new ConfigParameters();
 
-        nList = document.getElementsByTagName("serverGUI");
+        // parameter of server GUI
+        nList = document.getElementsByTagName(SERVERGUI);
         node = nList.item(0);
         String parameter = node.getTextContent();
 
@@ -82,6 +91,18 @@ public class XmlMessageServer extends XmlMessage {
         } else {
             LOG.error("MessengerConf.xml in 'serverGUI' has mistake, it must be 'true' or 'false'");
         }
+
+        // read port.
+        nList = document.getElementsByTagName(PORT);
+        node = nList.item(0);
+        parameter = node.getTextContent();
+        try {
+            conf.setPort(Integer.parseInt(parameter));
+        } catch (Exception e) {
+            LOG.error("MessengerConf.xml in 'Port' has mistake, it must be number");
+            conf.setPort(DEFAULTPORT);
+        }
+
         return conf;
     }
 
@@ -120,19 +141,24 @@ public class XmlMessageServer extends XmlMessage {
     protected synchronized static void writeProperties(ConfigParameters conf) throws TransformerException, FileNotFoundException {
         paramLangXML();
         Document doc = builder.newDocument();
-        Element RootElement = doc.createElement("Preference");
+        Element RootElement = doc.createElement(ROOTNAME);
 
-        Element NameElementTitle = doc.createElement("logger");
+        Element NameElementTitle = doc.createElement(INCLUDLOG);
         NameElementTitle.appendChild(doc.createTextNode("TRUE"));
         RootElement.appendChild(NameElementTitle);
 
-        NameElementTitle = doc.createElement("levelLogger");
+        NameElementTitle = doc.createElement(LEVELLOG);
         NameElementTitle.appendChild(doc.createTextNode(String.valueOf(LogManager.getRootLogger().getLevel())));
         RootElement.appendChild(NameElementTitle);
 
         //server's GUI
-        NameElementTitle = doc.createElement("serverGUI");
+        NameElementTitle = doc.createElement(SERVERGUI);
         NameElementTitle.appendChild(doc.createTextNode(String.valueOf(conf.isGUI())));
+        RootElement.appendChild(NameElementTitle);
+
+        //server's port
+        NameElementTitle = doc.createElement(PORT);
+        NameElementTitle.appendChild(doc.createTextNode(String.valueOf(conf.getPort())));
         RootElement.appendChild(NameElementTitle);
 
         // add in XML
@@ -141,7 +167,7 @@ public class XmlMessageServer extends XmlMessage {
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
         t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-        t.transform(new DOMSource(doc), new StreamResult(new FileOutputStream("MessengerConf.xml")));
+        t.transform(new DOMSource(doc), new StreamResult(new FileOutputStream(NAMEOFFILE)));
     }
 
 }
