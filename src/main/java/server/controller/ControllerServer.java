@@ -384,6 +384,10 @@ public class ControllerServer extends Observable implements Server{
 
                         }
                     }
+                    this.displayInfoLog("Admin "+ Preference.Ban.name()+" user:  " + infoFoBan);
+                    client.getXmlUser().setMessage(getDate()+" System message: user < " + infoFoBan + " > is baned.");
+                    readCommand(client, Preference.MessageForAll);
+
                 }
                 break;
 
@@ -405,10 +409,11 @@ public class ControllerServer extends Observable implements Server{
                                 activeUsers.get(i).getXmlUser().setMessage(UNBAN);
                                 activeUsers.get(i).sendMessage(Preference.UnBan.name());
                                 break;
-
                         }
                     }
                     this.displayInfoLog("Admin "+ Preference.UnBan.name()+" user:  " + infoFoBan2);
+                    client.getXmlUser().setMessage(getDate()+" System message: user < " + infoFoBan2 + " > is unbaned.");
+                    readCommand(client, Preference.MessageForAll);
                 }
 
                 client.sendMessage(Preference.UnBan.name());
