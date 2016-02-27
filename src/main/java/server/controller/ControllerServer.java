@@ -277,9 +277,14 @@ public class ControllerServer extends Observable implements Server{
           if(this.finish){
               return;
           }
+          try {
               Socket client = socket.accept();
               logger.debug("Connection from " + client.getInetAddress().getHostName());
               this.addObserver(new ServerThread(client));
+          }
+          catch (SocketException e){
+              continue;
+          }
 
       }
 
