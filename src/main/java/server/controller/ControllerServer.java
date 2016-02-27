@@ -14,6 +14,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 /**
  * Server's controller
@@ -41,7 +42,7 @@ public class ControllerServer extends Observable implements Server{
      * Method, that add ServerThread of client to list of active users.
      * @param activeUser ServerThread of client.
      */
-    public void addActiveUser(ServerThread activeUser){
+    public synchronized void addActiveUser(ServerThread activeUser){
         activeUsers.add(activeUser);
         this.setChanged();
         notifyObservers();
@@ -51,7 +52,7 @@ public class ControllerServer extends Observable implements Server{
      * Method, that remove ServerThread of client from list of active users.
      * @param activeUser ServerThread of client.
      */
-    public void removeActiveUser(ServerThread activeUser){
+    public synchronized void removeActiveUser(ServerThread activeUser){
         activeUsers.remove(activeUser);
         this.setChanged();
         notifyObservers();
@@ -123,7 +124,6 @@ public class ControllerServer extends Observable implements Server{
      * @throws TransformerException if method send() has mistake.
      */
     public synchronized void registration (ServerThread client, String login, String password)throws TransformerException{
-
         User createUser = new User();
         createUser.setLogin(login);
         createUser.setPassword(password);
@@ -132,7 +132,6 @@ public class ControllerServer extends Observable implements Server{
         if(model.addUser(createUser)) {
             client.getXmlUser().setIdUser(createUser.getId());
             client.setUser(createUser);
-            addActiveUser(client);
             client.setAuthentication(true);
             client.getXmlUser().setMessage(Preference.Successfully.name());
             client.sendMessage(Preference.Registration.name());
@@ -185,7 +184,6 @@ public class ControllerServer extends Observable implements Server{
                       }
                   }
                   if (!online) {
-                      addActiveUser(client);
                       client.setAuthentication(true);
                       if (client.getUser().isBan()) {
                           client.getXmlUser().setMessage(Preference.Ban.name());
@@ -206,7 +204,6 @@ public class ControllerServer extends Observable implements Server{
                       else {
                           this.displayInfoLog(client.getUser().getLogin() + " is welcome.");
                       }
-
                   }
               }
               else{
@@ -218,6 +215,16 @@ public class ControllerServer extends Observable implements Server{
               client.getXmlUser().setMessage(WRONG_COMMAND);
               client.sendMessage(Preference.Authentication.name());
               break;
+      }
+      if(client.isAuthentication()){
+          client.getXmlUser().setMessage(getDate()+" System message: user < " + client.getUser().getLogin() + " > is welcome.");
+          try {
+              readCommand(client, Preference.MessageForAll);
+          }
+          catch (TransformerException e){
+            logger.error(e);
+          }
+          addActiveUser(client);
       }
 
   }
@@ -244,6 +251,7 @@ public class ControllerServer extends Observable implements Server{
     public void gracefulReload(){
         this.model.gracefulReload();
     }
+
     /**
      * Method for write exception on servers GUI to LOG error message.
      * @param message is exception of server.
@@ -276,7 +284,12 @@ public class ControllerServer extends Observable implements Server{
       }
 
     }
+    private String getDate(){
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
+        String date = ".:Time: " +formatter.format(new Date())+":.";
+        return date;
 
+    }
     /**
      * Method for stop server's controller.
      * @throws IOException if steams has error.
@@ -310,13 +323,13 @@ public class ControllerServer extends Observable implements Server{
      * @throws TransformerException if transformation xml to OutputStream has mistake.
      */
     public synchronized void readCommand(ServerThread client,Preference preference) throws TransformerException{
+
         switch (preference){
 
             case MessageForAll:
                 String messageToChat = client.getXmlUser().getMessage();
                 for(int i=0;i<activeUsers.size();i++){
                     activeUsers.get(i).getXmlUser().setMessage(messageToChat);
-                    activeUsers.get(i).getXmlUser().setList(getUserListString());
                     activeUsers.get(i).sendMessage(Preference.MessageForAll.name());
                 }
                 Model.logMessage(client.getXmlUser());
@@ -404,7 +417,6 @@ public class ControllerServer extends Observable implements Server{
                 break;
 
             case Edit:
-
                     List<String> newUser = client.getXmlUser().getList();
                     try {
                         client.getUser().setLogin(newUser.get(0));
@@ -447,7 +459,6 @@ public class ControllerServer extends Observable implements Server{
                     logger.debug(Preference.Remove.name()+ " removeUser");
                 }
                 else{
-                //remove user
                     model.removeUser(client.getUser());
                     removeActiveUser(client);
                     client.getXmlUser().setMessage(Preference.Successfully.name());
@@ -457,13 +468,15 @@ public class ControllerServer extends Observable implements Server{
                     this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
                     logger.debug("Remove " + client.getUser().getLogin());
                 }
-               break;
+                break;
 
             case Close:
                 deleteObserver(client);
                 removeActiveUser(client);
                 client.close();
                 this.displayInfoLog("User: " + client.getUser().getLogin() + " close.");
+                client.getXmlUser().setMessage(getDate()+" System message: user < " + client.getUser().getLogin() + " > is closed.");
+                readCommand(client, Preference.MessageForAll);
                 break;
 
             default:
@@ -589,8 +602,6 @@ public class ControllerServer extends Observable implements Server{
                     }
                 }
                 this.setXmlUser(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
-
-
 }
 
         /**
