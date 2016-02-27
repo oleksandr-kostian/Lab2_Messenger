@@ -17,6 +17,7 @@ public class Model implements ModelActions {
     private static Logger          LOG = Logger.getLogger(Model.class);
     private static UserIO          USERIO;
     private static boolean         statusWork;
+    private static boolean         isGui;
     private HashMap<Long, User> list;
 
     public Model() {
@@ -282,12 +283,22 @@ public class Model implements ModelActions {
      */
     public boolean gracefulReload() {
         try {
-           if (XmlMessageServer.loadProperties()) {
-               return true;
-           }
+            ConfigParameters conf = XmlMessageServer.loadProperties();
+            isGui = conf.isGUI();
+            return true;
         } catch (SAXException e) {
             LOG.error("read properties", e);
         }
+
         return false;
+    }
+
+    /**
+     * Method that return parameter of server view.
+     * @return <code>true</code> if interface is GUI,
+     *         <code>false</code> if interface is not GUI.
+     */
+    public boolean isGUI() {
+        return isGui;
     }
 }
