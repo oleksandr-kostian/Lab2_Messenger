@@ -16,10 +16,10 @@ import server.controller.Preference;
 public class Model implements ModelActions {
     private static Logger          LOG = Logger.getLogger(Model.class);
     private static UserIO          USERIO;
-    private static boolean         statusWork;
     private static boolean         isGui;
     private static int             port;
-    private HashMap<Long, User> list;
+    private boolean                statusWork;
+    private HashMap<Long, User>    list;
 
     public Model() {
         start();
@@ -31,7 +31,7 @@ public class Model implements ModelActions {
      * @param message  ia a String with text.
      * @param forWhom is a String with direction.
      */
-    protected static void logMessage(Long id, String message, String forWhom) {
+    protected synchronized static void logMessage(Long id, String message, String forWhom) {
         try (Writer logMess = new BufferedWriter(new FileWriter("logMessage.txt", true))) {
             String number = String.format("%15d", id);
             logMess.append("id: <").append(number).append("> ")
@@ -300,7 +300,7 @@ public class Model implements ModelActions {
      * @return <code>true</code> if interface is GUI,
      *         <code>false</code> if interface is not GUI.
      */
-    public boolean isGUI() {
+    public static boolean isGUI() {
         return isGui;
     }
 
