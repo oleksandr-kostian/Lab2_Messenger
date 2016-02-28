@@ -37,6 +37,7 @@ public class ControllerServer extends Observable implements Server{
     private static final String  WRONG_COMMAND = "The client is not authenticated. No token \"authentication\"  word. Please try to connect again.";
     private static final String  UNBAN =  "You was unban";
     private static final String  DELETE = "Admin deleted you.";
+    private static final String  STOP = "Server is stopped. Please, try to reconnect.";
 
     /**
      * Method, that add ServerThread of client to list of active users.
@@ -300,7 +301,10 @@ public class ControllerServer extends Observable implements Server{
      * @throws IOException if steams has error.
      */
     public void stop() throws IOException{
-       this.finish=true;
+        if(activeUsers.size()!=0) {
+            activeUsers.get(0).reportOfStop();
+        }
+        this.finish=true;
         if (socket != null) {
                 socket.close();
             }
@@ -489,6 +493,13 @@ public class ControllerServer extends Observable implements Server{
                 readCommand(client, Preference.MessageForAll);
                 break;
 
+            case Stop:
+                for(int i=0;i<activeUsers.size();i++){
+                    activeUsers.get(i).getXmlUser().setMessage(STOP);
+                    activeUsers.get(i).sendMessage(Preference.Stop.name());
+                }
+                break;
+
             default:
                 client.sendMessage(Preference.IncorrectValue.name());
                 break;
@@ -597,6 +608,20 @@ public class ControllerServer extends Observable implements Server{
         }
 
         /**
+         * Method for report to all users, that server is stopped.
+         */
+        public synchronized void reportOfStop(){
+            this.getXmlUser().setMessage(getDate()+" System message: "+STOP);
+            try{
+                readCommand(this,Preference.MessageForAll);
+                readCommand(this,Preference.Stop);
+            }
+            catch (TransformerException e1){
+                logger.error(e1);
+            }
+            this.close();
+        }
+        /**
          * Method of read message from client to server.
          * @throws IOException of read line.
          * @throws SAXException if read xml.
@@ -623,7 +648,7 @@ public class ControllerServer extends Observable implements Server{
                 boolean isEditRepeat=false;
                 while (true) {
                    if (finish) {
-                       this.close();
+                       reportOfStop();
                        return;
                    }
                     try {
@@ -659,8 +684,6 @@ public class ControllerServer extends Observable implements Server{
             catch (TransformerException e){
                 logger.error(e);
             }
-
-
         }
 
         /**

@@ -19,6 +19,7 @@ public enum Preference {
     Admin,
     UnBan,
     IncorrectValue,
+    Stop,
     Successfully;
 
     /**
