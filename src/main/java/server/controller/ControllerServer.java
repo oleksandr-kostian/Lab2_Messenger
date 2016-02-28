@@ -23,7 +23,7 @@ import java.util.*;
  * @version %I%, %G%
  */
 public class ControllerServer extends Observable implements Server{
-    private final int                       PORT=1025;
+    private int                             PORT;
     private ServerSocket                    socket;
     private List<ServerThread>              activeUsers;
     private ModelActions                    model;
@@ -66,6 +66,7 @@ public class ControllerServer extends Observable implements Server{
      */
     public ControllerServer(ModelActions model)throws  IOException, SAXException{
         this.model = model;
+        this.PORT=Model.getPort();
         run();
     }
     /**
@@ -73,6 +74,7 @@ public class ControllerServer extends Observable implements Server{
      * @param serverGUI GUI of servers controller.
      */
     public ControllerServer(View serverGUI,ModelActions model){
+        this.PORT=Model.getPort();
         this.serverGUI = serverGUI;
         this.model = model;
         this.serverGUI.setServer(this);
@@ -87,23 +89,23 @@ public class ControllerServer extends Observable implements Server{
     public String startGUI(){
         if(this.serverGUI!=null){
             if (!serverGUI.isServerStart()) {
-                this.finish=false;
-                new Thread(new Runnable() {
-                   public void run() {
-                        try {
-                            model.start();
-                            serverGUI.getServer().run();
+                this.finish = false;
+                model.start();
+                this.PORT = Model.getPort();
+                    new Thread(new Runnable() {
+                        public void run() {
+                            try {
+                                serverGUI.getServer().run();
+                            } catch (org.xml.sax.SAXException e) {
+                                catchGuiException(e);
+                            } catch (IOException e) {
+                                catchGuiException(e);
+                            }
                         }
-                        catch (org.xml.sax.SAXException e) {
-                            catchGuiException(e);
-                        }
-                        catch (IOException  e){
-                            catchGuiException(e);
-                        }
-                   }
-                }).start();
+                    }).start();
                 serverGUI.setServerStart(true);
                 return "Stop";
+
             }
             if (serverGUI.isServerStart()) {
                 try {

@@ -7,6 +7,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import server.controller.ControllerServer;
+import server.controller.Preference;
 import server.controller.Server;
 import server.model.ModelActions;
 
@@ -25,6 +26,7 @@ public class ServerView extends JFrame implements View{
     private Server                  server;
     private JButton                 gracefulReload;
     private boolean                 clickStart;
+    private static final String     RELOAD = Preference.Successfully+"! Changes will take effect after server is reloaded.";
     /**
      * Constructor of server GUI.
      */
@@ -154,7 +156,7 @@ public class ServerView extends JFrame implements View{
             @Override
             public void actionPerformed(ActionEvent e) {
                     gracefulReload();
-                    display("Graceful Reload is successful.");
+                    display(RELOAD);
             }
         });
         return buttonPanel;
