@@ -80,17 +80,7 @@ public class ControllerServer extends Observable implements Server{
             logger.error(e);
         }
     }
-   /**
-     * GUI constructor of servers controller.
-     * @param serverGUI GUI of servers controller.
-     */
-   /* public ControllerServer(View serverGUI,ModelActions model){
-        this.PORT=Model.getPort();
-        this.serverGUI = serverGUI;
-        this.model = model;
-        this.serverGUI.setServer(this);
-    }
-*/
+ 
     /**
      * Method, that start GUI of server.
      * @return String value <code>start</code> if server is running,
