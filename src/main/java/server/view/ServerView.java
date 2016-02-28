@@ -19,6 +19,7 @@ import javax.swing.*;
      * @version %I%, %G%
      */
 public class ServerView extends JFrame implements View{
+    private JFrame                  frame;
     private JPanel                  viewPanel;
     private Font                    font;
     private static JTextArea        memo;
@@ -35,7 +36,14 @@ public class ServerView extends JFrame implements View{
         this.createGUI();
         clickStart=false;
     }
-
+    /**
+    * Method for close GUI.
+    */
+    @Override
+    public void closeGUI() {
+        frame.setVisible(false);
+        this.dispose();
+    }
      /**
      * Method for set server.
      * @param server is server.
@@ -79,7 +87,7 @@ public class ServerView extends JFrame implements View{
      * Method, that create GUI of server.
      */
     public void createGUI() {
-        final JFrame frame = new JFrame();
+        frame= new JFrame();
         frame.setTitle("Server");
         frame.setResizable(false);
         font = new Font("Verdana", Font.PLAIN, 14);

@@ -38,4 +38,9 @@ public interface View  {
      <code>false</code> if server is stopped.
      */
     void setServerStart(boolean isStart);
+
+    /**
+     * Method for close GUI.
+     */
+    void closeGUI();
 }

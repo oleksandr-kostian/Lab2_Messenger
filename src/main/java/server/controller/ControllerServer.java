@@ -61,39 +61,51 @@ public class ControllerServer extends Observable implements Server{
 
     /**
      * Default constructor of servers controller.
-     * @throws IOException if port don't build; wrong of client's socket.
-     * @throws SAXException if ServerThread has mistake of xml.
      */
-    public ControllerServer(ModelActions model)throws  IOException, SAXException{
-        this.model = model;
-        this.PORT=Model.getPort();
-        run();
+    public ControllerServer(ModelActions model){
+        try {
+            this.PORT = Model.getPort();
+            this.model = model;
+            if (Model.isGUI()) {
+                this.serverGUI = new ServerView();
+                this.serverGUI.setServer(this);
+            } else {
+                run();
+            }
+        }
+        catch (IOException e){
+            logger.error(e);
+        }
+        catch (SAXException e){
+            logger.error(e);
+        }
     }
-    /**
+   /**
      * GUI constructor of servers controller.
      * @param serverGUI GUI of servers controller.
      */
-    public ControllerServer(View serverGUI,ModelActions model){
+   /* public ControllerServer(View serverGUI,ModelActions model){
         this.PORT=Model.getPort();
         this.serverGUI = serverGUI;
         this.model = model;
         this.serverGUI.setServer(this);
     }
-
+*/
     /**
      * Method, that start GUI of server.
      * @return String value <code>start</code> if server is running,
      *         String value <code>stop</code>  if server is stopped.
      */
     @Override
-    public String startGUI(){
-        if(this.serverGUI!=null){
+    public String startGUI() {
+        if (this.serverGUI != null) {
             if (!serverGUI.isServerStart()) {
                 this.finish = false;
                 model.start();
                 this.PORT = Model.getPort();
-                    new Thread(new Runnable() {
-                        public void run() {
+                new Thread(new Runnable() {
+                    public void run() {
+                        if (Model.isGUI()) {
                             try {
                                 serverGUI.getServer().run();
                             } catch (org.xml.sax.SAXException e) {
@@ -101,22 +113,26 @@ public class ControllerServer extends Observable implements Server{
                             } catch (IOException e) {
                                 catchGuiException(e);
                             }
+                        } else {
+                            serverGUI.closeGUI();
+                            new ControllerServer(model);
+                            return;
                         }
-                    }).start();
+                    }
+                }).start();
                 serverGUI.setServerStart(true);
                 return "Stop";
-
             }
-            if (serverGUI.isServerStart()) {
-                try {
-                    this.stop();
-                    serverGUI.setServerStart(false);
-                    return ("Start");
-                } catch (IOException e3) {
-                   catchGuiException(e3);
-                }
+        if (serverGUI.isServerStart()) {
+            try {
+                this.stop();
+                serverGUI.setServerStart(false);
+                return ("Start");
+            } catch (IOException e3) {
+                catchGuiException(e3);
             }
         }
+    }
         return "";
     }
     /**
@@ -509,7 +525,7 @@ public class ControllerServer extends Observable implements Server{
     }
 
     public static void main(String[] args)throws IOException, ParseException,SAXException {
-       new ControllerServer(new ServerView(), new Model());
+       new ControllerServer(new Model());
     }
 
     /**
