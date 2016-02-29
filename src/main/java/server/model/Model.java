@@ -283,16 +283,10 @@ public class Model implements ModelActions {
      *         <code>false</code> if configuration file has error.
      */
     public boolean gracefulReload() {
-        try {
-            ConfigParameters conf = XmlMessageServer.loadProperties();
-            isGui = conf.isGUI();
-            port = conf.getPort();
-            return true;
-        } catch (SAXException e) {
-            LOG.error("read properties", e);
-        }
-
-        return false;
+        ConfigParameters conf = XmlMessageServer.loadProperties();
+        isGui = conf.isGUI();
+        port = conf.getPort();
+        return true;
     }
 
     /**

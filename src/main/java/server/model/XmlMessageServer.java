@@ -5,8 +5,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.*;
@@ -19,7 +17,7 @@ import java.io.IOException;
 
 /**
  * Class that describes work with thread for users and
- * save propetries in XML file
+ * save properties in XML file.
  *
  * @author Sasha Kostyan
  * @version %I%, %G%
@@ -31,76 +29,138 @@ public class XmlMessageServer extends XmlMessage {
     private static final String INCLUDLOG   = "logger";
     private static final String LEVELLOG    = "levelLogger";
     private static final String SERVERGUI   = "serverGUI";
-    private static final String PORT        = "Port";
+    private static final String NAMEPORT    = "Port";
     private static       Logger LOG         = Logger.getLogger(XmlMessageServer.class);
+
+    /**
+     * Method for create default parameters.
+     * @return new ConfigParameters with default value
+     */
+    private static ConfigParameters setDefaultParameters() {
+        ConfigParameters conf = new ConfigParameters();
+        conf.setGUI(false);
+        conf.setPort(DEFAULTPORT);
+        conf.setLog(true);
+        conf.setLevelLog(String.valueOf(LogManager.getRootLogger().getLevel()));
+
+        return conf;
+    }
+
+    /**
+     * Method that set default value for the specific parameter.
+     * @param conf    class type of ConfigParameters for set value.
+     * @param command is parameter for set value.
+     * @return        class type of ConfigParameters.
+     */
+    private static ConfigParameters setDefaultParameters(ConfigParameters conf, String command) {
+        if (command.equals(NAMEPORT)) {
+            conf.setPort(DEFAULTPORT);
+        }
+
+        if (command.equals(LEVELLOG)) {
+            conf.setLevelLog(String.valueOf(LogManager.getRootLogger().getLevel()));
+        }
+
+        return conf;
+    }
 
     /**
      * Method for read properties.
      * @return true if read ok.
-     * @throws SAXException if xml parse is false.
      */
-    protected synchronized static ConfigParameters loadProperties() throws  SAXException {
+    protected synchronized static ConfigParameters loadProperties() {
+        boolean notFoundNode = false;
         paramLangXML();
-
         Document document = null;
+        ConfigParameters conf = setDefaultParameters();
+
+        // try parse the document.
         try {
             document = builder.parse(new File(NAMEOFFILE));
-        } catch (IOException e) {
+        } catch (IOException | SAXException e) {
             try {
-                ConfigParameters conf = new ConfigParameters();
-                conf.setGUI(false);
-                conf.setPort(DEFAULTPORT);
-
+                LOG.error("Configuration file do not have required parameters, or file did not find. " +
+                        "Write default parameters.");
                 writeProperties(conf);
-                return conf;
+                return  conf;
             } catch (TransformerException | FileNotFoundException e1) {
                 LOG.error(e1);
             }
         }
+
         document.getDocumentElement().normalize();
 
-        NodeList nList = document.getElementsByTagName(INCLUDLOG);
-        Node node = nList.item(0);
-        String log  = node.getTextContent();
+        // Log parameters.
+        String log;
+        if ((log = readChild(document, INCLUDLOG)) != null) {
+            if (log.equalsIgnoreCase("true")) {
+                conf.setLog(true);
+                String level;
 
-        if (log.equalsIgnoreCase("true")) {
-            nList = document.getElementsByTagName(LEVELLOG);
-            node = nList.item(0);
-            String level  = node.getTextContent();
-
-            if (!setLevelLog(level)) {
-                LOG.error("MessengerConf.xml in 'levelLogger' has mistake.");
+                if ((level = readChild(document, LEVELLOG)) != null) {
+                    if (setLevelLog(level)) {
+                        conf.setLevelLog(level);
+                    }
+                } else {
+                    LOG.info("Configure file do not have '" + LEVELLOG + "', it will add with default value.");
+                    setDefaultParameters(conf, LEVELLOG);
+                    notFoundNode = true;
+                }
+            } else {
+                if (log.equalsIgnoreCase("false")) {
+                    conf.setLog(false);
+                    LogManager.getRootLogger().setLevel(Level.OFF);
+                } else {
+                    LOG.error("MessengerConf.xml in 'logger' has mistake, it must be 'true' or 'false'. " +
+                            "Use default parameter.");
+                }
             }
         } else {
-            if (log.equalsIgnoreCase("false")) {
-                LogManager.getRootLogger().setLevel(Level.OFF);
-            } else {
-                LOG.error("MessengerConf.xml in 'logger' has mistake, it must be 'true' or 'false'");
-            }
+            LOG.info("Configure file do not have '" + INCLUDLOG + "', it will add with default value.");
+            setDefaultParameters(conf, LEVELLOG);
+            notFoundNode = true;
         }
 
-        ConfigParameters conf = new ConfigParameters();
+        String parameter;
 
         // parameter of server GUI
-        nList = document.getElementsByTagName(SERVERGUI);
-        node = nList.item(0);
-        String parameter = node.getTextContent();
-
-        if (parameter.equalsIgnoreCase("true") || parameter.equalsIgnoreCase("false") ) {
-            conf.setGUI(Boolean.parseBoolean(parameter.toLowerCase()));
+        if ((parameter = readChild(document, SERVERGUI)) != null) {
+            if (parameter.equalsIgnoreCase("true") || parameter.equalsIgnoreCase("false") ) {
+                conf.setGUI(Boolean.parseBoolean(parameter.toLowerCase()));
+            } else {
+                LOG.error("MessengerConf.xml in 'serverGUI' has mistake, it must be 'true' or 'false'. " +
+                        "Use default parameters.");
+            }
         } else {
-            LOG.error("MessengerConf.xml in 'serverGUI' has mistake, it must be 'true' or 'false'");
+            LOG.info("Configure file do not have '" + SERVERGUI + "', it will add with default value.");
+            notFoundNode = true;
         }
 
         // read port.
-        nList = document.getElementsByTagName(PORT);
-        node = nList.item(0);
-        parameter = node.getTextContent();
-        try {
-            conf.setPort(Integer.parseInt(parameter));
-        } catch (Exception e) {
-            LOG.error("MessengerConf.xml in 'Port' has mistake, it must be number");
-            conf.setPort(DEFAULTPORT);
+        if ((parameter = readChild(document, NAMEPORT)) != null) {
+            try {
+                int port = Integer.parseInt(parameter);
+                if (port  < 1024) {
+                    throw null;
+                }
+
+                conf.setPort(port);
+            } catch (NullPointerException | NumberFormatException e) {
+                LOG.error("MessengerConf.xml in 'Port' has mistake, it must be number, and > 0.");
+                conf.setPort(DEFAULTPORT);
+            }
+        } else {
+            LOG.error("Configure file do not have 'PORT', it will add with default value " + DEFAULTPORT + ".");
+            setDefaultParameters(conf, NAMEPORT);
+            notFoundNode = true;
+        }
+
+        if (notFoundNode) {
+            try {
+                writeProperties(conf);
+            } catch (TransformerException | FileNotFoundException e) {
+                LOG.error(e);
+            }
         }
 
         return conf;
@@ -127,14 +187,14 @@ public class XmlMessageServer extends XmlMessage {
             case "fatal": LogManager.getRootLogger().setLevel(Level.FATAL);
                 break;
             default:
-                LOG.error("MessengerConf.xml in 'levelLogger' has mistakes");
+                LOG.error("MessengerConf.xml in 'levelLogger' has mistakes. Use default parameter.");
                 return false;
         }
         return true;
     }
 
     /**
-     * write default properties.
+     * Write default properties.
      * @throws TransformerException if there was error of parse.
      * @throws FileNotFoundException if file did not find.
      */
@@ -143,23 +203,17 @@ public class XmlMessageServer extends XmlMessage {
         Document doc = builder.newDocument();
         Element RootElement = doc.createElement(ROOTNAME);
 
-        Element NameElementTitle = doc.createElement(INCLUDLOG);
-        NameElementTitle.appendChild(doc.createTextNode("TRUE"));
-        RootElement.appendChild(NameElementTitle);
+        //include log
+        writeChild(RootElement, doc, INCLUDLOG, String.valueOf(conf.isLog()));
 
-        NameElementTitle = doc.createElement(LEVELLOG);
-        NameElementTitle.appendChild(doc.createTextNode(String.valueOf(LogManager.getRootLogger().getLevel())));
-        RootElement.appendChild(NameElementTitle);
+        //log level
+        writeChild(RootElement, doc, LEVELLOG, conf.getLevelLog());
 
         //server's GUI
-        NameElementTitle = doc.createElement(SERVERGUI);
-        NameElementTitle.appendChild(doc.createTextNode(String.valueOf(conf.isGUI())));
-        RootElement.appendChild(NameElementTitle);
+        writeChild(RootElement, doc, SERVERGUI, String.valueOf(conf.isGUI()));
 
         //server's port
-        NameElementTitle = doc.createElement(PORT);
-        NameElementTitle.appendChild(doc.createTextNode(String.valueOf(conf.getPort())));
-        RootElement.appendChild(NameElementTitle);
+        writeChild(RootElement, doc, NAMEPORT, String.valueOf(conf.getPort()));
 
         // add in XML
         doc.appendChild(RootElement);

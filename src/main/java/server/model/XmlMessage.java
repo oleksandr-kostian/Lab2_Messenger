@@ -47,7 +47,14 @@ public class XmlMessage {
         }
     }
 
-    private static void writeChild(Element RootElement, Document doc, String strTeg, String str ) {
+    /**
+     * Method that write node in XML Document.
+     * @param RootElement root element of Document.
+     * @param doc         is a type of Document for read.
+     * @param strTeg      is name with child.
+     * @param str         is text.
+     */
+    protected static void writeChild(Element RootElement, Document doc, String strTeg, String str ) {
         Element NameElementTitle = doc.createElement(strTeg);
         NameElementTitle.appendChild(doc.createTextNode(str));
         RootElement.appendChild(NameElementTitle);
@@ -114,10 +121,10 @@ public class XmlMessage {
     /**
      * Method read TextContent of node from XML with name of child.
      * @param document is a type of Document for read.
-     * @param strTeg name of child
-     * @return String with text or null if node did not found.
+     * @param strTeg   name of child
+     * @return         String with text or null if node did not found.
      */
-    private static String readChild(Document document, String strTeg) {
+    protected static String readChild(Document document, String strTeg) {
         NodeList nList = document.getElementsByTagName(strTeg);
         Node     node  = nList.item(0);
         return node == null ? null : node.getTextContent();
