@@ -18,7 +18,7 @@ import java.util.HashMap;
  * @version %I%, %G%
  */
 final class UserIO {
-    private static Logger LOG = Logger.getLogger(UserIO.class);
+    private static final Logger LOG = Logger.getLogger(UserIO.class);
 
     protected static class Singleton {
         public static final UserIO _INSTANCE = new UserIO();
@@ -70,7 +70,7 @@ final class UserIO {
 
             LOG.info("read from file success");
         } catch (JAXBException e) {
-            LOG.error("JAXB unmarshal reads " + e);
+            LOG.error("JAXB un-marshal reads " + e);
         }
         return list;
     }

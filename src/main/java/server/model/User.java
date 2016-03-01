@@ -2,9 +2,8 @@ package server.model;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import java.util.Objects;
-
 /**
+
  * Class that describes user
  *
  * @author Sasha Kostyan
@@ -82,7 +81,7 @@ public class User implements Cloneable {
 
     @Override
     public User clone() {
-        User result = null;
+        User result;
         try {
             result = (User) super.clone();
             result.setLogin(this.login);
@@ -96,11 +95,15 @@ public class User implements Cloneable {
 
     @Override
     public String toString() {
-        StringBuilder resalt = new StringBuilder();
+        /*StringBuilder resalt = new StringBuilder();
         resalt.append("User{").append("id=").append(id).append(", password='").append(password)
                 .append("', login='").append(login).append("', ban='").append(ban)
                 .append("', isAdmin='").append(isAdmin).append("'}");
-        return resalt.toString();
+        return resalt.toString();*/
+
+        return "User{id=" + id + ", password='" + password +
+                "', login='" + login + "', ban='" + ban +
+                "', isAdmin='" + isAdmin + "'}";
     }
 
     @Override
@@ -110,8 +113,7 @@ public class User implements Cloneable {
 
         User user = (User) o;
 
-        if (id != user.id) return false;
-        return login != null ? login.equals(user.login) : user.login == null;
+        return id == user.id && (login != null ? login.equals(user.login) : user.login == null);
 
     }
 

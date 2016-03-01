@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
 import server.controller.Preference;
 
 /**
@@ -14,11 +13,11 @@ import server.controller.Preference;
  * @version %I%, %G%
  */
 public class Model implements ModelActions {
-    private static Logger          LOG = Logger.getLogger(Model.class);
-    private static UserIO          USERIO;
-    private static boolean         isGui;
-    private static int             port;
-    private boolean                statusWork;
+    private static final Logger    LOG        = Logger.getLogger(Model.class);
+    private static       UserIO    USERIO;
+    private static       boolean   isGui;
+    private static       int       port;
+    private              boolean   statusWork;
     private HashMap<Long, User>    list;
 
     public Model() {
@@ -237,7 +236,7 @@ public class Model implements ModelActions {
         try {
             list = USERIO.readList().getHashList();
         } catch (FileNotFoundException e) {
-            list = new HashMap<Long, User>();
+            list = new HashMap<>();
         }
 
         addAdmin();

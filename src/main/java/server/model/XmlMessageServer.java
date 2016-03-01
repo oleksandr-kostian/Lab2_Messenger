@@ -30,7 +30,7 @@ public class XmlMessageServer extends XmlMessage {
     private static final String LEVELLOG    = "levelLogger";
     private static final String SERVERGUI   = "serverGUI";
     private static final String NAMEPORT    = "Port";
-    private static       Logger LOG         = Logger.getLogger(XmlMessageServer.class);
+    private static final Logger LOG         = Logger.getLogger(XmlMessageServer.class);
 
     /**
      * Method for create default parameters.
@@ -88,7 +88,9 @@ public class XmlMessageServer extends XmlMessage {
             }
         }
 
-        document.getDocumentElement().normalize();
+        if (document != null) {
+            document.getDocumentElement().normalize();
+        }
 
         // Log parameters.
         String log;
@@ -103,7 +105,7 @@ public class XmlMessageServer extends XmlMessage {
                     }
                 } else {
                     LOG.info("Configure file do not have '" + LEVELLOG + "', it will add with default value.");
-                    setDefaultParameters(conf, LEVELLOG);
+                    conf = setDefaultParameters(conf, LEVELLOG);
                     notFoundNode = true;
                 }
             } else {
@@ -117,7 +119,7 @@ public class XmlMessageServer extends XmlMessage {
             }
         } else {
             LOG.info("Configure file do not have '" + INCLUDLOG + "', it will add with default value.");
-            setDefaultParameters(conf, LEVELLOG);
+            conf = setDefaultParameters(conf, LEVELLOG);
             notFoundNode = true;
         }
 
@@ -151,7 +153,7 @@ public class XmlMessageServer extends XmlMessage {
             }
         } else {
             LOG.error("Configure file do not have 'PORT', it will add with default value " + DEFAULTPORT + ".");
-            setDefaultParameters(conf, NAMEPORT);
+            conf = setDefaultParameters(conf, NAMEPORT);
             notFoundNode = true;
         }
 

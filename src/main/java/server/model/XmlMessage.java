@@ -24,7 +24,7 @@ import java.util.List;
  * @version %I%, %G%
  */
 public class XmlMessage {
-    private static       Logger      LOG              = Logger.getLogger(XmlMessage.class);
+    private static final Logger      LOG              = Logger.getLogger(XmlMessage.class);
     private static final String      ROOT_ELEMENT     = "XmlMessage";
     private static final String      ID_USER          = "IdUser";
     private static final String      ELSE_PREFERENCE  = "preference";
