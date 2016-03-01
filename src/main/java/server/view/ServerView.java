@@ -6,10 +6,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import server.controller.ControllerServer;
 import server.controller.Preference;
 import server.controller.Server;
-import server.model.ModelActions;
 
 import javax.swing.*;
     /**
@@ -20,12 +18,10 @@ import javax.swing.*;
      */
 public class ServerView extends JFrame implements View{
     private JFrame                  frame;
-    private JPanel                  viewPanel;
     private Font                    font;
     private static JTextArea        memo;
     private JButton                 startButton;
     private Server                  server;
-    private JButton                 gracefulReload;
     private boolean                 clickStart;
     private static final String     RELOAD = Preference.Successfully+"! Changes will take effect after server is reloaded.";
     /**
@@ -91,7 +87,7 @@ public class ServerView extends JFrame implements View{
         frame.setTitle("Server");
         frame.setResizable(false);
         font = new Font("Verdana", Font.PLAIN, 14);
-        viewPanel = new JPanel();
+        JPanel viewPanel = new JPanel();
 
         JPanel generalPanel = new JPanel();
         generalPanel.setLayout(new BorderLayout());
@@ -157,14 +153,14 @@ public class ServerView extends JFrame implements View{
             }
         });
 
-        gracefulReload = new JButton("Graceful reload");
+        JButton gracefulReload = new JButton("Graceful reload");
         gracefulReload.setFont(font);
         buttonPanel.add(gracefulReload);
         gracefulReload.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                    gracefulReload();
-                    display(RELOAD);
+                gracefulReload();
+                display(RELOAD);
             }
         });
         return buttonPanel;

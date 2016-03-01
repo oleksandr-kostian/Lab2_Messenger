@@ -60,7 +60,7 @@ public class ControllerServer extends Observable implements Server{
     }
 
     /**
-     * Default constructor of servers controller.
+     * Constructor of servers controller.
      */
     public ControllerServer(ModelActions model){
         try {
@@ -69,14 +69,12 @@ public class ControllerServer extends Observable implements Server{
             if (Model.isGUI()) {
                 this.serverGUI = new ServerView();
                 this.serverGUI.setServer(this);
-            } else {
+            }
+            else {
                 run();
             }
         }
-        catch (IOException e){
-            logger.error(e);
-        }
-        catch (SAXException e){
+        catch (IOException | SAXException e){
             logger.error(e);
         }
     }
@@ -98,15 +96,12 @@ public class ControllerServer extends Observable implements Server{
                         if (Model.isGUI()) {
                             try {
                                 serverGUI.getServer().run();
-                            } catch (org.xml.sax.SAXException e) {
-                                catchGuiException(e);
-                            } catch (IOException e) {
+                            } catch (SAXException | IOException e) {
                                 catchGuiException(e);
                             }
                         } else {
                             serverGUI.closeGUI();
                             new ControllerServer(model);
-                            return;
                         }
                     }
                 }).start();
@@ -294,9 +289,7 @@ public class ControllerServer extends Observable implements Server{
           catch (SocketException e){
               continue;
           }
-
       }
-
     }
     private String getDate(){
         SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
@@ -318,7 +311,6 @@ public class ControllerServer extends Observable implements Server{
             }
         this.displayInfoLog("\n" + "Server is stopped." + "\n");
         model.stop();
-
     }
 
     /**
@@ -331,7 +323,6 @@ public class ControllerServer extends Observable implements Server{
           userList.add(activeUsers.get(i).getUser().getLogin());
       }
         return userList;
-
     }
     /**
      * Method, that reads client's preference, handles it and sends answer to client.
@@ -392,8 +383,6 @@ public class ControllerServer extends Observable implements Server{
                                 activeUsers.get(i).getXmlUser().setMessage(Preference.Ban.name());
                                 activeUsers.get(i).sendMessage(Preference.Ban.name());
                                 break;
-
-
                         }
                     }
                     this.displayInfoLog("Admin "+ Preference.Ban.name()+" user:  " + infoFoBan);
@@ -473,10 +462,8 @@ public class ControllerServer extends Observable implements Server{
                             client.getXmlUser().setMessage(Preference.Admin.name());
                             client.sendMessage(Preference.Remove.name());
                             break;
-
                         }
                     }
-
                     this.displayInfoLog("Admin remove user: " + removeUser);
                     logger.debug(Preference.Remove.name()+ " removeUser");
                 }
@@ -523,7 +510,7 @@ public class ControllerServer extends Observable implements Server{
      */
     public class ServerThread extends Thread implements Observer{
         private User                 user;
-        private Socket               socket;
+        private final Socket         socket;
         private InputStream          fromClient;
         private OutputStream         toClient;
         private XmlSet               xmlUser;
@@ -533,9 +520,8 @@ public class ControllerServer extends Observable implements Server{
          * Constructor of class.
          * @param socket socket of client.
          * @throws IOException if socket has mistake.
-         * @throws SAXException if method start() has mistake of xml.
          */
-        public ServerThread(Socket socket) throws  IOException,SAXException{
+        public ServerThread(Socket socket) throws  IOException{
             this.socket = socket;
             this.authentication=false;
             fromClient = socket.getInputStream();
@@ -661,7 +647,7 @@ public class ControllerServer extends Observable implements Server{
                    }
                     try {
                         this.getMessage();
-                        if(isEditRepeat==true){
+                        if(isEditRepeat){
                             isEditRepeat=false;
                             continue;
                         }
@@ -686,10 +672,7 @@ public class ControllerServer extends Observable implements Server{
                     }
                 }
             }
-            catch (SAXException e) {
-                logger.error(e);
-            }
-            catch (TransformerException e){
+            catch (SAXException | TransformerException e) {
                 logger.error(e);
             }
         }
