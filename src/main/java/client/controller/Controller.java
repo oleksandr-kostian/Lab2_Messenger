@@ -1,5 +1,7 @@
 package client.controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -24,7 +26,7 @@ import javax.swing.*;
  * @author Veleri Rechembei, Slavik Miroshnychenko
  * @version %I%, %G%
  */
-public class Controller implements Runnable,ControllerActionsClient {
+public class Controller extends Thread implements ControllerActionsClient {
 
     private static final Logger logger = Logger.getLogger(Controller.class);
     private static final String  ONLINE_USER = "The user is online.";
@@ -41,10 +43,9 @@ public class Controller implements Runnable,ControllerActionsClient {
     private static final String  INCORECT_REGISTRATION = "IncorrectValue name of user. This user has already been created.";
     private static final String  ENTER_TO_PRIVATE = "invites you to a private chat, are you want to enter?";
     private static final String  SURE = "Are you sure?";
-    final private int PORT = 1506;
 
 
-
+    private int PORT = 1506;
     private String hostName;
     private Socket connect;
     private String myUser;
@@ -53,16 +54,16 @@ public class Controller implements Runnable,ControllerActionsClient {
     private OutputStream toServer;
     private XmlSet userXml;
     private XmlSet userSet;
-    private boolean ban;
-    private boolean admin;
-    private boolean close;
+    volatile private boolean ban;
+    volatile private boolean admin;
+    volatile private boolean close;
     private boolean authentication;
     private List<String> banUsers;
     private List<ChatView> views = new ArrayList();
-
+    boolean isConnect;
     public Controller(String hostName) {
         this.hostName = hostName;
-        connectToServer();
+        isConnect = connectToServer();
     }
 
     public boolean connectToServer() {
@@ -193,14 +194,12 @@ public class Controller implements Runnable,ControllerActionsClient {
         login.add(removeUser);
         userSet.setList(login);
         sendMessage(userSet, Preference.Remove.name());
-
     }
 
     public void unBan(String unBanUser) {
         List<String> login = new ArrayList<String>();
         login.add(unBanUser);
         userSet.setList(login);
-        //sendAllMessage(unBanUser + " is unBan");
         sendMessage(userSet, Preference.UnBan.name());
     }
 
@@ -227,8 +226,6 @@ public class Controller implements Runnable,ControllerActionsClient {
             userSet.setMessage(stringBuilder.toString() +"<br>"+ myUser + ": <br>" + msg);
             sendMessage(userSet, Preference.PrivateMessage.name());
         }
-        userSet.setMessage(myUser + ": <br>" + msg);
-        sendMessage(userSet, Preference.PrivateMessage.name());
     }
 
     public void sendAllMessage(String msg) {
@@ -280,8 +277,8 @@ public class Controller implements Runnable,ControllerActionsClient {
     @Override
     public void run() {
         while (true) {
-            if (close) break;
-            getMessage();
+            if (close) return;
+             getMessage();
             XmlSet buff = getUserXml();
             if (buff != null) {
                 if (!authentication) {
@@ -481,11 +478,44 @@ public class Controller implements Runnable,ControllerActionsClient {
 
 
     public void createView(ViewFactory factory) {
-        ChatView view = factory.createView(this);
+        final ChatView view = factory.createView(this);
         views.add(view);
-        view.createEnterToChat();
-    }
+        if (isConnect) {
+            view.createEnterToChat();
 
+        } else {
+            close = true;
+            final EditConnection editConnection = new EditConnection();
+            editConnection.getConnect().addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (editConnection.getURLField().getText() != null && !editConnection.getURLField().getText().trim().equals("") &&
+                            editConnection.getPortField().getText() != null && !editConnection.getPortField().getText().trim().equals("")) {
+                        try {
+                            PORT = Integer.parseInt(editConnection.getPortField().getText());
+                        }catch (NumberFormatException e2){
+                            JOptionPane.showMessageDialog(null,"Port must be number!");
+                            return;
+                        }
+                        hostName = editConnection.getURLField().getText();
+                        if(connectToServer()){
+                            editConnection.closeFrame();
+                            close = false;
+                            for(ChatView cv:views){
+                                cv.createEnterToChat();
+                            }
+                            start();
+                            //view.createEnterToChat();
+
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(null,"Incorrect, repeat pleas");
+                        }
+                    }
+                }
+            });
+        }
+    }
     public static void main(String[] args) throws IOException, SAXException {
         String serverAddress = "localhost";
         Controller client = new Controller(serverAddress);

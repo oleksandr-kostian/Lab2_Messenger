@@ -16,8 +16,7 @@ import java.util.List;
 /**
  * Created by Слава on 22.01.2016.
  */
-public class LoginWindow extends JFrame {
-    private int id = 0;
+class LoginWindow extends JFrame {
     private JTextField loginField;
     private JPasswordField passwordField;
     private JButton ok = new JButton() ;
@@ -29,21 +28,12 @@ public class LoginWindow extends JFrame {
         this.controller = controller;
         createGUI();
     }
-    LoginWindow() {
+    public LoginWindow() {
         super("Edit");
         createGUI();
     }
-
-    public JTextField getLoginField() {
-        return loginField;
-    }
-
-    public JPasswordField getPasswordField() {
-        return passwordField;
-    }
-
     public void createGUI(){
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         Box box1 = Box.createHorizontalBox();
         final JLabel loginLabel = new JLabel("Login:");
@@ -122,14 +112,5 @@ public class LoginWindow extends JFrame {
         this.setVisible(false);
         this.dispose();
     }
-
-    public JButton getOk() {
-        return ok;
-    }
-
-    public JButton getReg() {
-        return reg;
-    }
-
 
 }
