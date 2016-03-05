@@ -169,7 +169,16 @@ public class UserFrame implements UserView {
         menu.getEdit().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                EditFrame editFrame = new EditFrame(controller);
+                final SimpleFrame editPassword = new SimpleFrame("Edit password",new JLabel("Enter new password"),new JButton("Next"));
+                editPassword.getButton().addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        editPassword.close();
+                        if(editPassword.getTextField().getText()!=null && !editPassword.getTextField().getText().trim().equals("")) {
+                            controller.editUser(editPassword.getTextField().getText());
+                        }
+                    }
+                });
             }
         });
         menu.getRemovePrivate().addActionListener(new ActionListener() {

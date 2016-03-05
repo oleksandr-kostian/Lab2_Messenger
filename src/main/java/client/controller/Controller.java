@@ -260,9 +260,9 @@ public class Controller implements Runnable,ControllerActionsClient {
         sendMessage(userSet, Preference.PrivateMessage.name());
     }
 
-    public void editUser(String newLogin, String newPassword) {
+    public void editUser(String newPassword) {
         java.util.List<String> logPas = new ArrayList<String>();
-        logPas.add(newLogin);
+        logPas.add(myUser);
         logPas.add(newPassword);
         userSet.setList(logPas);
         sendMessage(userSet, Preference.Edit.name());

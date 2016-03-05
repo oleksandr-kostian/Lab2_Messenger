@@ -43,7 +43,7 @@ public class UserMenu extends  JMenuBar{
         privat.setFont(font);
         fileMenu.add(privat);
 
-         edit = new JMenuItem("Edit account");
+         edit = new JMenuItem("Edit password");
         edit.setFont(font);
         fileMenu.add(edit);
 

@@ -52,7 +52,7 @@ public class SimpleFrame extends JFrame {
         JPanel panel = new FonPanel();
         panel.add(mainBox);
         add(panel);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
         setVisible(true);

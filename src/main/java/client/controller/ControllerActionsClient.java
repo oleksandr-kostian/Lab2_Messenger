@@ -76,11 +76,10 @@ public interface ControllerActionsClient {
     void createView(ViewFactory factory);
 
     /**
-     * Method for edit login or password of user.
-     * @param newLogin    of user.
+     * Method for edit  password of user.
      * @param newPassword of user.
      */
-    void editUser(String newLogin,String newPassword);
+    void editUser(String newPassword);
 
     /**
      * Method for remove of user.
