@@ -109,4 +109,11 @@ public interface ControllerActionsClient {
      * Get user, whom use controler.
      */
      String getMyUser();
+
+    /**
+     * Method for create privateChat
+     * @param users who enter private chat
+     * @param title private chat
+     */
+    void createPrChat(List<String> users,String title);
 }

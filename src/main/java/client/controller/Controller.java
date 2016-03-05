@@ -39,9 +39,9 @@ public class Controller implements Runnable,ControllerActionsClient {
     private static final String  BAN_ADMIN = "Ban is successfully";
     private static final String  UNBAN_ADMIN = "UnBan is successfully";
     private static final String  INCORECT_REGISTRATION = "IncorrectValue name of user. This user has already been created.";
-    private static final String  ENTER_TO_PRIVATE = "Do you want to enter the private chat?";
+    private static final String  ENTER_TO_PRIVATE = "invites you to a private chat, are you want to enter?";
     private static final String  SURE = "Are you sure?";
-    final private int PORT = 1025;
+    final private int PORT = 1506;
 
 
 
@@ -206,32 +206,29 @@ public class Controller implements Runnable,ControllerActionsClient {
 
     public void sendPrivateMessage(List<String> users, String msg, int keyDialog) {
         if (ban) return;
-        Map<Integer, PrivateChat> mainPanelMap;
-        if (admin) {
-            mainPanelMap = views.get(0).getAdminFrame().getMap();
-        } else {
-            mainPanelMap = views.get(0).getUserFrame().getMap();
-        }
-        if (keyDialog == 0) {
-            if (!admin) {
-                for (ChatView cv : views) {
-                    keyDialog = (int) System.currentTimeMillis();
-                    cv.getUserFrame().createPrivateChat(users, keyDialog);
-                }
-            } else {
-                for (ChatView cv : views) {
-                    keyDialog = (int) System.currentTimeMillis();
-                    cv.getAdminFrame().createPrivateChat(users, keyDialog);
-                }
-            }
-
-        }
         userSet.setKeyDialog(keyDialog);
         userSet.setList(users);
         msg = msg.replaceAll("\\n", "<br>");
+       /* List<String> exitUser = new ArrayList<>();
+        for(String user:users){
+            if(!activeUsers.contains(user)){
+                exitUser.add(user);
+            }
+        }
+        exitUser.remove(myUser);
+        if(exitUser.size()==0) {
+            userSet.setMessage(myUser + ": <br>" + msg);
+            sendMessage(userSet, Preference.PrivateMessage.name());
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String user:exitUser){
+                stringBuilder.append(user + " close chat <br> ");
+            }
+            userSet.setMessage(stringBuilder.toString() +"<br>"+ myUser + ": <br>" + msg);
+            sendMessage(userSet, Preference.PrivateMessage.name());
+        }*/
         userSet.setMessage(myUser + ": <br>" + msg);
         sendMessage(userSet, Preference.PrivateMessage.name());
-
     }
 
     public void sendAllMessage(String msg) {
@@ -240,6 +237,27 @@ public class Controller implements Runnable,ControllerActionsClient {
         msg = msg.replaceAll("\\n", "<br>");
         userSet.setMessage(myUser + ": <br>" + msg);
         sendMessage(userSet, Preference.MessageForAll.name());
+
+    }
+
+    public void createPrChat(List<String> users,String title){
+        if (ban) return;
+        int keyDialog = 0;
+        if (!admin) {
+            for (ChatView cv : views) {
+                keyDialog = (int) System.currentTimeMillis();
+                cv.getUserFrame().createPrivateChat(users, keyDialog,title);
+            }
+        } else {
+            for (ChatView cv : views) {
+                keyDialog = (int) System.currentTimeMillis();
+                cv.getAdminFrame().createPrivateChat(users, keyDialog,title);
+            }
+        }
+        userSet.setList(users);
+        userSet.setKeyDialog(keyDialog);
+        userSet.setMessage(title);
+        sendMessage(userSet, Preference.PrivateMessage.name());
     }
 
     public void editUser(String newLogin, String newPassword) {
@@ -349,16 +367,20 @@ public class Controller implements Runnable,ControllerActionsClient {
                     }
                 }
                 if (buff.getPreference().equals(Preference.MessageForAll.name())) {
-                    if (ban) continue;
-                    String msg = buff.getMessage().replaceAll("<br>", "\n");
-                    if (admin) {
-                        for (ChatView cv : views) {
-                            cv.getAdminFrame().setAllMessage(msg);
+                    try {
+                        if (ban) continue;
+                        String msg = buff.getMessage().replaceAll("<br>", "\n");
+                        if (admin) {
+                            for (ChatView cv : views) {
+                                cv.getAdminFrame().setAllMessage(msg);
+                            }
+                        } else {
+                            for (ChatView cv : views) {
+                                cv.getUserFrame().setAllMessage(msg);
+                            }
                         }
-                    } else {
-                        for (ChatView cv : views) {
-                            cv.getUserFrame().setAllMessage(msg);
-                        }
+                    }catch (NullPointerException e){
+                        continue;
                     }
                 }
                 if (buff.getPreference().equals(Preference.ActiveUsers.name())) {
@@ -399,8 +421,9 @@ public class Controller implements Runnable,ControllerActionsClient {
                     } else {
                         if (buff.getList().contains(myUser)) {
                             Object[] options = {"Yes", "No"};
+                            String  question = buff.getList().get(0) +" " +ENTER_TO_PRIVATE;
                             int n = JOptionPane
-                                    .showOptionDialog(null, ENTER_TO_PRIVATE,
+                                    .showOptionDialog(null, question,
                                             "Confirmation", JOptionPane.YES_NO_OPTION,
                                             JOptionPane.QUESTION_MESSAGE, null, options,
                                             options[0]);
@@ -409,11 +432,11 @@ public class Controller implements Runnable,ControllerActionsClient {
                                 privateUser.remove(myUser);
                                 if (admin) {
                                     for (ChatView cv : views) {
-                                        cv.getAdminFrame().createPrivateChat(privateUser, buff.getKeyDialog());
+                                        cv.getAdminFrame().createPrivateChat(privateUser, buff.getKeyDialog(),buff.getMessage());
                                     }
                                 } else {
                                     for (ChatView cv : views) {
-                                        cv.getUserFrame().createPrivateChat(privateUser, buff.getKeyDialog());
+                                        cv.getUserFrame().createPrivateChat(privateUser, buff.getKeyDialog(),buff.getMessage());
                                     }
                                 }
                             }

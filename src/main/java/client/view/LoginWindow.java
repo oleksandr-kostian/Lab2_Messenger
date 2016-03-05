@@ -8,10 +8,7 @@ import server.model.XmlSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -86,6 +83,12 @@ public class LoginWindow extends JFrame {
         p.add(mainBox);
         setContentPane(p);
         pack();
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent event) {
+                    controller.closeChat();
+                    System.exit(2);
+            }
+        });
         setResizable(false);
         setLocationRelativeTo(null);
         setVisible(true);

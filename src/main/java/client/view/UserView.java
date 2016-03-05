@@ -12,7 +12,7 @@ public interface UserView {
      * @param privateUser users, whom need send message
      * @param keyDialog universal key for private chat
      */
-    public void createPrivateChat(List<String> privateUser,int keyDialog);
+    public void createPrivateChat(List<String> privateUser,int keyDialog,String title);
 
     /**
      * Method for send message to private chat

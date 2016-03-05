@@ -16,7 +16,7 @@ public class PrivatePanel extends MainPanel implements PrivateChat {
     private int key;
     private ControllerActionsClient controller;
 
-    public PrivatePanel(List<String> activeUsers, ControllerActionsClient controller) {
+    public PrivatePanel(List<String> activeUsers, ControllerActionsClient controller,String title) {
         super(activeUsers, controller);
         this.controller = controller;
     }

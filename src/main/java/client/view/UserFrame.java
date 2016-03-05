@@ -2,6 +2,7 @@ package client.view;
 
 import client.controller.Controller;
 import client.controller.ControllerActionsClient;
+import net.miginfocom.swing.MigLayout;
 import server.model.XmlSet;
 
 import javax.swing.*;
@@ -21,7 +22,6 @@ public class UserFrame implements UserView {
     private java.util.List<String> activeUsers = new ArrayList<>();
     private ControllerActionsClient controller;
     private String login;
-    private boolean close;
     private JFrame viewAll;
     private Map<Integer,PrivateChat> keys = new TreeMap<>();
     private List<String> privateList;
@@ -68,11 +68,13 @@ public class UserFrame implements UserView {
 
 
     @Override
-    public void createPrivateChat(final List<String> privateList, final int keyDialog) {
-        privateChat = new PrivatePanel(privateList,controller);
+    public void createPrivateChat(final List<String> privateList, final int keyDialog,String title) {
+        privateChat = new PrivatePanel(privateList,controller,title);
         privateChat.setKey(keyDialog);
         keys.put(keyDialog,privateChat);
-        tabbedPane.addTab("Private chat", privateChat);
+        tabbedPane.addTab(title, privateChat);
+        int count = tabbedPane.getTabCount()-1;
+        tabbedPane.setSelectedIndex(count);
     }
 
 
@@ -98,12 +100,6 @@ public class UserFrame implements UserView {
     public void editLogin(String login) {
         viewAll.setTitle(login);
     }
-
-    public boolean isClose() {
-        return close;
-    }
-
-
 
     public void createGUI(){
         viewAll = new JFrame();
@@ -157,7 +153,17 @@ public class UserFrame implements UserView {
                 for(int i:allChat.getElement()){
                     privateList.add(activeUsers.get(i));
                 }
-                controller.sendPrivateMessage(privateList,"Welcome in private chat!",0);
+                final SimpleFrame titleChat = new SimpleFrame("Title",new JLabel("Enter title chat pleas"),new JButton("NEXT"));
+                titleChat.getButton().addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        titleChat.close();
+                        if(titleChat.getTextField().getText()!=null && !titleChat.getTextField().getText().trim().equals("")) {
+                            controller.createPrChat(privateList, titleChat.getTextField().getText());
+                        }
+                    }
+                });
+
             }
         });
         menu.getEdit().addActionListener(new ActionListener() {
@@ -170,6 +176,9 @@ public class UserFrame implements UserView {
             public void actionPerformed(ActionEvent e) {
                 int select = tabbedPane.getSelectedIndex();
                 if (select >= 1) {
+                    /*PrivatePanel panel = (PrivatePanel) tabbedPane.getSelectedComponent();
+                   controller.sendPrivateMessage(panel.getActiveUsers(),"I close chat;",panel.getKey());
+                   */
                     tabbedPane.removeTabAt(select);
                 }
             }
