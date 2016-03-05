@@ -209,7 +209,7 @@ public class Controller implements Runnable,ControllerActionsClient {
         userSet.setKeyDialog(keyDialog);
         userSet.setList(users);
         msg = msg.replaceAll("\\n", "<br>");
-       /* List<String> exitUser = new ArrayList<>();
+       List<String> exitUser = new ArrayList<>();
         for(String user:users){
             if(!activeUsers.contains(user)){
                 exitUser.add(user);
@@ -226,7 +226,7 @@ public class Controller implements Runnable,ControllerActionsClient {
             }
             userSet.setMessage(stringBuilder.toString() +"<br>"+ myUser + ": <br>" + msg);
             sendMessage(userSet, Preference.PrivateMessage.name());
-        }*/
+        }
         userSet.setMessage(myUser + ": <br>" + msg);
         sendMessage(userSet, Preference.PrivateMessage.name());
     }

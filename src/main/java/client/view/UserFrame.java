@@ -176,9 +176,8 @@ public class UserFrame implements UserView {
             public void actionPerformed(ActionEvent e) {
                 int select = tabbedPane.getSelectedIndex();
                 if (select >= 1) {
-                    /*PrivatePanel panel = (PrivatePanel) tabbedPane.getSelectedComponent();
-                   controller.sendPrivateMessage(panel.getActiveUsers(),"I close chat;",panel.getKey());
-                   */
+                    PrivatePanel panel = (PrivatePanel) tabbedPane.getSelectedComponent();
+                    controller.sendPrivateMessage(panel.getActiveUsers(),"I close chat;",panel.getKey());
                     tabbedPane.removeTabAt(select);
                 }
             }
