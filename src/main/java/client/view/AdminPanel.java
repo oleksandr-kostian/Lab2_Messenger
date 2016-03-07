@@ -1,6 +1,5 @@
 package client.view;
 
-import client.controller.Controller;
 import client.controller.ControllerActionsClient;
 import net.miginfocom.swing.MigLayout;
 

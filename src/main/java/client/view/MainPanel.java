@@ -1,6 +1,5 @@
 package client.view;
 
-import client.controller.Controller;
 import client.controller.ControllerActionsClient;
 import net.miginfocom.swing.MigLayout;
 
@@ -21,7 +20,6 @@ public class MainPanel  extends FonPanel{
     private JTextArea memo;
     private java.util.List<String> activeUsers = new ArrayList<>();
     private JTextArea edit;
-    private JPanel listPanel;
     private JButton send;
     private ControllerActionsClient controller;
 
@@ -115,7 +113,7 @@ public class MainPanel  extends FonPanel{
         JScrollPane jsp1 = new JScrollPane(memo);
         JScrollPane jsp2 = new JScrollPane(edit);
 
-        listPanel = setListPanel();
+        JPanel  listPanel = setListPanel();
         setLayout(new MigLayout());
         add(jsp1);
         add(listPanel,"wrap");

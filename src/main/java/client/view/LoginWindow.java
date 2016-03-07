@@ -1,17 +1,11 @@
 package client.view;
 
-import client.controller.Controller;
-import client.controller.ControllerActionsClient;
-import org.xml.sax.SAXException;
-import server.model.XmlSet;
 
+import client.controller.ControllerActionsClient;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
-import java.util.*;
-import java.util.List;
 
 /**
  * Created by Слава on 22.01.2016.

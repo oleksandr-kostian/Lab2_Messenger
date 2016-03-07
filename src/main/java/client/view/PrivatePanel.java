@@ -1,6 +1,5 @@
 package client.view;
 
-import client.controller.Controller;
 import client.controller.ControllerActionsClient;
 
 import java.awt.event.ActionEvent;

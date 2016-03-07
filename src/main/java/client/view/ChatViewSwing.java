@@ -1,9 +1,7 @@
 package client.view;
 
-import client.controller.Controller;
 import client.controller.ControllerActionsClient;
 
-import java.util.ArrayList;
 
 /**
  * Created by Слава on 17.02.2016.
@@ -12,7 +10,7 @@ public class ChatViewSwing implements ChatView {
     private UserFrame userFrame;
     private AdminFrame adminFrame;
     private ControllerActionsClient controller;
-    LoginWindow loginWindow;
+    private LoginWindow loginWindow;
 
     public ChatViewSwing(ControllerActionsClient controller) {
         this.controller = controller;

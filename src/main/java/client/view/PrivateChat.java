@@ -8,14 +8,14 @@ public interface PrivateChat {
      * Method for set universal key private chat
      * @param key universal key
      */
-    public void setKey(int key);
+    void setKey(int key);
 
     /**
      * Method that get key
      * @return universal key
      */
-    public int getKey();
+    int getKey();
 
-    public void setMessage(String message);
-    public String getMessage();
+    void setMessage(String message);
+    String getMessage();
 }

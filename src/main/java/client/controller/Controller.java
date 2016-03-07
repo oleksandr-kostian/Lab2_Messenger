@@ -3,8 +3,6 @@ package client.controller;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -14,13 +12,9 @@ import java.util.Map;
 import client.view.*;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 import server.controller.Preference;
 import server.model.XmlMessage;
 import server.model.XmlSet;
-import server.view.ServerView;
-
-
 import javax.swing.*;
 
 /**
@@ -48,7 +42,7 @@ public class Controller extends Thread implements ControllerActionsClient {
 
 
     private int PORT = 1506;
-    private String hostName = "localhost";;
+    private String hostName = "localhost";
     private Socket connect;
     private String myUser;
     private List<String> activeUsers = new ArrayList<>();
@@ -62,8 +56,8 @@ public class Controller extends Thread implements ControllerActionsClient {
     volatile private boolean serverDown;
     private boolean authentication;
     private List<String> banUsers;
-    private List<ChatView> views = new ArrayList();
-    boolean isConnect;
+    private List<ChatView> views = new ArrayList<ChatView>();
+    private boolean isConnect;
     public Controller() {
         isConnect = connectToServer();
     }
@@ -137,16 +131,12 @@ public class Controller extends Thread implements ControllerActionsClient {
             setUserXml(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
 
         } catch (org.xml.sax.SAXException e1) {
-            serverDown = true;
-            close = true;
             closeSocket();
             logger.error(" SAXException.Authorization is not passed successfully. ", e1);
             JOptionPane.showMessageDialog(null,"Server is down. Try to reconnect");
 
         } catch (IOException e) {
             setUserXml(null);
-            serverDown = true;
-            close = true;
             closeSocket();
             logger.error(" Exception reading Streams: ", e);
             JOptionPane.showMessageDialog(null, "Server is down. Try to reconnect");
@@ -209,7 +199,6 @@ public class Controller extends Thread implements ControllerActionsClient {
         List<String> login = new ArrayList<String>();
         login.add(banUser);
         userSet.setList(login);
-        //sendAllMessage(banUser + " is ban");
         sendMessage(userSet, Preference.Ban.name());
     }
 
@@ -495,11 +484,10 @@ public class Controller extends Thread implements ControllerActionsClient {
                     ban = false;
                     JOptionPane.showMessageDialog(null, UNBAN);
                 }
-                if(buff.getPreference().equals(Preference.Stop)){
+                if(buff.getPreference().equals(Preference.Stop.name())){
                     closeSocket();
-                    close = true;
-                    serverDown = true;
-                    //setUserXml(null);
+                    JOptionPane.showMessageDialog(null, "Server is down. Try to reconnect");
+
                 }
             }
         }

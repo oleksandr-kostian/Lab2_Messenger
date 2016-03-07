@@ -1,9 +1,7 @@
 package client.view;
 
-import client.controller.Controller;
 import client.controller.ControllerActionsClient;
-import net.miginfocom.swing.MigLayout;
-import server.model.XmlSet;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,7 +15,6 @@ import java.util.List;
 public class UserFrame implements UserView {
     private JTabbedPane tabbedPane;
     private MainPanel allChat;
-    private PrivatePanel privateChat;
     private UserMenu menu;
     private java.util.List<String> activeUsers = new ArrayList<>();
     private ControllerActionsClient controller;
@@ -69,7 +66,7 @@ public class UserFrame implements UserView {
 
     @Override
     public void createPrivateChat(final List<String> privateList, final int keyDialog,String title) {
-        privateChat = new PrivatePanel(privateList,controller,title);
+        PrivatePanel privateChat = new PrivatePanel(privateList,controller,title);
         privateChat.setKey(keyDialog);
         keys.put(keyDialog,privateChat);
         tabbedPane.addTab(title, privateChat);
@@ -200,10 +197,6 @@ public class UserFrame implements UserView {
         });
     }
 
-    public  void closeFrame(){
-        viewAll.setVisible(false);
-        viewAll.dispose();
-    }
 
 
 

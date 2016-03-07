@@ -10,5 +10,5 @@ public interface AdminView extends UserView {
      * Method for set users,whom have ban
      * @param banUsers list users
      */
-    public void setBanUsers(List<String> banUsers);
+    void setBanUsers(List<String> banUsers);
 }

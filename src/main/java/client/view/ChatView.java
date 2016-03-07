@@ -8,24 +8,24 @@ public interface ChatView {
      * Method for create UserView
      * @see UserView
      */
-    public void createUserView();
+    void createUserView();
 
     /**
      * Method for create AdminView
      * @see AdminView
      */
-    public void createAdminView();
+    void createAdminView();
 
     /**
      * Method for create Enter to chat, which let user enter to chat
      */
-    public void createEnterToChat();
+    void createEnterToChat();
 
     /**
      * Method for close Enter to chat
      */
-    public void closeEnterToChat();
+    void closeEnterToChat();
 
-    public UserView getUserFrame();
-    public AdminView getAdminFrame();
+    UserView getUserFrame();
+    AdminView getAdminFrame();
 }

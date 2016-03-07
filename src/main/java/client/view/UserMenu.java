@@ -10,7 +10,6 @@ public class UserMenu extends  JMenuBar{
     private JMenuItem privat;
     private JMenuItem edit;
     private JMenuItem remove;
-    private JMenu fileMenu;
     private JMenuItem removePrivate;
 
     public UserMenu() {
@@ -36,7 +35,7 @@ public class UserMenu extends  JMenuBar{
 
     public void  setMenu() {
         Font font = new Font("Verdana", Font.PLAIN, 11);
-        fileMenu = new JMenu("UserMenu");
+        JMenu fileMenu = new JMenu("UserMenu");
         fileMenu.setFont(font);
 
          privat =  new JMenuItem("Private chat");

@@ -12,7 +12,7 @@ import java.io.IOException;
 class FonPanel extends JPanel {
     /**
      * method for set fon to panel
-     * @param g
+     * @param g graphics
      */
     public void paintComponent(Graphics g){
         Image im = null;

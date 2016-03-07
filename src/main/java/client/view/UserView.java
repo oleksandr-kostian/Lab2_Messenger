@@ -12,32 +12,32 @@ public interface UserView {
      * @param privateUser users, whom need send message
      * @param keyDialog universal key for private chat
      */
-    public void createPrivateChat(List<String> privateUser,int keyDialog,String title);
+    void createPrivateChat(List<String> privateUser,int keyDialog,String title);
 
     /**
      * Method for send message to private chat
      * @param msg message
      * @param keyDialog universal key for private chat
      */
-    public void setPrivateMessage(String msg,int keyDialog);
+    void setPrivateMessage(String msg,int keyDialog);
 
     /**
      * Method for send message to all chat
      * @param msg message
      */
-    public void setAllMessage(String msg);
+    void setAllMessage(String msg);
 
     /**
      * Method for set all active users
      * @param activeUsers all active users
      */
-    public void setActiveUsers(List<String> activeUsers);
+    void setActiveUsers(List<String> activeUsers);
 
     /**
      * Method for set  new user login
      * @param login new login
      */
-    public void editLogin(String login);
+    void editLogin(String login);
 
     /**
      * Metod that get map
@@ -45,6 +45,6 @@ public interface UserView {
      * @see PrivateChat
      * @see Map
      */
-    public Map<Integer,PrivateChat> getMap();
+    Map<Integer,PrivateChat> getMap();
 
 }

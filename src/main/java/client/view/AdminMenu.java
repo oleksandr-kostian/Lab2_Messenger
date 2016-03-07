@@ -31,10 +31,6 @@ public class AdminMenu extends UserMenu {
 
     }
 
-    public JMenuItem getEditUser() {
-        return ban;
-    }
-
     public JMenuItem getBan() {
         return ban;
     }
