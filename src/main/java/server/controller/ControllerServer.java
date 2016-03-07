@@ -281,7 +281,7 @@ public class ControllerServer extends Observable implements Server{
       socket = new ServerSocket(PORT);
       this.displayInfoLog("Server started.");
         this.displayInfoLog("Waiting a client... ");
-      while (true) {
+        while (true) {
           if(this.finish){
               return;
           }
@@ -306,10 +306,13 @@ public class ControllerServer extends Observable implements Server{
      * @throws IOException if steams has error.
      */
     public void stop() throws IOException{
-        if(activeUsers.size()!=0) {
+        if (activeUsers.size() != 0) {
             activeUsers.get(0).reportOfStop();
         }
         this.finish=true;
+        for(int i=0;i<activeUsers.size();i++){
+            activeUsers.remove(activeUsers.get(i));
+        }
         if (socket != null) {
                 socket.close();
             }
@@ -608,7 +611,7 @@ public class ControllerServer extends Observable implements Server{
             this.getXmlUser().setMessage(getDate()+" System message: "+STOP);
             try{
                 readCommand(this,Preference.MessageForAll);
-                readCommand(this,Preference.Stop);
+                readCommand(this, Preference.Stop);
             }
             catch (TransformerException e1){
                 logger.error(e1);
@@ -619,7 +622,7 @@ public class ControllerServer extends Observable implements Server{
          * Method of read message from client to server.
          * @throws SAXException if read xml.
          */
-        public  void getMessage() throws SAXException{
+        public void getMessage() throws SAXException{
                 try {
                     BufferedReader is = new BufferedReader(new InputStreamReader(fromClient));
                     StringBuffer ans = new StringBuffer();
@@ -640,6 +643,7 @@ public class ControllerServer extends Observable implements Server{
                             logger.error(e1);
                         }
                     }
+
                 }
 
         }
