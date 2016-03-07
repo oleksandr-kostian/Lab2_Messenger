@@ -14,9 +14,11 @@ import java.util.Map;
 import client.view.*;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import server.controller.Preference;
 import server.model.XmlMessage;
 import server.model.XmlSet;
+import server.view.ServerView;
 
 
 import javax.swing.*;
@@ -46,7 +48,7 @@ public class Controller extends Thread implements ControllerActionsClient {
 
 
     private int PORT = 1506;
-    private String hostName;
+    private String hostName = "localhost";;
     private Socket connect;
     private String myUser;
     private List<String> activeUsers = new ArrayList<>();
@@ -57,12 +59,12 @@ public class Controller extends Thread implements ControllerActionsClient {
     volatile private boolean ban;
     volatile private boolean admin;
     volatile private boolean close;
+    volatile private boolean serverDown;
     private boolean authentication;
     private List<String> banUsers;
     private List<ChatView> views = new ArrayList();
     boolean isConnect;
-    public Controller(String hostName) {
-        this.hostName = hostName;
+    public Controller() {
         isConnect = connectToServer();
     }
 
@@ -92,8 +94,20 @@ public class Controller extends Thread implements ControllerActionsClient {
             if (toServer != null) toServer.close();
             if (connect != null) connect.close();
         } catch (Exception e) {
+
             logger.error("Exception close: ",e);}
 
+    }
+    public void closeSocket(){
+        try{
+            close = true;
+            serverDown = true;
+            if (fromServer != null) fromServer.close();
+            if (toServer != null) toServer.close();
+            if (connect != null) connect.close();
+        } catch (Exception e) {
+
+        logger.error("Exception close: ",e);}
     }
     
     public void setUserXml(XmlSet userXml) {
@@ -104,9 +118,10 @@ public class Controller extends Thread implements ControllerActionsClient {
         return userXml;
     }
 
-    public void getMessage() {
+    public synchronized void  getMessage() {
         try {
-            if(fromServer == null) throw new IOException();
+            //if(close) return;
+            if (fromServer == null) throw new IOException();
             BufferedReader is = new BufferedReader(new InputStreamReader(fromServer));
             StringBuffer ans = new StringBuffer();
             while (true) {
@@ -116,23 +131,32 @@ public class Controller extends Thread implements ControllerActionsClient {
                     break;
                 }
             }
-            this.setUserXml(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+            if(ans.toString().equals("null")){
+                throw new SAXException();
+            }
+            setUserXml(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+
         } catch (org.xml.sax.SAXException e1) {
+            serverDown = true;
+            close = true;
+            closeSocket();
             logger.error(" SAXException.Authorization is not passed successfully. ", e1);
-            JOptionPane.showMessageDialog(null,"Server is down");
-            close = true;
-            System.exit(1);
+            JOptionPane.showMessageDialog(null,"Server is down. Try to reconnect");
+
         } catch (IOException e) {
-            logger.error(" Exception reading Streams: ", e);
-            JOptionPane.showMessageDialog(null,"Server is down");
+            setUserXml(null);
+            serverDown = true;
             close = true;
-            System.exit(1);
+            closeSocket();
+            logger.error(" Exception reading Streams: ", e);
+            JOptionPane.showMessageDialog(null, "Server is down. Try to reconnect");
         }
     }
 
 
     public void sendMessage(XmlSet xml, String message) {
         try {
+            if(serverDown) return;
             xml.setPreference(message);
 
             XmlMessage.writeXMLinStream(xml, toServer);
@@ -278,7 +302,7 @@ public class Controller extends Thread implements ControllerActionsClient {
     public void run() {
         while (true) {
             if (close) return;
-             getMessage();
+            getMessage();
             XmlSet buff = getUserXml();
             if (buff != null) {
                 if (!authentication) {
@@ -471,7 +495,12 @@ public class Controller extends Thread implements ControllerActionsClient {
                     ban = false;
                     JOptionPane.showMessageDialog(null, UNBAN);
                 }
-
+                if(buff.getPreference().equals(Preference.Stop)){
+                    closeSocket();
+                    close = true;
+                    serverDown = true;
+                    //setUserXml(null);
+                }
             }
         }
     }
@@ -517,8 +546,7 @@ public class Controller extends Thread implements ControllerActionsClient {
         }
     }
     public static void main(String[] args) throws IOException, SAXException {
-        String serverAddress = "localhost";
-        Controller client = new Controller(serverAddress);
+        Controller client = new Controller();
         client.createView(ChatViewSwing.getFactory());
         client.run();
     }
