@@ -48,7 +48,10 @@ public class ControllerServer extends Observable implements Server{
         this.setChanged();
         notifyObservers();
     }
-
+    public synchronized void updateUsers(){
+        this.setChanged();
+        notifyObservers();
+    }
     /**
      * Method, that remove ServerThread of client from list of active users.
      * @param activeUser ServerThread of client.
@@ -221,14 +224,15 @@ public class ControllerServer extends Observable implements Server{
               break;
       }
       if(client.isAuthentication()){
-          client.getXmlUser().setMessage(getDate()+" System message: user < " + client.getUser().getLogin() + " > is welcome.");
+          addActiveUser(client);
+          client.getXmlUser().setMessage(getDate() + " System message: user < " + client.getUser().getLogin() + " > is welcome.");
           try {
               readCommand(client, Preference.MessageForAll);
           }
           catch (TransformerException e){
             logger.error(e);
           }
-          addActiveUser(client);
+
       }
 
   }
@@ -245,7 +249,7 @@ public class ControllerServer extends Observable implements Server{
         else{
             System.out.println(message);
         }
-            logger.info(message);
+        logger.info(message);
     }
 
     /**
@@ -276,7 +280,7 @@ public class ControllerServer extends Observable implements Server{
       this.displayInfoLog("Building to port " + this.PORT + ", please wait  ...");
       socket = new ServerSocket(PORT);
       this.displayInfoLog("Server started.");
-      this.displayInfoLog("Waiting a client... ");
+        this.displayInfoLog("Waiting a client... ");
       while (true) {
           if(this.finish){
               return;
@@ -514,7 +518,7 @@ public class ControllerServer extends Observable implements Server{
         private InputStream          fromClient;
         private OutputStream         toClient;
         private XmlSet               xmlUser;
-        boolean                      authentication;
+        private boolean              authentication;
 
         /**
          * Constructor of class.
@@ -537,17 +541,13 @@ public class ControllerServer extends Observable implements Server{
          */
         @Override
         public void update(Observable o, Object arg) {
-            this.getXmlUser().setList(((ControllerServer) o).getUserListString());
-            try{
+            try {
+                this.getXmlUser().setList(((ControllerServer) o).getUserListString());
                 sendMessage(Preference.ActiveUsers.name());
             }
-            catch (TransformerException e) {
-                try{
-                    readCommand(this,Preference.Close);
-                }
-                catch (TransformerException e1) {
-                    logger.error(e1);
-                }
+            catch (TransformerException | NullPointerException e) {
+                updateUsers();
+                logger.error(e);
             }
         }
 
@@ -617,21 +617,32 @@ public class ControllerServer extends Observable implements Server{
         }
         /**
          * Method of read message from client to server.
-         * @throws IOException of read line.
          * @throws SAXException if read xml.
          */
-        public  void getMessage() throws IOException,SAXException{
-                BufferedReader is = new BufferedReader(new InputStreamReader(fromClient));
-                StringBuffer ans = new StringBuffer();
-                while (true) {
-                    String input = is.readLine();
-                    ans.append(input);
-                    if (input == null || input.equals("</XmlMessage>")) {
-                        break;
+        public  void getMessage() throws SAXException{
+                try {
+                    BufferedReader is = new BufferedReader(new InputStreamReader(fromClient));
+                    StringBuffer ans = new StringBuffer();
+                    while (true) {
+                        String input = is.readLine();
+                        ans.append(input);
+                        if (input == null || input.equals("</XmlMessage>")) {
+                            break;
+                        }
+                    }
+                    this.setXmlUser(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
+                }
+                catch (IOException e) {
+                    if(!this.socket.isClosed()) {
+                        try {
+                            readCommand(this, Preference.Close);
+                        } catch (TransformerException e1) {
+                            logger.error(e1);
+                        }
                     }
                 }
-                this.setXmlUser(XmlMessage.readXmlFromStream(new ByteArrayInputStream(ans.toString().getBytes())));
-}
+
+        }
 
         /**
          * Method that describes the action thread.
@@ -642,19 +653,16 @@ public class ControllerServer extends Observable implements Server{
                 boolean isEditRepeat=false;
                 while (true) {
                    if (finish) {
-                       reportOfStop();
                        return;
                    }
-                    try {
-                        this.getMessage();
-                        if(isEditRepeat){
-                            isEditRepeat=false;
-                            continue;
-                        }
+                    this.getMessage();
+                    if (this.socket.isClosed()) {
+                        return;
                     }
-                    catch (IOException e) {
+                    if(isEditRepeat){
+                        isEditRepeat=false;
                         continue;
-                    }
+                        }
                     if (getXmlUser() != null) {
                         if (!this.isAuthentication()) {
                             authorization(this);
@@ -673,7 +681,7 @@ public class ControllerServer extends Observable implements Server{
                 }
             }
             catch (SAXException | TransformerException e) {
-                logger.error(e);
+                    logger.error(e);
             }
         }
 
