@@ -72,7 +72,7 @@ public class Controller extends Thread implements ControllerActionsClient {
             logger.error("Host unknown: ",e);
             return false;
         } catch (IOException e) {
-            logger.error("Unexpected exception: ",e);
+            close=true;
             return false;
         }
 
@@ -138,7 +138,6 @@ public class Controller extends Thread implements ControllerActionsClient {
         } catch (IOException e) {
             setUserXml(null);
             closeSocket();
-            logger.error(" Exception reading Streams: ", e);
             JOptionPane.showMessageDialog(null, "Server is down. Try to reconnect");
         }
     }
