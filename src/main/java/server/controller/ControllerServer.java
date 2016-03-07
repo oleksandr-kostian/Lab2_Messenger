@@ -311,7 +311,12 @@ public class ControllerServer extends Observable implements Server{
         }
         this.finish=true;
         for(int i=0;i<activeUsers.size();i++){
-            activeUsers.remove(activeUsers.get(i));
+            try {
+                readCommand(activeUsers.get(i), Preference.Close);
+            }
+            catch (TransformerException e){
+                logger.error(e);
+            }
         }
         if (socket != null) {
                 socket.close();
