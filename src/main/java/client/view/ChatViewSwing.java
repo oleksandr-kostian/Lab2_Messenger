@@ -4,7 +4,9 @@ import client.controller.ControllerActionsClient;
 
 
 /**
- * Created by Слава on 17.02.2016.
+ * Class  for work with chat view
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class ChatViewSwing implements ChatView {
     private UserFrame userFrame;
@@ -16,6 +18,10 @@ public class ChatViewSwing implements ChatView {
         this.controller = controller;
     }
 
+    /**
+     * Method for create new view use factory
+     * @return ViewFactory
+     */
     public static ViewFactory getFactory() {
         return new ViewFactory() {
             public ChatView createView(ControllerActionsClient controller) {

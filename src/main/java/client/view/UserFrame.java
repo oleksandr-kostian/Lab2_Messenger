@@ -10,7 +10,9 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Created by Слава on 29.01.2016.
+ * Class that create frame for normal user
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class UserFrame implements UserView {
     private JTabbedPane tabbedPane;
@@ -54,11 +56,16 @@ public class UserFrame implements UserView {
         return activeUsers;
     }
 
+    /**
+     * Method for create common chat for all users
+     * @param activeUsers
+     */
     public void createAllChat(List<String> activeUsers){
         allChat = new MainPanel(activeUsers,controller);
         tabbedPane.addTab("All chat",allChat);
     }
 
+    @Override
     public Map<Integer, PrivateChat> getMap() {
         return keys;
     }
@@ -146,7 +153,7 @@ public class UserFrame implements UserView {
                     JOptionPane.showMessageDialog(viewAll, "For create Private chat use AllChat!");
                     return;
                 }
-                    privateList = new ArrayList<String>();
+                    privateList = new ArrayList<>();
                 for(int i:allChat.getElement()){
                     privateList.add(activeUsers.get(i));
                 }

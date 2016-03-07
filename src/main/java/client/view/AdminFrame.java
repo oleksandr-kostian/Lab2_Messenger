@@ -7,7 +7,9 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 /**
- * Created by Слава on 24.01.2016.
+ *  Class that create frame for admin
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class AdminFrame extends UserFrame implements AdminView{
     private ControllerActionsClient controller;
@@ -26,6 +28,10 @@ public class AdminFrame extends UserFrame implements AdminView{
         setAllChat(adminPanel);
         getTabbedPane().addTab("All chat",adminPanel);
     }
+
+    /**
+     * Method for add Listener to admin menu
+     */
     public void setMenuListener(){
         super.setMenuListener();
         AdminMenu menu =(AdminMenu) super.getMenu();

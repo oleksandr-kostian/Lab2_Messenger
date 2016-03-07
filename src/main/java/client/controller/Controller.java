@@ -56,7 +56,7 @@ public class Controller extends Thread implements ControllerActionsClient {
     volatile private boolean serverDown;
     private boolean authentication;
     private List<String> banUsers;
-    private List<ChatView> views = new ArrayList<ChatView>();
+    private List<ChatView> views = new ArrayList<>();
     private boolean isConnect;
     public Controller() {
         isConnect = connectToServer();
@@ -160,7 +160,7 @@ public class Controller extends Thread implements ControllerActionsClient {
     public void registration(String login, String password) {
         if (login != null && !login.trim().equals("") && password != null) {
             XmlSet aut = new XmlSet(3);
-            java.util.List<String> logPas = new ArrayList<String>();
+            java.util.List<String> logPas = new ArrayList<>();
             setMyUser(login);
             logPas.add(login);
             logPas.add(password);
@@ -173,7 +173,7 @@ public class Controller extends Thread implements ControllerActionsClient {
     public void authentication(String login, String password) {
         if (login != null && !login.trim().equals("") && password != null) {
             XmlSet aut = new XmlSet(4);
-            java.util.List<String> logPas = new ArrayList<String>();
+            java.util.List<String> logPas = new ArrayList<>();
             setMyUser(login);
             logPas.add(login);
             logPas.add(password);
@@ -196,21 +196,21 @@ public class Controller extends Thread implements ControllerActionsClient {
     }
 
     public void ban(String banUser) {
-        List<String> login = new ArrayList<String>();
+        List<String> login = new ArrayList<>();
         login.add(banUser);
         userSet.setList(login);
         sendMessage(userSet, Preference.Ban.name());
     }
 
     public void remove(String removeUser) {
-        List<String> login = new ArrayList<String>();
+        List<String> login = new ArrayList<>();
         login.add(removeUser);
         userSet.setList(login);
         sendMessage(userSet, Preference.Remove.name());
     }
 
     public void unBan(String unBanUser) {
-        List<String> login = new ArrayList<String>();
+        List<String> login = new ArrayList<>();
         login.add(unBanUser);
         userSet.setList(login);
         sendMessage(userSet, Preference.UnBan.name());
@@ -271,7 +271,7 @@ public class Controller extends Thread implements ControllerActionsClient {
     }
 
     public void editUser(String newPassword) {
-        java.util.List<String> logPas = new ArrayList<String>();
+        java.util.List<String> logPas = new ArrayList<>();
         logPas.add(myUser);
         logPas.add(newPassword);
         userSet.setList(logPas);

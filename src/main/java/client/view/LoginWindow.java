@@ -8,7 +8,9 @@ import java.awt.*;
 import java.awt.event.*;
 
 /**
- * Created by Слава on 22.01.2016.
+ * Class for enter login and password
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 class LoginWindow extends JFrame {
     private JTextField loginField;

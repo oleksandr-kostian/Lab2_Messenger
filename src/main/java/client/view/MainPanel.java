@@ -12,7 +12,11 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Created by Слава on 22.02.2016.
+ * Class that create main panel for chat
+ * witch include window for history chat and
+ * window for send message
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class MainPanel  extends FonPanel{
     private int[] element;
@@ -52,7 +56,10 @@ public class MainPanel  extends FonPanel{
         return memo;
     }
 
-
+    /**
+     * Method for set list active user
+     * @return new JList
+     */
     public JList setList(){
         DefaultListModel<String> model = new DefaultListModel<>();
         for (String s: activeUsers){
@@ -73,8 +80,11 @@ public class MainPanel  extends FonPanel{
         return edit;
     }
 
+    /**
+     * Method for set list active user to panel
+     * @return new JPanel
+     */
     public JPanel setListPanel() {
-
         final JPanel panel = new FonPanel();
         panel.setLayout(new MigLayout());
         JLabel listLabel = new JLabel("Active users");
@@ -125,6 +135,7 @@ public class MainPanel  extends FonPanel{
     public List<String> getActiveUsers() {
         return activeUsers;
     }
+
     public void setSendListener(){
         getSend().addActionListener(new ActionListener() {
             @Override
@@ -153,6 +164,11 @@ public class MainPanel  extends FonPanel{
         });
 
     }
+
+    /**
+     * Method for set active user
+     * @param activeUsers
+     */
     public void  setActiveUsers(List<String> activeUsers){
         this.activeUsers = activeUsers;
         DefaultListModel<String> activeUser = new DefaultListModel<>();

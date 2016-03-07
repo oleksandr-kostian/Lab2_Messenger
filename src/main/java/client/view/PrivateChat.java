@@ -1,7 +1,9 @@
 package client.view;
 
 /**
- * Created by Слава on 22.02.2016.
+ * Interface that describes methods for  private chat view
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public interface PrivateChat {
     /**

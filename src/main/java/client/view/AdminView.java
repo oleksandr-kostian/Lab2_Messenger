@@ -3,7 +3,9 @@ package client.view;
 import java.util.List;
 
 /**
- * Created by Слава on 17.02.2016.
+ * Interface that describes methods for  admin view
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public interface AdminView extends UserView {
     /**

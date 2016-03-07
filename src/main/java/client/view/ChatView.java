@@ -1,7 +1,9 @@
 package client.view;
 
 /**
- * Created by Слава on 17.02.2016.
+ * Interface that describes methods for chat view
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public interface ChatView {
     /**
@@ -26,6 +28,15 @@ public interface ChatView {
      */
     void closeEnterToChat();
 
+    /**
+     * Method that get to created user view
+     * @return user view
+     */
     UserView getUserFrame();
+
+    /**
+     * Method that get to created admin view
+     * @return admin view
+     */
     AdminView getAdminFrame();
 }

@@ -4,7 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Created by Слава on 24.01.2016.
+ * *
+ * Class that create menu for admin frame
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class AdminMenu extends UserMenu {
     private JMenuItem ban;

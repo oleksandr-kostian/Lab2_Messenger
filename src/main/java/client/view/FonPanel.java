@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Created by Слава on 29.01.2016.
+ * Class that create fon for panel
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 class FonPanel extends JPanel {
     /**

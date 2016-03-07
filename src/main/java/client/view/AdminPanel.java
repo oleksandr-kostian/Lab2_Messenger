@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Слава on 22.02.2016.
+ * Class that create panel for admin frame
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class AdminPanel extends MainPanel {
     private JList listBann;
@@ -21,6 +23,12 @@ public class AdminPanel extends MainPanel {
     public AdminPanel(List<String> activeUsers, ControllerActionsClient controller) {
         super(activeUsers,controller);
     }
+
+    /**
+     * Method that create Panel, which include
+     * list active user and list user with ban
+     * @return new JPanel
+     */
     public JPanel setListPanel(){
         JPanel listPanel = new FonPanel();
         listPanel.setLayout(new MigLayout());
@@ -52,6 +60,7 @@ public class AdminPanel extends MainPanel {
     public List<String> getBanUsers() {
         return banUsers;
     }
+
 
     public void  setBanUsers(List<String> banUsers){
         this.banUsers = banUsers;

@@ -9,7 +9,9 @@ import java.awt.event.KeyEvent;
 import java.util.List;
 
 /**
- * Created by Слава on 23.02.2016.
+ * Class that panel for private chat
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class PrivatePanel extends MainPanel implements PrivateChat {
     private int key;

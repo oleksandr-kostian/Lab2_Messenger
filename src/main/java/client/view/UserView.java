@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Слава on 17.02.2016.
+ * Interface that describes methods for user view
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public interface UserView {
     /**

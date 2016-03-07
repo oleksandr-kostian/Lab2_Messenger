@@ -5,7 +5,10 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 /**
- * Created by Слава on 04.03.2016.
+ * Class that create frame for generic work
+ * which include need label and button
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class SimpleFrame extends JFrame {
     private JLabel label;

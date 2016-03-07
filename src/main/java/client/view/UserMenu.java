@@ -4,7 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Created by Слава on 22.12.2015.
+ * Class that create menu for user frame
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class UserMenu extends  JMenuBar{
     private JMenuItem privat;

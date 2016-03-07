@@ -5,7 +5,9 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 /**
- * Created by Слава on 05.03.2016.
+ *  Class that create frame for connect to server
+ * @author  Slavik Miroshnychenko
+ * @version %I%, %G%
  */
 public class EditConnection extends JFrame {
     private JTextField URLField;
