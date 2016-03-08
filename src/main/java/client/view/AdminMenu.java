@@ -13,6 +13,7 @@ public class AdminMenu extends UserMenu {
     private JMenuItem ban;
     private JMenuItem unBan;
     private JMenuItem remove;
+
     public AdminMenu() {
         Font font = new Font("Verdana", Font.PLAIN, 11);
         JMenu admin = new JMenu("Admin");
@@ -44,5 +45,11 @@ public class AdminMenu extends UserMenu {
 
     public JMenuItem getRemoveUser() {
         return remove;
+    }
+
+    @Override
+    public JMenuItem getRemove() {// admin not remove yourself
+        super.getRemove().setEnabled(false);
+        return new JMenuItem();
     }
 }
