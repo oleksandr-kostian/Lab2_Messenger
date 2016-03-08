@@ -463,13 +463,7 @@ public class ControllerServer extends Observable implements Server{
 
             case Remove:
                 if(client.getUser().isAdmin()){
-                    String removeUser="";
-                    try {
-                         removeUser = client.getXmlUser().getList().get(0);
-                    }
-                    catch (IndexOutOfBoundsException e){
-                        removeUser = "root";
-                    }
+                    String removeUser = client.getXmlUser().getList().get(0);
                     for(int i=0;i<activeUsers.size();i++){
                         if(activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
                             model.removeUser(activeUsers.get(i).getUser());
@@ -498,6 +492,8 @@ public class ControllerServer extends Observable implements Server{
                     this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
                     logger.debug("Remove " + client.getUser().getLogin());
                 }
+                this.setChanged();
+                notifyObservers();
                 break;
 
             case Close:
