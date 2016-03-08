@@ -463,16 +463,23 @@ public class ControllerServer extends Observable implements Server{
 
             case Remove:
                 if(client.getUser().isAdmin()){
-                    String removeUser = client.getXmlUser().getList().get(0);
+                    String removeUser="";
+                    try {
+                         removeUser = client.getXmlUser().getList().get(0);
+                    }
+                    catch (IndexOutOfBoundsException e){
+                        removeUser = "root";
+                    }
                     for(int i=0;i<activeUsers.size();i++){
                         if(activeUsers.get(i).getUser().getLogin().compareToIgnoreCase(removeUser)==0){
                             model.removeUser(activeUsers.get(i).getUser());
                             activeUsers.get(i).getXmlUser().setMessage(DELETE);
                             activeUsers.get(i).sendMessage(Preference.Remove.name());
-                            activeUsers.get(i).close();
-                            removeActiveUser(activeUsers.get(i));
+                            deleteObserver(activeUsers.get(i));
                             client.getXmlUser().setMessage(Preference.Admin.name());
                             client.sendMessage(Preference.Remove.name());
+                            activeUsers.get(i).close();
+                            removeActiveUser(activeUsers.get(i));
                             break;
                         }
                     }
@@ -480,12 +487,14 @@ public class ControllerServer extends Observable implements Server{
                     logger.debug(Preference.Remove.name()+ " removeUser");
                 }
                 else{
+
                     model.removeUser(client.getUser());
+                    deleteObserver(client);
                     removeActiveUser(client);
                     client.getXmlUser().setMessage(Preference.Successfully.name());
                     client.sendMessage(Preference.Remove.name());
                     client.close();
-                    deleteObserver(client);
+
                     this.displayInfoLog("Server remove user:  " + client.getUser().getLogin());
                     logger.debug("Remove " + client.getUser().getLogin());
                 }
